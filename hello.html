@@ -1,0 +1,168 @@
+
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>나의 첫 번째 인사 페이지</title>
+
+    <style>
+        /* 페이지 전체 디자인 */
+        body {
+            font-family: Arial, sans-serif;
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            margin: 0;
+        }
+
+        /* 인사 카드 디자인 */
+        .container {
+            background: white;
+            padding: 50px;
+            border-radius: 20px;
+            text-align: center;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+        }
+
+        h1 {
+            color: #333;
+        }
+
+        p {
+            color: #666;
+            font-size: 18px;
+        }
+
+        input {
+            padding: 12px;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            font-size: 16px;
+        }
+
+        button {
+            padding: 12px 20px;
+            background: #667eea;
+            color: white;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 16px;
+        }
+
+        button:hover {
+            background: #5265c9;
+        }
+
+        #greeting {
+            margin-top: 25px;
+            font-weight: bold;
+            color: #667eea;
+        }
+
+        .goal {
+            margin-top: 28px;
+            padding-top: 24px;
+            border-top: 1px solid #eee;
+        }
+
+        .goal h2 {
+            margin: 0 0 12px;
+            color: #333;
+            font-size: 20px;
+        }
+
+        .goal input {
+            margin: 0 8px 8px 0;
+        }
+
+        #saved-goal {
+            margin-top: 16px;
+            font-weight: bold;
+            color: #764ba2;
+        }
+    </style>
+</head>
+
+<body>
+
+    <div class="container">
+        <h1>안녕하세요! 👋</h1>
+        <p>나만의 첫 번째 웹페이지입니다.</p>
+
+        <input
+            type="text"
+            id="username"
+            placeholder="이름을 입력하세요"
+        >
+
+        <button onclick="sayHello()">인사하기</button>
+
+        <div id="greeting"></div>
+
+        <div class="goal">
+            <h2>오늘의 목표</h2>
+            <input
+                type="text"
+                id="goal-input"
+                placeholder="오늘의 목표를 입력하세요"
+            >
+            <button type="button" onclick="saveGoal()">저장하기</button>
+            <div id="saved-goal"></div>
+        </div>
+    </div>
+
+    <script>
+        // 인사하기 기능
+        function sayHello() {
+            const name = document.getElementById("username").value;
+
+            if (name.trim() === "") {
+                alert("이름을 입력해주세요!");
+                return;
+            }
+
+            document.getElementById("greeting").innerText =
+                "반갑습니다, " + name + "님! 🎉";
+        }
+
+        function todayGoalKey() {
+            const today = new Date();
+            const year = today.getFullYear();
+            const month = String(today.getMonth() + 1).padStart(2, "0");
+            const day = String(today.getDate()).padStart(2, "0");
+            return "todayGoal-" + year + "-" + month + "-" + day;
+        }
+
+        function showGoal() {
+            const goal = localStorage.getItem(todayGoalKey());
+            const savedGoal = document.getElementById("saved-goal");
+
+            if (goal) {
+                document.getElementById("goal-input").value = goal;
+                savedGoal.innerText = "저장된 목표: " + goal;
+            } else {
+                savedGoal.innerText = "";
+            }
+        }
+
+        function saveGoal() {
+            const goal = document.getElementById("goal-input").value.trim();
+
+            if (goal === "") {
+                alert("목표를 입력해주세요!");
+                return;
+            }
+
+            localStorage.setItem(todayGoalKey(), goal);
+            showGoal();
+        }
+
+        showGoal();
+    </script>
+
+</body>
+</html>

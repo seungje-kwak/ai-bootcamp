@@ -1,0 +1,30 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>명언 생성 웹페이지</title>
+    <link rel="stylesheet" href="quotes.css">
+</head>
+<body>
+    <main class="card">
+        <p class="eyebrow">오늘의 한 문장</p>
+        <h1>명언 생성 웹페이지</h1>
+
+        <section class="quote-panel" aria-live="polite">
+            <blockquote id="quote" class="quote">
+                명언을 불러오는 중입니다.
+            </blockquote>
+            <p id="author" class="author">작성자</p>
+        </section>
+
+        <div class="actions">
+            <button type="button" id="next-quote">새로운 명언 보기</button>
+            <button type="button" id="copy-quote" class="secondary">명언 복사하기</button>
+        </div>
+        <p id="copy-status" class="status" role="status"></p>
+    </main>
+
+    <script src="quotes.js"></script>
+</body>
+</html>

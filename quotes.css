@@ -1,0 +1,143 @@
+:root {
+    --ink: #243042;
+    --muted: #667085;
+    --paper: #fffdf9;
+    --line: rgba(36, 48, 66, 0.08);
+    --accent: #3d6b8c;
+    --accent-dark: #2d5270;
+}
+
+* {
+    box-sizing: border-box;
+}
+
+body {
+    margin: 0;
+    min-height: 100vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 24px;
+    font-family: "Segoe UI", Arial, sans-serif;
+    color: var(--ink);
+    background:
+        radial-gradient(circle at top left, #f7efe4, transparent 42%),
+        linear-gradient(160deg, #eef3f4 0%, #f6f1ea 55%, #e7eef3 100%);
+}
+
+.card {
+    width: min(640px, 100%);
+    padding: clamp(28px, 5vw, 48px);
+    background: var(--paper);
+    border: 1px solid var(--line);
+    border-radius: 28px;
+    box-shadow: 0 24px 60px rgba(36, 48, 66, 0.12);
+}
+
+.eyebrow {
+    margin: 0 0 8px;
+    color: var(--accent);
+    font-size: 13px;
+    font-weight: 700;
+    letter-spacing: 0.08em;
+}
+
+h1 {
+    margin: 0 0 28px;
+    font-size: clamp(28px, 4vw, 40px);
+    line-height: 1.25;
+}
+
+.quote-panel {
+    min-height: 180px;
+    padding: 8px 4px 20px;
+    border-top: 1px solid var(--line);
+    border-bottom: 1px solid var(--line);
+}
+
+.quote,
+.author {
+    transition: opacity 0.35s ease, transform 0.35s ease;
+}
+
+.quote-panel.is-changing .quote,
+.quote-panel.is-changing .author {
+    opacity: 0;
+    transform: translateY(10px);
+}
+
+.quote {
+    margin: 24px 0 12px;
+    font-family: Georgia, "Times New Roman", serif;
+    font-size: clamp(22px, 3vw, 30px);
+    line-height: 1.55;
+}
+
+.quote::before {
+    content: "“";
+    display: block;
+    margin-bottom: 8px;
+    color: #c7b59a;
+    font-size: 48px;
+    line-height: 0.6;
+}
+
+.author {
+    margin: 0 0 20px;
+    color: var(--muted);
+    font-size: 16px;
+}
+
+.author::before {
+    content: "— ";
+}
+
+.actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+    margin-top: 24px;
+}
+
+button {
+    border: 0;
+    border-radius: 999px;
+    padding: 13px 20px;
+    background: var(--accent);
+    color: white;
+    font: inherit;
+    font-weight: 700;
+    cursor: pointer;
+}
+
+button:hover {
+    background: var(--accent-dark);
+}
+
+button.secondary {
+    background: transparent;
+    color: var(--accent-dark);
+    border: 1px solid #c9d5de;
+}
+
+button.secondary:hover {
+    background: #f3f7f9;
+}
+
+.status {
+    min-height: 24px;
+    margin: 14px 0 0;
+    color: var(--accent-dark);
+    font-size: 14px;
+    font-weight: 700;
+}
+
+@media (max-width: 520px) {
+    .actions {
+        flex-direction: column;
+    }
+
+    button {
+        width: 100%;
+    }
+}
