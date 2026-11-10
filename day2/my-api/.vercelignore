@@ -1,0 +1,4 @@
+# 혹시 이 폴더에서 vercel 명령을 실행해도 비밀키가 올라가지 않도록
+.env
+.env.*
+!.env.example
