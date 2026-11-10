@@ -1,0 +1,130 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>풀스택 메모</title>
+<style>
+  :root { --main: #0e6b8c; --ok: #1f9d55; --err: #d64545; --line: #e3e6ea; }
+  * { box-sizing: border-box; }
+  body { font-family: system-ui, "Malgun Gothic", sans-serif; background: #f5f7f9; margin: 0; color: #222; }
+  main { max-width: 640px; margin: 40px auto; padding: 0 16px; }
+  h1 { color: var(--main); margin-bottom: 4px; }
+  .sub { color: #666; margin-top: 0; font-size: .9rem; }
+  .status { display: flex; gap: 8px; flex-wrap: wrap; margin: 20px 0; }
+  .pill { padding: 6px 12px; border-radius: 999px; background: #fff; border: 1px solid var(--line); font-size: .85rem; }
+  .pill.ok { border-color: var(--ok); color: var(--ok); }
+  .pill.err { border-color: var(--err); color: var(--err); }
+  form { display: flex; gap: 8px; }
+  input { flex: 1; padding: 12px; border: 1px solid var(--line); border-radius: 10px; font: inherit; }
+  button { padding: 12px 18px; border: 0; border-radius: 10px; background: var(--main); color: #fff; font: inherit; font-weight: 600; cursor: pointer; }
+  button:disabled { opacity: .5; cursor: default; }
+  ul { list-style: none; padding: 0; margin-top: 20px; }
+  li { background: #fff; border: 1px solid var(--line); border-radius: 10px; padding: 12px 14px; margin-bottom: 8px; display: flex; justify-content: space-between; align-items: center; gap: 10px; }
+  li small { color: #888; display: block; font-size: .78rem; }
+  li button { background: transparent; color: var(--err); padding: 6px 10px; }
+  .empty { color: #888; text-align: center; padding: 20px; }
+  .error { color: var(--err); font-size: .9rem; min-height: 1.2em; }
+</style>
+</head>
+<body>
+<main>
+  <h1>풀스택 메모</h1>
+  <p class="sub">Frontend(Vercel) → FastAPI(Railway) → Supabase 연결 테스트</p>
+
+  <div class="status">
+    <span class="pill" id="apiUrl"></span>
+    <span class="pill" id="apiStatus">API 확인 중…</span>
+    <span class="pill" id="dbStatus">DB 확인 중…</span>
+  </div>
+
+  <form id="form">
+    <input id="content" placeholder="메모를 입력하세요" maxlength="500" required>
+    <button id="addBtn">추가</button>
+  </form>
+  <p class="error" id="error"></p>
+
+  <ul id="list"><li class="empty">불러오는 중…</li></ul>
+</main>
+
+<script src="config.js"></script>
+<script>
+  const API = window.API_BASE;
+  const $ = (id) => document.getElementById(id);
+  $("apiUrl").textContent = "API: " + API;
+
+  function setPill(el, ok, text) {
+    el.textContent = text;
+    el.className = "pill " + (ok ? "ok" : "err");
+  }
+
+  async function api(path, options = {}) {
+    const res = await fetch(API + path, {
+      headers: { "Content-Type": "application/json" },
+      ...options,
+    });
+    if (!res.ok) {
+      const body = await res.json().catch(() => ({}));
+      throw new Error(body.detail ? JSON.stringify(body.detail) : res.status + " " + res.statusText);
+    }
+    return res.status === 204 ? null : res.json();
+  }
+
+  async function checkHealth() {
+    try { await api("/health"); setPill($("apiStatus"), true, "API 연결됨"); }
+    catch { setPill($("apiStatus"), false, "API 연결 실패"); }
+    try { await api("/health/db"); setPill($("dbStatus"), true, "Supabase 연결됨"); }
+    catch { setPill($("dbStatus"), false, "Supabase 연결 실패"); }
+  }
+
+  function render(notes) {
+    const list = $("list");
+    list.innerHTML = "";
+    if (!notes.length) {
+      list.innerHTML = '<li class="empty">아직 메모가 없습니다.</li>';
+      return;
+    }
+    for (const n of notes) {
+      const li = document.createElement("li");
+      const text = document.createElement("div");
+      text.textContent = n.content;
+      const time = document.createElement("small");
+      time.textContent = new Date(n.created_at).toLocaleString("ko-KR");
+      text.appendChild(time);
+      const del = document.createElement("button");
+      del.textContent = "삭제";
+      del.onclick = async () => {
+        try { await api("/notes/" + n.id, { method: "DELETE" }); load(); }
+        catch (e) { $("error").textContent = "삭제 실패: " + e.message; }
+      };
+      li.append(text, del);
+      list.appendChild(li);
+    }
+  }
+
+  async function load() {
+    try { render(await api("/notes")); $("error").textContent = ""; }
+    catch (e) { $("list").innerHTML = ""; $("error").textContent = "목록 불러오기 실패: " + e.message; }
+  }
+
+  $("form").addEventListener("submit", async (e) => {
+    e.preventDefault();
+    const content = $("content").value.trim();
+    if (!content) return;
+    $("addBtn").disabled = true;
+    try {
+      await api("/notes", { method: "POST", body: JSON.stringify({ content }) });
+      $("content").value = "";
+      load();
+    } catch (err) {
+      $("error").textContent = "추가 실패: " + err.message;
+    } finally {
+      $("addBtn").disabled = false;
+    }
+  });
+
+  checkHealth();
+  load();
+</script>
+</body>
+</html>
