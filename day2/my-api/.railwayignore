@@ -1,0 +1,6 @@
+# railway up 으로 올릴 때 제외할 파일 (비밀키·캐시)
+.env
+.env.local
+__pycache__/
+*.pyc
+.venv/

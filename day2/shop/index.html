@@ -1,0 +1,88 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>제주상회</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;700;900&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+<header class="topbar">
+  <div class="wrap topbar-inner">
+    <a href="#" class="brand"><span class="brand-mark">🍊</span>제주상회</a>
+    <button class="cart-btn" id="openCart" aria-label="장바구니 열기">
+      <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="21" r="1"/><circle cx="20" cy="21" r="1"/><path d="M1 1h4l2.7 13.4a2 2 0 0 0 2 1.6h9.7a2 2 0 0 0 2-1.6L23 6H6"/></svg>
+      <span>장바구니</span>
+      <span class="badge" id="cartBadge">0</span>
+    </button>
+  </div>
+</header>
+
+<section class="hero">
+  <div class="wrap hero-inner">
+    <div>
+      <span class="hero-tag">JEJU LOCAL MARKET</span>
+      <h1>제주의 맛과 멋을<br>집 앞까지</h1>
+      <p>한라봉부터 돌하르방 키링까지. <b>5만원 이상</b> 담으면 배송비 무료!</p>
+    </div>
+    <div class="hero-art" aria-hidden="true">🍊<span>🌊</span><span>🗿</span></div>
+  </div>
+</section>
+
+<main class="wrap">
+  <div class="status-line" id="statusLine"></div>
+  <div class="filters" id="filters"></div>
+  <div class="grid" id="grid"></div>
+</main>
+
+<!-- 장바구니 서랍 -->
+<div class="overlay" id="overlay"></div>
+<aside class="drawer" id="drawer" aria-label="장바구니" aria-hidden="true">
+  <div class="drawer-head">
+    <h2>🛒 장바구니 <small id="drawerCount"></small></h2>
+    <button class="icon-btn" id="closeCart" aria-label="닫기">✕</button>
+  </div>
+
+  <div class="ship-meter" id="shipMeter">
+    <p id="shipText"></p>
+    <div class="meter"><div id="shipBar"></div></div>
+  </div>
+
+  <ul class="cart-list" id="cartList"></ul>
+
+  <div class="drawer-foot">
+    <div class="sum-row"><span>상품 금액</span><span id="sumItems">0원</span></div>
+    <div class="sum-row"><span>배송비</span><span id="sumShip">0원</span></div>
+    <div class="sum-row total"><span>결제 예정 금액</span><span id="sumTotal">0원</span></div>
+    <button class="checkout" id="checkoutBtn">주문하기</button>
+    <button class="clear" id="clearBtn">장바구니 비우기</button>
+  </div>
+</aside>
+
+<!-- 주문 완료 -->
+<div class="modal" id="modal" aria-hidden="true">
+  <div class="modal-card">
+    <div class="modal-icon">🎉</div>
+    <h3>주문이 완료되었어요!</h3>
+    <p id="orderText"></p>
+    <ul id="orderItems"></ul>
+    <button class="checkout" id="modalClose">쇼핑 계속하기</button>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<footer class="foot">
+  <div class="wrap">
+    <b>🍊 제주상회</b> · Vercel(화면) → Railway FastAPI(서버) → Supabase(DB)
+    <div class="api-url" id="apiUrl"></div>
+  </div>
+</footer>
+
+<script src="config.js"></script>
+<script src="app.js"></script>
+</body>
+</html>

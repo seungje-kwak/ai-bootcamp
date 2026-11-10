@@ -1,0 +1,954 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>풀스택 구조 한눈에 보기</title>
+<style>
+  :root {
+    --bg: #f6f4ef;
+    --card: #ffffff;
+    --text: #23232a;
+    --muted: #6b6b75;
+    --line: #e2ded5;
+    --soft: #f2f0ea;
+    --front: #2f80ed;
+    --front-soft: #e6f0fd;
+    --api: #f28c28;
+    --api-soft: #fdf0e3;
+    --db: #1f9d74;
+    --db-soft: #e2f5ee;
+    --rail: #8b5cf6;
+    --rail-soft: #f1ebfe;
+    --accent: #7a4fd6;
+    --err: #d64545;
+    --err-soft: #fde8e8;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  html { scroll-behavior: smooth; }
+  body {
+    font-family: system-ui, "Malgun Gothic", "Apple SD Gothic Neo", sans-serif;
+    background: var(--bg); color: var(--text); line-height: 1.65;
+  }
+  main { max-width: 1100px; margin: 0 auto; padding: 28px 16px 70px; }
+  h1 { font-size: clamp(1.5rem, 4vw, 2.1rem); }
+  .lead { color: var(--muted); margin: 6px 0 16px; }
+  h2 { font-size: 1.35rem; margin: 56px 0 6px; scroll-margin-top: 70px; }
+  h2 + .sub { color: var(--muted); margin-bottom: 16px; font-size: .95rem; }
+  code { font-family: Consolas, monospace; background: var(--soft); padding: 1px 6px; border-radius: 6px; font-size: .86em; }
+
+  /* 목차 */
+  .toc {
+    position: sticky; top: 0; z-index: 50; background: rgba(246,244,239,.95); backdrop-filter: blur(6px);
+    display: flex; gap: 6px; overflow-x: auto; padding: 10px 0; border-bottom: 1px solid var(--line);
+  }
+  .toc a {
+    white-space: nowrap; text-decoration: none; color: var(--text); font-size: .86rem; font-weight: 600;
+    padding: 6px 12px; border-radius: 999px; background: var(--card); border: 1px solid var(--line);
+  }
+  .toc a:hover { border-color: var(--accent); color: var(--accent); }
+
+  .card { background: var(--card); border-radius: 18px; padding: 20px; box-shadow: 0 4px 18px rgba(0,0,0,.05); }
+
+  /* 식당 비유 */
+  .analogy { display: grid; grid-template-columns: repeat(3, 1fr); gap: 14px; }
+  .an { background: var(--card); border-radius: 16px; padding: 18px; border-top: 5px solid; }
+  .an .big { font-size: 2.2rem; }
+  .an h3 { font-size: 1.05rem; margin: 4px 0; }
+  .an p { color: var(--muted); font-size: .92rem; }
+  .an.f { border-color: var(--front); } .an.a { border-color: var(--api); } .an.d { border-color: var(--db); }
+
+  /* 버튼 공통 */
+  .btn {
+    border: 0; border-radius: 10px; padding: 10px 16px; font: inherit; font-weight: 600; cursor: pointer;
+    background: var(--card); color: var(--text); box-shadow: 0 1px 4px rgba(0,0,0,.1);
+  }
+  .btn.primary { background: var(--accent); color: #fff; }
+  .btn:disabled { opacity: .4; cursor: default; }
+  .chips { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 14px; }
+  .chip {
+    border: 1px solid var(--line); background: var(--card); border-radius: 999px; padding: 7px 14px;
+    font: inherit; font-size: .86rem; cursor: pointer;
+  }
+  .chip.on { background: var(--text); color: #fff; border-color: var(--text); }
+  .chip .bad { color: var(--err); }
+  .chip.on .bad { color: #ffb3b3; }
+
+  /* 모드 토글 */
+  .modes { display: inline-flex; background: #e9e5dc; border-radius: 999px; padding: 4px; margin-bottom: 14px; flex-wrap: wrap; }
+  .modes button {
+    border: 0; background: transparent; padding: 8px 18px; border-radius: 999px;
+    font: inherit; font-weight: 600; color: var(--muted); cursor: pointer;
+  }
+  .modes button.on { background: var(--card); color: var(--text); box-shadow: 0 1px 4px rgba(0,0,0,.1); }
+
+  /* 무대 공통 */
+  .stage { position: relative; }
+  .wire { position: absolute; inset: 0; pointer-events: none; width: 100%; height: 100%; }
+  .packet {
+    position: absolute; z-index: 5; left: 0; top: 0; pointer-events: none;
+    background: var(--accent); color: #fff; font-size: .76rem; font-weight: 700;
+    padding: 6px 10px; border-radius: 10px; white-space: nowrap; max-width: 280px; overflow: hidden; text-overflow: ellipsis;
+    box-shadow: 0 6px 16px rgba(122,79,214,.35); opacity: 0;
+    font-family: Consolas, "Malgun Gothic", monospace;
+  }
+  .packet.back { background: var(--db); box-shadow: 0 6px 16px rgba(31,157,116,.35); }
+  .packet.fail { background: var(--err); box-shadow: 0 6px 16px rgba(214,69,69,.35); }
+  .active { transform: scale(1.05); box-shadow: 0 0 0 6px rgba(122,79,214,.2) !important; }
+  .failed { box-shadow: 0 0 0 6px rgba(214,69,69,.25) !important; border-color: var(--err) !important; background: var(--err-soft) !important; }
+
+  /* 큰 그림 */
+  #bigStage {
+    display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 40px; padding: 30px 20px;
+  }
+  .node {
+    position: relative; border-radius: 16px; padding: 18px 14px; text-align: center;
+    border: 2px solid; transition: transform .3s, box-shadow .3s; z-index: 1;
+  }
+  .node .icon { font-size: 2.3rem; }
+  .node h3 { font-size: 1.02rem; margin-top: 4px; }
+  .node .where { font-size: .82rem; color: var(--muted); }
+  .node .addr { display: inline-block; margin-top: 8px; font-family: Consolas, monospace; font-size: .8rem; padding: 3px 10px; border-radius: 8px; background: rgba(255,255,255,.7); }
+  .node .files { margin-top: 6px; font-size: .78rem; color: var(--muted); }
+  #nFront { border-color: var(--front); background: var(--front-soft); }
+  #nApi { border-color: var(--api); background: var(--api-soft); }
+  #nDb { border-color: var(--db); background: var(--db-soft); }
+
+  .panel { display: grid; grid-template-columns: 1.1fr 1fr; gap: 16px; margin-top: 16px; }
+  .step-no { font-size: .8rem; font-weight: 700; color: var(--accent); }
+  .explain h3 { font-size: 1.12rem; margin: 2px 0 8px; }
+  .explain p { font-size: .95rem; }
+  .tip { margin-top: 12px; background: #f4effd; border-radius: 10px; padding: 10px 12px; font-size: .88rem; }
+  .controls { display: flex; gap: 8px; align-items: center; margin-top: 14px; flex-wrap: wrap; }
+  .dots { display: flex; gap: 6px; margin-left: auto; }
+  .dots span { width: 10px; height: 10px; border-radius: 50%; background: #d6d1c6; cursor: pointer; }
+  .dots span.on { background: var(--accent); }
+
+  /* 코드 박스 */
+  .code { background: #1f1f26; color: #e6e6ea; border-radius: 16px; padding: 16px 0; overflow: auto; }
+  .code .fname { font-size: .78rem; color: #a5a5b5; margin: 0 16px 8px; }
+  .code pre { font-family: Consolas, monospace; font-size: .82rem; line-height: 1.6; white-space: pre; padding: 0 16px; }
+  .code .hl { background: rgba(242,140,40,.28); display: inline-block; min-width: 100%; border-radius: 4px; }
+  .code .cm { color: #8fd18f; }
+  .codelines { font-family: Consolas, monospace; font-size: .8rem; line-height: 1.55; }
+  .codelines div { white-space: pre; padding: 0 16px 0 0; transition: background .3s, opacity .3s; }
+  .codelines .ln { display: inline-block; width: 38px; text-align: right; color: #6f6f80; margin-right: 12px; user-select: none; }
+  .codelines div.on { background: rgba(242,140,40,.3); }
+  .codelines.dim div:not(.on) { opacity: .45; }
+
+  /* 서버 켜지는 순서 */
+  .boot { display: grid; grid-template-columns: 1.2fr 1fr; gap: 16px; align-items: start; }
+  .boot .code { max-height: 560px; }
+  .board { display: flex; flex-direction: column; gap: 8px; }
+  .bitem {
+    display: flex; gap: 10px; align-items: flex-start; padding: 10px 12px; border-radius: 12px;
+    background: var(--soft); opacity: .35; transition: opacity .4s, background .4s, transform .4s;
+  }
+  .bitem.on { opacity: 1; background: var(--api-soft); }
+  .bitem.now { transform: translateX(6px); box-shadow: 0 0 0 2px var(--api); }
+  .bitem .bi { font-size: 1.3rem; }
+  .bitem b { font-size: .9rem; display: block; }
+  .bitem small { color: var(--muted); font-size: .8rem; }
+  .routes { margin-top: 4px; font-family: Consolas, monospace; font-size: .76rem; display: grid; gap: 2px; }
+  .routes span { background: #fff; border-radius: 6px; padding: 1px 6px; }
+  .bootmsg { margin-top: 12px; min-height: 3.2em; font-size: .93rem; }
+  .terminal { background: #111; color: #9fe39f; font-family: Consolas, monospace; font-size: .78rem; border-radius: 10px; padding: 10px 12px; margin-top: 8px; min-height: 2.4em; white-space: pre-wrap; }
+
+  /* 요청 처리 파이프라인 */
+  #pipeStage { padding: 20px 14px; display: grid; grid-template-columns: 130px 1fr; gap: 26px; align-items: center; }
+  .client { border: 2px solid var(--front); background: var(--front-soft); border-radius: 14px; padding: 14px 8px; text-align: center; font-size: .85rem; z-index: 1; position: relative; transition: transform .3s, box-shadow .3s; }
+  .client .icon { font-size: 1.8rem; }
+  .stations { display: grid; grid-template-columns: repeat(6, 1fr); gap: 14px; position: relative; z-index: 1; }
+  .st {
+    border: 2px solid var(--api); background: var(--api-soft); border-radius: 14px; padding: 12px 8px; text-align: center;
+    transition: transform .3s, box-shadow .3s, background .3s, border-color .3s;
+  }
+  .st .icon { font-size: 1.6rem; }
+  .st b { display: block; font-size: .86rem; }
+  .st small { display: block; color: var(--muted); font-size: .72rem; line-height: 1.35; margin-top: 2px; }
+  .st.passed { background: #fff7ef; }
+  .pipe-out { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-top: 16px; }
+  .log { list-style: none; font-size: .88rem; display: flex; flex-direction: column; gap: 6px; max-height: 330px; overflow: auto; }
+  .log li { padding: 8px 10px; border-radius: 10px; background: var(--soft); animation: pop .3s ease; }
+  .log li.ok { background: var(--db-soft); }
+  .log li.bad { background: var(--err-soft); }
+  @keyframes pop { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: none; } }
+
+  /* Supabase */
+  #sbStage { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 34px; padding: 22px 16px; }
+  .layer { border: 2px solid; border-radius: 14px; padding: 14px; z-index: 1; position: relative; transition: transform .3s, box-shadow .3s; }
+  .layer h4 { font-size: .95rem; margin-bottom: 2px; }
+  .layer .who { font-size: .76rem; color: var(--muted); margin-bottom: 8px; }
+  .layer pre { font-family: Consolas, monospace; font-size: .76rem; background: rgba(255,255,255,.75); border-radius: 8px; padding: 8px; white-space: pre-wrap; word-break: break-all; min-height: 92px; }
+  #lyPy { border-color: var(--api); background: var(--api-soft); }
+  #lyRest { border-color: var(--front); background: var(--front-soft); }
+  #lyPg { border-color: var(--db); background: var(--db-soft); }
+  .mini-table { width: 100%; border-collapse: collapse; margin-top: 8px; font-size: .76rem; background: #fff; border-radius: 8px; overflow: hidden; }
+  .mini-table th, .mini-table td { padding: 4px 6px; border-bottom: 1px solid var(--line); text-align: left; }
+  .mini-table th { background: #d7efe5; }
+  .mini-table tr.new td { animation: flash 1.2s ease; }
+  .mini-table tr.gone td { animation: fade .8s ease forwards; }
+  .mini-table tr.read td { animation: read 1.2s ease; }
+  @keyframes flash { from { background: #b6f0d7; } to { background: #fff; } }
+  @keyframes read { 0%,100% { background: #fff; } 40% { background: #fff1c9; } }
+  @keyframes fade { to { opacity: 0; text-decoration: line-through; background: var(--err-soft); } }
+  .keys { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-top: 16px; }
+  .key { border-radius: 14px; padding: 14px 16px; background: var(--card); border-left: 5px solid; font-size: .9rem; }
+  .key.secret { border-color: var(--err); }
+  .key.pub { border-color: var(--front); }
+  .key p { color: var(--muted); }
+
+  /* Railway */
+  .rail-steps { display: grid; grid-template-columns: repeat(7, 1fr); gap: 10px; position: relative; }
+  .rs {
+    border: 2px solid var(--line); background: var(--card); border-radius: 14px; padding: 12px 8px; text-align: center;
+    opacity: .45; transition: all .4s;
+  }
+  .rs .icon { font-size: 1.6rem; }
+  .rs b { display: block; font-size: .82rem; }
+  .rs small { display: block; font-size: .72rem; color: var(--muted); line-height: 1.35; }
+  .rs.done { opacity: 1; border-color: var(--rail); background: var(--rail-soft); }
+  .rs.now { opacity: 1; border-color: var(--rail); background: var(--rail-soft); transform: translateY(-6px); box-shadow: 0 8px 18px rgba(139,92,246,.25); }
+  .progress { height: 6px; background: var(--soft); border-radius: 999px; margin: 14px 0; overflow: hidden; }
+  .progress div { height: 100%; width: 0; background: var(--rail); transition: width .6s; }
+  .rail-out { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+  .buildlog { background: #111; color: #d6d6de; font-family: Consolas, monospace; font-size: .78rem; border-radius: 12px; padding: 12px 14px; min-height: 220px; max-height: 300px; overflow: auto; white-space: pre-wrap; }
+  .buildlog .g { color: #9fe39f; } .buildlog .p { color: #c9b3ff; } .buildlog .y { color: #ffd479; }
+
+  #railRun { display: grid; grid-template-columns: repeat(4, 1fr); gap: 30px; padding: 24px 16px; margin-top: 16px; }
+  .rbox { border: 2px solid; border-radius: 14px; padding: 14px 10px; text-align: center; z-index: 1; position: relative; font-size: .84rem; transition: transform .3s, box-shadow .3s; }
+  .rbox .icon { font-size: 1.8rem; }
+  .rbox b { display: block; }
+  .rbox small { color: var(--muted); display: block; font-size: .74rem; }
+  .rbox.inner { border-style: dashed; }
+
+  /* 용어, 비교 */
+  .glossary { display: grid; grid-template-columns: repeat(2, 1fr); gap: 12px; }
+  .term { background: var(--card); border-radius: 14px; padding: 16px 18px; }
+  .term b { display: block; margin-bottom: 4px; }
+  .term p { font-size: .92rem; color: var(--muted); }
+  .compare { width: 100%; border-collapse: collapse; background: var(--card); border-radius: 14px; overflow: hidden; font-size: .92rem; }
+  .compare th, .compare td { padding: 12px 14px; border-bottom: 1px solid var(--line); text-align: left; vertical-align: top; }
+  .compare th { background: #efebe2; }
+  .note { font-size: .82rem; color: var(--muted); margin-top: 8px; }
+
+  @media (max-width: 860px) {
+    .analogy, .glossary, .panel, .boot, .pipe-out, .keys, .rail-out { grid-template-columns: 1fr; }
+    #bigStage, #sbStage { grid-template-columns: 1fr; gap: 34px; }
+    #pipeStage { grid-template-columns: 1fr; }
+    .stations { grid-template-columns: repeat(3, 1fr); }
+    .rail-steps { grid-template-columns: repeat(4, 1fr); }
+    #railRun { grid-template-columns: 1fr 1fr; }
+    .dots { margin-left: 0; }
+  }
+  @media (max-width: 480px) {
+    .stations { grid-template-columns: repeat(2, 1fr); }
+    .rail-steps { grid-template-columns: repeat(2, 1fr); }
+    #railRun { grid-template-columns: 1fr; }
+  }
+</style>
+</head>
+<body>
+<main>
+  <h1>🍽️ 내 메모 앱은 어떻게 돌아갈까?</h1>
+  <p class="lead">화면(프론트엔드) → 서버(FastAPI, main.py) → 데이터베이스(Supabase). 그리고 그 서버를 인터넷에 올려 주는 Railway까지, 실제 코드를 따라가며 살펴봐요.</p>
+
+  <nav class="toc">
+    <a href="#s1">① 식당 비유</a>
+    <a href="#s2">② 큰 그림</a>
+    <a href="#s3">③ main.py가 켜지는 순서</a>
+    <a href="#s4">④ FastAPI 요청 처리</a>
+    <a href="#s5">⑤ Supabase 속</a>
+    <a href="#s6">⑥ Railway 속</a>
+    <a href="#s7">⑦ 용어 정리</a>
+  </nav>
+
+  <!-- ① -->
+  <h2 id="s1">① 식당에 비유하면</h2>
+  <p class="sub">세 부분이 각자 맡은 일만 해요.</p>
+  <div class="analogy">
+    <div class="an f"><div class="big">🧾</div><h3>메뉴판·손님 테이블 = 프론트엔드</h3>
+      <p>내가 보고 누르는 화면이에요. 주문만 하고, 요리(저장)는 직접 못 해요.<br><code>frontend/index.html</code></p></div>
+    <div class="an a"><div class="big">👨‍🍳</div><h3>주방장 = FastAPI 서버</h3>
+      <p>주문서를 검사하고, 창고에 가서 재료를 넣고 꺼내 와요. 창고 열쇠(비밀키)는 주방장만 갖고 있어요.<br><code>my-api/main.py</code></p></div>
+    <div class="an d"><div class="big">🗄️</div><h3>창고 = Supabase</h3>
+      <p>메모가 실제로 보관되는 데이터베이스예요. 인터넷 너머 Supabase 회사 컴퓨터에 있어요.<br><code>notes 테이블</code></p></div>
+  </div>
+
+  <!-- ② -->
+  <h2 id="s2">② 큰 그림: 편지가 오가는 길</h2>
+  <p class="sub">위쪽 버튼으로 "지금(로컬)"과 "배포 후"를 바꿔 보세요. 흐름은 같고 주소만 달라져요.</p>
+  <div class="modes">
+    <button class="on" data-mode="local">💻 지금: 내 컴퓨터에서 테스트</button>
+    <button data-mode="deploy">🌐 나중에: 인터넷에 배포</button>
+  </div>
+  <div class="card stage" id="bigStage">
+    <svg class="wire" id="bigWire"></svg>
+    <div class="node" id="nFront"><div class="icon">🖥️</div><h3>프론트엔드 (화면)</h3>
+      <div class="where" data-local="내 컴퓨터의 브라우저" data-deploy="Vercel이 화면 파일을 나눠줌"></div>
+      <div class="addr" data-local="localhost:5173" data-deploy="내프로젝트.vercel.app"></div>
+      <div class="files">index.html · config.js</div></div>
+    <div class="node" id="nApi"><div class="icon">⚙️</div><h3>백엔드 서버 (FastAPI)</h3>
+      <div class="where" data-local="내 컴퓨터에서 main.py 실행 중" data-deploy="Railway 컴퓨터에서 main.py 실행 중"></div>
+      <div class="addr" data-local="127.0.0.1:8000" data-deploy="your-app.up.railway.app"></div>
+      <div class="files">main.py · .env(비밀키)</div></div>
+    <div class="node" id="nDb"><div class="icon">🗄️</div><h3>데이터베이스 (Supabase)</h3>
+      <div class="where" data-local="인터넷 너머 Supabase" data-deploy="인터넷 너머 Supabase (똑같음)"></div>
+      <div class="addr" data-local="zkeh….supabase.co" data-deploy="zkeh….supabase.co"></div>
+      <div class="files">notes 테이블</div></div>
+    <div class="packet" id="bigPacket"></div>
+  </div>
+  <div class="panel">
+    <div class="card explain">
+      <div class="step-no" id="bStepNo"></div>
+      <h3 id="bTitle"></h3>
+      <p id="bText"></p>
+      <div class="tip" id="bTip"></div>
+      <div class="controls">
+        <button class="btn" id="bPrev">◀ 이전</button>
+        <button class="btn primary" id="bPlay">▶ 재생</button>
+        <button class="btn" id="bNext">다음 ▶</button>
+        <div class="dots" id="bDots"></div>
+      </div>
+    </div>
+    <div class="code"><div class="fname" id="bFile"></div><pre id="bCode"></pre></div>
+  </div>
+
+  <!-- ③ -->
+  <h2 id="s3">③ main.py가 켜지는 순서 (서버 시작)</h2>
+  <p class="sub">서버를 켜면 파이썬이 main.py를 <b>위에서 아래로 딱 한 번</b> 읽으면서 영업 준비를 해요. 이때는 요청을 처리하지 않고 "준비"만 해요.</p>
+  <div class="controls" style="margin:0 0 12px">
+    <button class="btn primary" id="bootPlay">▶ 서버 켜기</button>
+    <button class="btn" id="bootPrev">◀</button>
+    <button class="btn" id="bootNext">▶ 한 줄씩</button>
+    <span class="step-no" id="bootNo"></span>
+  </div>
+  <div class="boot">
+    <div class="code"><div class="fname">📄 my-api/main.py (실제 코드)</div><div class="codelines" id="bootCode"></div></div>
+    <div>
+      <div class="card">
+        <b id="bootTitle">준비 상황판</b>
+        <p class="bootmsg" id="bootMsg">"서버 켜기"를 눌러 보세요.</p>
+        <div class="terminal" id="bootTerm">$ </div>
+      </div>
+      <div class="board" id="board" style="margin-top:12px"></div>
+    </div>
+  </div>
+
+  <!-- ④ -->
+  <h2 id="s4">④ FastAPI 안에서 요청 하나가 처리되는 과정</h2>
+  <p class="sub">준비가 끝난 뒤, 화면에서 주문(요청)이 오면 FastAPI 안에서 6개의 관문을 차례로 지나요. 아래에서 주문을 골라 보세요. 빨간 주문은 중간에 걸리는 경우예요.</p>
+  <div class="chips" id="reqChips"></div>
+  <div class="card stage" id="pipeStage">
+    <svg class="wire" id="pipeWire"></svg>
+    <div class="client" id="pClient"><div class="icon">🖥️</div><b>화면</b><br><small id="pClientOrigin">localhost:5173</small></div>
+    <div class="stations" id="stations">
+      <div class="st" id="st0"><div class="icon">🚪</div><b>Uvicorn</b><small>8000번 문에서 HTTP 편지를 받아 파이썬이 읽을 수 있게 풀어 줌</small></div>
+      <div class="st" id="st1"><div class="icon">🛂</div><b>CORS 문지기</b><small>보낸 사이트가 FRONT_ORIGINS 명단에 있나?</small></div>
+      <div class="st" id="st2"><div class="icon">🧭</div><b>라우터</b><small>"방식 + 주소"에 맞는 함수 찾기</small></div>
+      <div class="st" id="st3"><div class="icon">📝</div><b>검사관 (Pydantic)</b><small>주문서 양식·숫자 타입이 맞나?</small></div>
+      <div class="st" id="st4"><div class="icon">👨‍🍳</div><b>내 함수 실행</b><small>main.py의 def … 가 실제 일을 함 (Supabase 다녀옴)</small></div>
+      <div class="st" id="st5"><div class="icon">📤</div><b>응답 포장</b><small>파이썬 값 → JSON + 상태 번호</small></div>
+    </div>
+    <div class="packet" id="pipePacket"></div>
+  </div>
+  <div class="pipe-out">
+    <div class="card"><b>📜 처리 기록</b><ul class="log" id="pipeLog" style="margin-top:10px"></ul></div>
+    <div class="code"><div class="fname" id="pipeFile">📄 my-api/main.py</div><pre id="pipeCode"></pre></div>
+  </div>
+
+  <!-- ⑤ -->
+  <h2 id="s5">⑤ Supabase 속 들여다보기</h2>
+  <p class="sub">main.py의 <code>sb.table("notes")…</code> 한 줄은 사실 <b>인터넷 편지(HTTP)</b>로 바뀌어 Supabase에 가고, Supabase는 그걸 다시 <b>SQL(데이터베이스 언어)</b>로 바꿔 실행해요. 한 줄이 세 번 번역되는 모습을 보세요.</p>
+  <div class="chips" id="sbChips"></div>
+  <div class="card stage" id="sbStage">
+    <svg class="wire" id="sbWire"></svg>
+    <div class="layer" id="lyPy"><h4>🐍 1. main.py + supabase 라이브러리</h4><div class="who">내 컴퓨터 / Railway에서 실행</div><pre id="pyCode"></pre></div>
+    <div class="layer" id="lyRest"><h4>🌐 2. PostgREST (자동 API)</h4><div class="who">Supabase 회사 컴퓨터 · 테이블마다 주소를 자동으로 만들어 줌</div><pre id="restCode"></pre></div>
+    <div class="layer" id="lyPg"><h4>🐘 3. PostgreSQL (진짜 DB)</h4><div class="who">Supabase 회사 컴퓨터 · 표 형태로 저장</div><pre id="sqlCode"></pre>
+      <table class="mini-table"><thead><tr><th>id</th><th>content</th><th>created_at</th></tr></thead><tbody id="miniRows"></tbody></table>
+    </div>
+    <div class="packet" id="sbPacket"></div>
+  </div>
+  <div class="tip" id="sbTip" style="margin-top:12px"></div>
+  <div class="keys">
+    <div class="key secret"><b>🔐 비밀키 (sb_secret_…) — main.py가 사용</b>
+      <p>모든 데이터를 읽고 쓰고 지울 수 있는 마스터키예요. 그래서 <b>서버(.env, Railway Variables)에만</b> 두고, 화면 코드나 git에는 절대 넣지 않아요. 편지의 <code>apikey</code> 칸에 실려 가요.</p></div>
+    <div class="key pub"><b>🔓 공개키 (sb_publishable_…) — 이번엔 안 씀</b>
+      <p>브라우저에 넣어도 되는 키예요. 대신 Supabase의 <b>RLS(행 단위 보안 규칙)</b>가 허락한 것만 할 수 있어요. 우리 구조는 화면이 Supabase에 직접 가지 않고 FastAPI를 거치니까 비밀키 하나로 충분해요.</p></div>
+  </div>
+
+  <!-- ⑥ -->
+  <h2 id="s6">⑥ Railway 속 들여다보기</h2>
+  <p class="sub">Railway는 "main.py를 대신 24시간 켜 두는 남의 컴퓨터"예요. GitHub에 코드를 올리면 아래 순서로 자동으로 서버를 만들어요.</p>
+  <div class="controls" style="margin:0 0 12px">
+    <button class="btn primary" id="railPlay">▶ 배포 시작</button>
+    <span class="step-no" id="railNo"></span>
+  </div>
+  <div class="rail-steps" id="railSteps"></div>
+  <div class="progress"><div id="railBar"></div></div>
+  <div class="rail-out">
+    <div class="card"><div class="step-no" id="railStepNo">STEP 0 / 7</div><h3 id="railTitle" style="font-size:1.1rem;margin:2px 0 8px">배포 전</h3><p id="railText">"배포 시작"을 눌러 보세요.</p><div class="tip" id="railTip">💡 내 컴퓨터에서 하던 "uvicorn 실행"을 Railway가 똑같이 해 주는 거예요.</div></div>
+    <div><div class="buildlog" id="railLog"><span class="p">Railway 빌드 로그 (이해를 돕기 위한 예시)</span>
+</div></div>
+  </div>
+
+  <h3 style="margin:26px 0 4px;font-size:1.05rem">배포 후, 요청은 Railway 안에서 이렇게 흘러가요</h3>
+  <p class="sub">"요청 보내기"를 누르면 Vercel 화면에서 보낸 주문이 Railway를 거쳐 Supabase까지 갔다 와요.</p>
+  <button class="btn primary" id="runPlay">▶ 요청 보내기</button>
+  <div class="card stage" id="railRun">
+    <svg class="wire" id="runWire"></svg>
+    <div class="rbox" id="rb0" style="border-color:var(--front);background:var(--front-soft)"><div class="icon">🖥️</div><b>Vercel 화면</b><small>○○.vercel.app<br>사용자 브라우저</small></div>
+    <div class="rbox" id="rb1" style="border-color:var(--rail);background:var(--rail-soft)"><div class="icon">🚉</div><b>Railway 입구</b><small>your-app.up.railway.app<br>HTTPS 자물쇠를 풀고 내 서버로 전달</small></div>
+    <div class="rbox inner" id="rb2" style="border-color:var(--api);background:var(--api-soft)"><div class="icon">⚙️</div><b>내 서버 상자 (컨테이너)</b><small>uvicorn main:app<br>--port $PORT 에서 대기</small></div>
+    <div class="rbox" id="rb3" style="border-color:var(--db);background:var(--db-soft)"><div class="icon">🗄️</div><b>Supabase</b><small>zkeh….supabase.co<br>notes 테이블</small></div>
+    <div class="packet" id="runPacket"></div>
+  </div>
+  <p class="note" id="runMsg">　</p>
+
+  <!-- ⑦ -->
+  <h2 id="s7">⑦ 헷갈리는 말 정리</h2>
+  <p class="sub">위에 나온 용어를 한 번에 모았어요.</p>
+  <div class="glossary">
+    <div class="term"><b>🏠 <code>127.0.0.1</code> = <code>localhost</code></b>
+      <p>"지금 이 컴퓨터 자기 자신"이라는 특별한 주소예요. 내 컴퓨터의 인터넷 IP가 아니라서, 다른 사람이 이 주소를 치면 <b>그 사람 컴퓨터</b>를 가리켜요. 그래서 로컬 테스트에만 써요.</p></div>
+    <div class="term"><b>🚪 포트 <code>:8000</code>, <code>:5173</code>, <code>$PORT</code></b>
+      <p>한 건물(컴퓨터) 안의 "몇 번 문"이에요. 로컬에선 내가 8000번을 정했고, Railway에선 Railway가 정해 준 번호(<code>$PORT</code>)를 써요.</p></div>
+    <div class="term"><b>📮 HTTP · <code>GET</code> / <code>POST</code> / <code>DELETE</code></b>
+      <p>컴퓨터끼리 주고받는 편지 형식이에요. GET = 보여줘, POST = 넣어줘, DELETE = 지워줘. <code>/notes</code>는 받는 사람(메뉴) 칸이에요.</p></div>
+    <div class="term"><b>🔢 상태 번호 200 · 201 · 204 · 404 · 422</b>
+      <p>답장 맨 위에 붙는 결과 번호예요. 200번대 = 성공, 404 = 그런 주소/데이터 없음, 422 = 주문서 양식이 틀림, 500번대 = 서버 쪽 문제.</p></div>
+    <div class="term"><b>🧭 라우터 · <code>@app.get(...)</code></b>
+      <p>함수 위에 붙인 <code>@</code> 표시(데코레이터)가 "이 주소로 오면 이 함수를 불러줘"라고 FastAPI 메뉴판에 적어 두는 역할이에요.</p></div>
+    <div class="term"><b>📝 Pydantic · <code>NoteIn</code></b>
+      <p>주문서 양식이에요. "content는 1~500자 글자"처럼 규칙을 적어 두면, 어긋난 주문은 내 함수에 닿기 전에 FastAPI가 422로 돌려보내요.</p></div>
+    <div class="term"><b>🔑 <code>.env</code> · 환경변수</b>
+      <p>프로그램 바깥에 적어 두는 설정값이에요. 로컬에선 .env 파일, Railway에선 Variables 칸에 적고, main.py는 <code>os.environ[...]</code>로 똑같이 꺼내 써요.</p></div>
+    <div class="term"><b>📦 컨테이너</b>
+      <p>내 코드 + 파이썬 + 설치한 라이브러리를 한 상자에 담은 것이에요. Railway는 이 상자를 자기 컴퓨터에서 켜 둬요.</p></div>
+  </div>
+
+  <h2>로컬 테스트 vs 배포, 무엇이 달라질까?</h2>
+  <p class="sub">코드는 그대로, 실행하는 장소만 바뀌어요.</p>
+  <table class="compare">
+    <tr><th></th><th>💻 지금 (로컬)</th><th>🌐 나중에 (배포)</th></tr>
+    <tr><td><b>화면</b></td><td>내 컴퓨터 <code>localhost:5173</code></td><td>Vercel <code>○○.vercel.app</code></td></tr>
+    <tr><td><b>main.py가 도는 곳</b></td><td>내 컴퓨터 <code>127.0.0.1:8000</code></td><td>Railway 컨테이너 <code>○○.up.railway.app</code></td></tr>
+    <tr><td><b>누가 uvicorn을 켜나</b></td><td>내가 터미널에서 직접</td><td>Railway가 Procfile을 보고 자동으로</td></tr>
+    <tr><td><b>비밀키 위치</b></td><td><code>my-api/.env</code> 파일</td><td>Railway Variables</td></tr>
+    <tr><td><b>CORS 명단</b></td><td><code>localhost:5173</code></td><td>Vercel 주소 추가 필요</td></tr>
+    <tr><td><b>데이터베이스</b></td><td colspan="2">둘 다 같은 Supabase. 로컬에서 넣은 메모가 배포 사이트에서도 보여요.</td></tr>
+  </table>
+</main>
+
+<script>
+/* =========================================================
+   공통 도구: 상자 A → 상자 B 로 편지(packet) 날리기
+   ========================================================= */
+const $ = (id) => document.getElementById(id);
+const sleep = (ms) => new Promise(r => setTimeout(r, ms));
+const esc = (s) => s.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
+
+function centerIn(stage, el, dy = 0) {
+  const s = stage.getBoundingClientRect(), r = el.getBoundingClientRect();
+  return { x: r.left - s.left + r.width / 2, y: r.top - s.top + r.height / 2 + dy };
+}
+
+function drawWire(stage, svg, ids) {
+  const s = stage.getBoundingClientRect();
+  svg.setAttribute("viewBox", `0 0 ${s.width} ${s.height}`);
+  let out = "";
+  for (let i = 0; i < ids.length - 1; i++) {
+    const a = centerIn(stage, $(ids[i])), b = centerIn(stage, $(ids[i + 1]));
+    out += `<line x1="${a.x}" y1="${a.y}" x2="${b.x}" y2="${b.y}" stroke="#cfc9bd" stroke-width="3" stroke-dasharray="8 8"/>`;
+  }
+  svg.innerHTML = out;
+}
+
+/* 한 섹션의 애니메이션을 담당 (취소 가능) */
+function makeAnimator(stage, packet) {
+  const st = { run: 0 };
+  return {
+    cancel() { st.run++; packet.getAnimations().forEach(a => a.cancel()); packet.style.opacity = 0; },
+    token() { return st.run; },
+    alive(t) { return t === st.run; },
+    async fly(fromEl, toEl, label, variant, t, ms = 1300) {
+      if (t !== st.run) return false;
+      packet.textContent = label;
+      packet.className = "packet" + (variant ? " " + variant : "");
+      const pw = packet.offsetWidth, ph = packet.offsetHeight;
+      const a = fromEl.x !== undefined ? fromEl : centerIn(stage, fromEl);
+      const b = centerIn(stage, toEl);
+      const maxX = stage.clientWidth - pw - 4;
+      const pos = (p) => `translate(${Math.max(4, Math.min(maxX, p.x - pw / 2))}px, ${p.y - ph / 2}px)`;
+      const anim = packet.animate([
+        { transform: pos(a), opacity: 0 },
+        { transform: pos(a), opacity: 1, offset: 0.12 },
+        { transform: pos(b), opacity: 1, offset: 0.88 },
+        { transform: pos(b), opacity: 0 }
+      ], { duration: ms, easing: "ease-in-out", fill: "forwards" });
+      // 탭이 가려져 애니메이션이 멈춰도 다음 단계로 넘어가도록 시간 제한을 함께 둠
+      await Promise.race([anim.finished.catch(() => {}), sleep(ms + 150)]);
+      return t === st.run;
+    }
+  };
+}
+function mark(el, cls) { el.classList.add(cls); }
+function clearMarks(root) { root.querySelectorAll(".active, .failed, .passed").forEach(e => e.classList.remove("active", "failed", "passed")); }
+
+/* =========================================================
+   ② 큰 그림
+   ========================================================= */
+const BIG = [
+  { title: "화면 열기", text: "브라우저에 주소를 치면 화면 파일(index.html, config.js)을 받아 와서 그려요. 아직 주방이나 창고와는 대화하지 않았어요.",
+    tip: { local: "💡 지금은 내 컴퓨터의 5173번 문에서 화면 파일을 나눠주고 있어요.", deploy: "💡 배포 후에는 Vercel이 화면 파일을 나눠줘요." },
+    moves: [["user", "nFront", "🌐 페이지 열기"]], file: "frontend/index.html",
+    code: `<span class="hl">&lt;input id="content" placeholder="메모를 입력하세요"&gt;</span>\n<span class="hl">&lt;button id="addBtn"&gt;추가&lt;/button&gt;</span>\n&lt;ul id="list"&gt;&lt;/ul&gt;\n&lt;script src="config.js"&gt;&lt;/script&gt;` },
+  { title: "주방 주소 고르기 (config.js)", text: "화면은 먼저 '주방이 어디 있지?'를 정해요. localhost에서 열었으면 내 컴퓨터 8000번 문으로, 인터넷에서 열었으면 Railway 주소로 주문을 보내요.",
+    tip: { local: "💡 지금은 → http://localhost:8000 (= 127.0.0.1:8000)", deploy: "💡 Vercel에서 열었으니 → Railway 주소 (배포 후 config.js에 적어 넣기)" },
+    moves: [], highlight: "nFront", file: "frontend/config.js",
+    code: `const RAILWAY_API_URL = "https://your-app.up.railway.app";\n<span class="hl">const isLocal = ["localhost", "127.0.0.1"].includes(location.hostname);</span>\n<span class="hl">window.API_BASE = isLocal ? "http://localhost:8000" : RAILWAY_API_URL;</span>` },
+  { title: "주방 문 열렸나요? (GET /health)", text: "화면이 '영업 중이세요?'라고 물어봐요. main.py가 켜져 있으면 {status: ok}로 답하고, 화면에 'API 연결됨'이 떠요. main.py를 끄면 '연결 실패'가 나와요.",
+    tip: { local: "💡 이게 '127.0.0.1의 8000번 포트에서 main.py가 실행 중이어야 한다'는 말의 뜻이에요.", deploy: "💡 Railway가 main.py를 24시간 켜 두니까 내 컴퓨터를 꺼도 돼요." },
+    moves: [["nFront", "nApi", "GET /health"], ["nApi", "nFront", '{"status":"ok"}', "back"]], file: "my-api/main.py",
+    code: `<span class="hl">@app.get("/health")</span>\n<span class="hl">def health():</span>\n<span class="hl">    return {"status": "ok"}</span>` },
+  { title: "메모 추가하기 (POST /notes)", text: "'추가'를 누르면 화면이 {\"content\": \"안녕\"}을 주방에 보내요. 주방장이 창고의 notes 표에 넣고, 저장된 결과(번호, 내용, 시간)를 돌려줘요.",
+    tip: { local: "💡 화면엔 창고 열쇠가 없어요. 꼭 주방(main.py)을 거쳐야 해서 안전해요.", deploy: "💡 흐름은 똑같고, 주방 위치만 Railway로 바뀌어요." },
+    moves: [["nFront", "nApi", 'POST /notes {"content":"안녕"}'], ["nApi", "nDb", "insert 안녕"], ["nDb", "nApi", "저장됨 id=1", "back"], ["nApi", "nFront", '201 {"id":1,…}', "back"]], file: "my-api/main.py",
+    code: `<span class="hl">@app.post("/notes", status_code=201)</span>\n<span class="hl">def create_note(note: NoteIn):</span>\n<span class="hl">    res = sb.table("notes").insert({"content": note.content.strip()}).execute()</span>\n    return res.data[0]` },
+  { title: "목록 보여주기 (GET /notes)", text: "저장한 뒤 화면은 '전체 목록 보여줘'라고 다시 주문해요. 주방장이 창고에서 최신순으로 꺼내 오면 화면이 목록을 그려요.",
+    tip: { local: "💡 Supabase 웹사이트 Table Editor에서 notes를 열면 같은 메모가 보여요.", deploy: "💡 같은 창고라서 배포 사이트에서도 똑같이 보여요." },
+    moves: [["nFront", "nApi", "GET /notes"], ["nApi", "nDb", "select * 최신순"], ["nDb", "nApi", "📋 메모 목록", "back"], ["nApi", "nFront", "📋 [안녕, …]", "back"]], file: "my-api/main.py",
+    code: `<span class="hl">@app.get("/notes")</span>\n<span class="hl">def list_notes():</span>\n<span class="hl">    res = sb.table("notes").select("*").order("created_at", desc=True).execute()</span>\n    return res.data` },
+  { title: "메모 지우기 (DELETE /notes/1)", text: "'삭제'를 누르면 '1번 지워줘' 주문이 가요. 창고에서 지우고 '처리했어요(204)'라고 짧게 답해요. 없는 번호면 404로 답해요.",
+    tip: { local: "💡 200번대 = 성공, 400번대 = 요청이 잘못됨, 500번대 = 서버 문제.", deploy: "💡 배포 후에도 같은 번호 규칙을 써요." },
+    moves: [["nFront", "nApi", "DELETE /notes/1"], ["nApi", "nDb", "delete id=1"], ["nDb", "nApi", "🗑️ 지움", "back"], ["nApi", "nFront", "204 처리 완료", "back"]], file: "my-api/main.py",
+    code: `<span class="hl">@app.delete("/notes/{note_id}", status_code=204)</span>\n<span class="hl">def delete_note(note_id: int):</span>\n<span class="hl">    res = sb.table("notes").delete().eq("id", note_id).execute()</span>\n    if not res.data:\n        raise HTTPException(status_code=404, detail="해당 메모가 없습니다.")` }
+];
+let bigMode = "local", bigStep = 0;
+const bigStage = $("bigStage");
+const bigAnim = makeAnimator(bigStage, $("bigPacket"));
+
+function bigRender() {
+  const s = BIG[bigStep];
+  $("bStepNo").textContent = `STEP ${bigStep + 1} / ${BIG.length}`;
+  $("bTitle").textContent = s.title;
+  $("bText").textContent = s.text;
+  $("bTip").textContent = s.tip[bigMode];
+  $("bFile").textContent = "📄 " + s.file;
+  $("bCode").innerHTML = s.code;
+  $("bPrev").disabled = bigStep === 0;
+  $("bNext").disabled = bigStep === BIG.length - 1;
+  document.querySelectorAll("#bDots span").forEach((d, i) => d.classList.toggle("on", i === bigStep));
+}
+async function bigPlay() {
+  bigAnim.cancel(); const t = bigAnim.token();
+  clearMarks(bigStage);
+  const s = BIG[bigStep];
+  if (s.highlight) { mark($(s.highlight), "active"); await sleep(1200); }
+  for (const [f, to, label, v] of s.moves) {
+    clearMarks(bigStage);
+    const from = f === "user" ? centerIn(bigStage, $("nFront"), -$("nFront").offsetHeight / 2 - 24) : $(f);
+    if (f !== "user") mark($(f), "active");
+    if (!(await bigAnim.fly(from, $(to), label, v, t))) return;
+    clearMarks(bigStage); mark($(to), "active"); await sleep(300);
+  }
+}
+function bigGo(i) { bigStep = i; bigRender(); bigPlay(); }
+$("bDots").innerHTML = BIG.map(() => "<span></span>").join("");
+document.querySelectorAll("#bDots span").forEach((d, i) => d.onclick = () => bigGo(i));
+$("bPrev").onclick = () => bigStep > 0 && bigGo(bigStep - 1);
+$("bNext").onclick = () => bigStep < BIG.length - 1 && bigGo(bigStep + 1);
+$("bPlay").onclick = () => bigPlay();
+document.querySelectorAll(".modes button").forEach(btn => btn.onclick = () => {
+  document.querySelectorAll(".modes button").forEach(b => b.classList.remove("on"));
+  btn.classList.add("on"); bigMode = btn.dataset.mode;
+  document.querySelectorAll("[data-local]").forEach(el => el.textContent = el.dataset[bigMode]);
+  bigRender(); bigPlay();
+});
+document.querySelectorAll("[data-local]").forEach(el => el.textContent = el.dataset.local);
+
+/* =========================================================
+   ③ main.py 시작 순서 (실제 파일 내용)
+   ========================================================= */
+const MAIN_PY = `import os
+
+from fastapi import FastAPI, HTTPException
+from fastapi.middleware.cors import CORSMiddleware
+from pydantic import BaseModel, Field
+from dotenv import load_dotenv
+from supabase import create_client
+
+load_dotenv()
+
+# 로컬에선 .env를 읽고, Railway에선 Variables가 이미 들어 있음
+SUPABASE_URL = os.environ["SUPABASE_URL"]
+SUPABASE_SECRET_KEY = os.environ["SUPABASE_SECRET_KEY"]
+FRONT_ORIGINS = [
+    o.strip() for o in os.getenv("FRONT_ORIGINS", "").split(",") if o.strip()
+]
+
+sb = create_client(SUPABASE_URL, SUPABASE_SECRET_KEY)
+
+app = FastAPI(title="my-api")
+
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=FRONT_ORIGINS,
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
+
+
+class NoteIn(BaseModel):
+    content: str = Field(min_length=1, max_length=500)
+
+
+@app.get("/health")
+def health():
+    return {"status": "ok"}
+
+
+@app.get("/health/db")
+def health_db():
+    """Supabase 연결 확인용: notes 테이블을 1건 조회해 본다."""
+    try:
+        sb.table("notes").select("id").limit(1).execute()
+    except Exception as e:
+        raise HTTPException(status_code=503, detail=f"Supabase 연결 실패: {e}")
+    return {"status": "ok", "db": "connected"}
+
+
+@app.get("/notes")
+def list_notes():
+    res = sb.table("notes").select("*").order("created_at", desc=True).execute()
+    return res.data
+
+
+@app.post("/notes", status_code=201)
+def create_note(note: NoteIn):
+    res = sb.table("notes").insert({"content": note.content.strip()}).execute()
+    return res.data[0]
+
+
+@app.delete("/notes/{note_id}", status_code=204)
+def delete_note(note_id: int):
+    res = sb.table("notes").delete().eq("id", note_id).execute()
+    if not res.data:
+        raise HTTPException(status_code=404, detail="해당 메모가 없습니다.")`;
+const LINES = MAIN_PY.split("\n");
+$("bootCode").innerHTML = LINES.map((l, i) => `<div id="L${i + 1}"><span class="ln">${i + 1}</span>${esc(l) || " "}</div>`).join("");
+
+function linesOf(text) { // 특정 글자가 있는 줄 번호 찾기
+  const i = LINES.findIndex(l => l.includes(text)); return i + 1;
+}
+const R = (a, b) => { const out = []; for (let i = a; i <= b; i++) out.push(i); return out; };
+const lMid = linesOf("app.add_middleware"), lNote = linesOf("class NoteIn"), lFirstRoute = linesOf('@app.get("/health")');
+
+const BOOT = [
+  { lines: [], icon: "⌨️", title: "명령어 입력", sub: "uvicorn main:app --port 8000",
+    msg: "터미널에서 <code>uvicorn main:app</code>을 실행하면 \"main.py 파일 안의 app을 서버로 켜 줘\"라는 뜻이에요. Railway에선 Procfile에 적힌 같은 명령을 Railway가 대신 쳐 줘요.",
+    term: "$ uvicorn main:app --reload --port 8000" },
+  { lines: R(1, 7), icon: "🧰", title: "도구 꺼내기 (import)", sub: "FastAPI, Pydantic, dotenv, supabase",
+    msg: "필요한 도구 상자를 꺼내요. <b>FastAPI</b> = 주방 운영 도구, <b>Pydantic</b> = 주문서 검사 도구, <b>dotenv</b> = .env 쪽지 읽는 도구, <b>supabase</b> = 창고와 대화하는 도구.",
+    term: "INFO:     Will watch for changes in these directories" },
+  { lines: [linesOf("load_dotenv()")], icon: "📄", title: ".env 쪽지 읽기", sub: "load_dotenv()",
+    msg: "같은 폴더의 <code>.env</code> 파일 내용을 '환경변수'라는 컴퓨터 메모장에 옮겨 적어요. Railway에는 .env 파일이 없지만, Variables에 적은 값이 이미 환경변수로 들어 있어서 괜찮아요.",
+    term: "" },
+  { lines: R(linesOf("SUPABASE_URL = "), linesOf("FRONT_ORIGINS = [") + 2), icon: "🔑", title: "설정값 꺼내기", sub: "URL · 비밀키 · CORS 명단",
+    msg: "환경변수에서 창고 주소, 창고 열쇠, 출입 명단을 꺼내 변수에 담아요. <code>os.environ[\"…\"]</code>는 값이 없으면 <b>여기서 에러가 나고 서버가 아예 안 켜져요</b>. (열쇠 없이 영업 시작 금지!)",
+    term: "" },
+  { lines: [linesOf("sb = create_client")], icon: "🔗", title: "창고 연락 도구 만들기", sub: "sb = create_client(...)",
+    msg: "주소와 열쇠를 넣어 <code>sb</code>라는 '창고 연락 도구'를 만들어요. 아직 실제로 연락하진 않고, 나중에 요청이 올 때마다 이 도구로 Supabase에 HTTP 편지를 보내요.",
+    term: "" },
+  { lines: [linesOf("app = FastAPI")], icon: "🏗️", title: "주방(app) 만들기", sub: "app = FastAPI()",
+    msg: "FastAPI 주방 본체 <code>app</code>을 만들어요. uvicorn 명령의 <code>main:app</code>이 가리키는 게 바로 이 변수예요.",
+    term: "" },
+  { lines: R(lMid, lMid + 6), icon: "🛂", title: "CORS 문지기 세우기", sub: "add_middleware(CORSMiddleware)",
+    msg: "모든 요청이 지나가는 입구에 '문지기(미들웨어)'를 세워요. FRONT_ORIGINS 명단에 있는 사이트의 화면만 주문을 받아요.",
+    term: "" },
+  { lines: R(lNote, lNote + 1), icon: "📝", title: "주문서 양식 등록", sub: "class NoteIn",
+    msg: "메모 추가 주문서 양식을 정해요. \"content라는 칸에 1~500자 글자가 있어야 함\". 이 규칙은 나중에 FastAPI가 자동으로 검사해요.",
+    term: "" },
+  { lines: R(lFirstRoute, LINES.length), icon: "📋", title: "메뉴판(라우트) 등록", sub: "@app.get / post / delete",
+    msg: "<code>@app.get(\"/notes\")</code> 같은 표시가 붙은 함수들을 메뉴판에 적어요. <b>함수를 실행하는 게 아니라 '이 주소로 오면 이 함수' 라고 적어 두기만</b> 해요. 실행은 손님 주문이 왔을 때!",
+    term: "", routes: true },
+  { lines: [], icon: "🚪", title: "8000번 문 열고 대기", sub: "Uvicorn running…",
+    msg: "준비 끝! uvicorn이 8000번 문(Railway에선 $PORT)을 열고 주문을 기다려요. 이제부터는 ④번 섹션처럼 요청이 올 때마다 해당 함수만 실행돼요.",
+    term: "INFO:     Uvicorn running on http://127.0.0.1:8000 (Press CTRL+C to quit)\nINFO:     Application startup complete." }
+];
+$("board").innerHTML = BOOT.map((b, i) => `<div class="bitem" id="bi${i}"><span class="bi">${b.icon}</span><div><b>${b.title}</b><small>${b.sub}</small>${b.routes ? `<div class="routes"><span>GET /health → health()</span><span>GET /health/db → health_db()</span><span>GET /notes → list_notes()</span><span>POST /notes → create_note()</span><span>DELETE /notes/{id} → delete_note()</span></div>` : ""}</div></div>`).join("");
+
+let bootStep = -1, bootRun = 0;
+function bootShow(i) {
+  bootStep = i;
+  const b = BOOT[i];
+  document.querySelectorAll("#bootCode div").forEach(d => d.classList.remove("on"));
+  $("bootCode").classList.toggle("dim", b.lines.length > 0);
+  b.lines.forEach(n => $("L" + n) && $("L" + n).classList.add("on"));
+  if (b.lines.length) $("L" + b.lines[0]).scrollIntoView({ block: "nearest", behavior: "smooth" });
+  BOOT.forEach((_, k) => {
+    $("bi" + k).classList.toggle("on", k <= i);
+    $("bi" + k).classList.toggle("now", k === i);
+  });
+  $("bootNo").textContent = `${i + 1} / ${BOOT.length}`;
+  $("bootTitle").textContent = `${b.icon} ${b.title}`;
+  $("bootMsg").innerHTML = b.msg;
+  const termLines = BOOT.slice(0, i + 1).map(x => x.term).filter(Boolean);
+  $("bootTerm").textContent = termLines.join("\n");
+}
+async function bootPlay() {
+  const my = ++bootRun;
+  for (let i = 0; i < BOOT.length; i++) {
+    if (my !== bootRun) return;
+    bootShow(i);
+    await sleep(2600);
+  }
+}
+$("bootPlay").onclick = () => bootPlay();
+$("bootNext").onclick = () => { bootRun++; bootShow(Math.min(BOOT.length - 1, bootStep + 1)); };
+$("bootPrev").onclick = () => { bootRun++; bootShow(Math.max(0, bootStep - 1)); };
+
+/* =========================================================
+   ④ FastAPI 요청 처리 파이프라인
+   ========================================================= */
+const REQS = [
+  { label: "GET /notes", ok: true, origin: "localhost:5173", req: "GET /notes",
+    say: ["8000번 문으로 HTTP 편지 도착: GET /notes", "보낸 곳 localhost:5173 → 명단에 있음 ✅", "GET + /notes → list_notes() 함수 찾음 ✅", "받을 주문서 양식 없음 → 검사 통과 ✅", "list_notes() 실행 → sb로 Supabase에 목록 요청 → 받아 옴", "파이썬 리스트 → JSON 변환, 200 OK"],
+    reply: "200 [{id:1, content:…}]", code: R(linesOf('@app.get("/notes")'), linesOf('@app.get("/notes")') + 3) },
+  { label: 'POST /notes "안녕"', ok: true, origin: "localhost:5173", req: 'POST /notes {"content":"안녕"}',
+    say: ['HTTP 편지 도착: POST /notes, 내용 {"content":"안녕"}', "보낸 곳 명단 확인 ✅", "POST + /notes → create_note() 찾음 ✅", 'NoteIn 양식 검사: content가 1~500자 글자? "안녕" ✅', "create_note(note) 실행 → Supabase에 insert → 저장된 줄 받음", "201 Created + 저장된 메모 JSON"],
+    reply: '201 {"id":2,"content":"안녕"}', code: R(lNote, lNote + 1).concat(R(linesOf('@app.post("/notes"'), linesOf('@app.post("/notes"') + 3)) },
+  { label: 'POST /notes "" (빈 글)', ok: false, failAt: 3, origin: "localhost:5173", req: 'POST /notes {"content":""}',
+    say: ['HTTP 편지 도착: POST /notes, 내용 {"content":""}', "보낸 곳 명단 확인 ✅", "create_note() 찾음 ✅", "NoteIn 양식 검사: 글자가 0개 → min_length=1 위반 ❌"],
+    reply: "422 content는 최소 1글자", why: "내 함수(create_note)는 아예 실행되지 않아요. 잘못된 주문이 창고까지 가지 않도록 FastAPI가 입구에서 막아 준 거예요.", code: R(lNote, lNote + 1) },
+  { label: "DELETE /notes/999", ok: false, failAt: 4, origin: "localhost:5173", req: "DELETE /notes/999",
+    say: ["HTTP 편지 도착: DELETE /notes/999", "명단 확인 ✅", "DELETE + /notes/{note_id} → delete_note() 찾음, note_id=999 ✅", "999가 정수(int)인지 검사 ✅", "delete_note(999) 실행 → Supabase에 삭제 요청 → 지워진 게 없음 → raise HTTPException(404) ❌"],
+    reply: "404 해당 메모가 없습니다.", why: "이번엔 내 함수 안에서 직접 '없다'고 판단해서 404를 돌려보냈어요. main.py의 if not res.data: 부분이에요.", code: R(linesOf('@app.delete'), linesOf('@app.delete') + 4) },
+  { label: "GET /hello (없는 주소)", ok: false, failAt: 2, origin: "localhost:5173", req: "GET /hello",
+    say: ["HTTP 편지 도착: GET /hello", "명단 확인 ✅", "메뉴판에서 GET /hello 를 찾아봄 → 없음 ❌"],
+    reply: "404 Not Found", why: "main.py에 @app.get(\"/hello\")가 없으니 FastAPI가 자동으로 404를 돌려줘요.", code: [] },
+  { label: "evil.com 에서 온 요청", ok: false, failAt: 1, origin: "evil.com", req: "POST /notes (evil.com)",
+    say: ["HTTP 편지 도착: 다른 사이트 evil.com의 화면이 보낸 주문", "보낸 곳 evil.com → FRONT_ORIGINS 명단에 없음 ❌"],
+    reply: "🚫 브라우저가 차단", why: "CORS 문지기가 '허락 도장'을 찍어 주지 않아서, 브라우저가 이 주문을 막아요. 남의 사이트가 내 서버를 몰래 쓰지 못하게 하는 장치예요.", code: R(lMid, lMid + 6) }
+];
+const pipeStage = $("pipeStage");
+const pipeAnim = makeAnimator(pipeStage, $("pipePacket"));
+const stIds = ["st0", "st1", "st2", "st3", "st4", "st5"];
+$("reqChips").innerHTML = REQS.map((r, i) => `<button class="chip${i === 0 ? " on" : ""}" data-i="${i}">${r.ok ? "✅" : "<span class='bad'>❌</span>"} ${esc(r.label)}</button>`).join("");
+document.querySelectorAll("#reqChips .chip").forEach(c => c.onclick = () => {
+  document.querySelectorAll("#reqChips .chip").forEach(x => x.classList.remove("on"));
+  c.classList.add("on"); pipePlay(+c.dataset.i);
+});
+
+function codeBlock(nums, el) {
+  if (!nums.length) { el.innerHTML = '<span class="cm"># main.py에 이 주소를 처리하는 함수가 없어요</span>'; return; }
+  const set = new Set(nums);
+  const min = Math.min(...nums), max = Math.max(...nums);
+  const out = [];
+  for (let n = min; n <= max; n++) {
+    const t = esc(LINES[n - 1] || "");
+    out.push(set.has(n) ? `<span class="hl">${t}</span>` : t);
+  }
+  el.innerHTML = out.join("\n");
+}
+
+async function pipePlay(i) {
+  pipeAnim.cancel(); const t = pipeAnim.token();
+  const r = REQS[i];
+  clearMarks(pipeStage);
+  $("pipeLog").innerHTML = "";
+  $("pClientOrigin").textContent = r.origin;
+  codeBlock(r.code, $("pipeCode"));
+  const log = (txt, cls) => { const li = document.createElement("li"); li.className = cls || ""; li.textContent = txt; $("pipeLog").appendChild(li); li.scrollIntoView({ block: "nearest" }); };
+  let prev = $("pClient");
+  const last = r.ok ? 5 : r.failAt;
+  for (let k = 0; k <= last; k++) {
+    const isFail = !r.ok && k === r.failAt;
+    if (!(await pipeAnim.fly(prev, $(stIds[k]), r.req, null, t, k === 0 ? 1100 : 750))) return;
+    clearMarks($("stations"));
+    for (let j = 0; j < k; j++) mark($(stIds[j]), "passed");
+    mark($(stIds[k]), isFail ? "failed" : "active");
+    log(`${["🚪", "🛂", "🧭", "📝", "👨‍🍳", "📤"][k]} ${r.say[k]}`, isFail ? "bad" : "");
+    await sleep(isFail ? 900 : 650);
+    if (!pipeAnim.alive(t)) return;
+    prev = $(stIds[k]);
+  }
+  if (!(await pipeAnim.fly(prev, $("pClient"), r.reply, r.ok ? "back" : "fail", t, 1300))) return;
+  log(`🖥️ 화면이 받은 답장: ${r.reply}`, r.ok ? "ok" : "bad");
+  if (r.why) log("💡 " + r.why, "");
+}
+
+/* =========================================================
+   ⑤ Supabase 3단 번역
+   ========================================================= */
+let rows = [{ id: 1, content: "제주 여행 준비", at: "13:55" }];
+let nextId = 2;
+const SB_OPS = [
+  { label: "메모 넣기 (insert)",
+    py: () => `sb.table("notes")\n  .insert({"content": "안녕"})\n  .execute()`,
+    rest: () => `POST /rest/v1/notes\napikey: sb_secret_••••\nPrefer: return=representation\n\n{"content": "안녕"}`,
+    sql: () => `INSERT INTO notes (content)\nVALUES ('안녕')\nRETURNING *;`,
+    apply: () => { const r = { id: nextId++, content: "안녕", at: new Date().toTimeString().slice(0, 5) }; rows.unshift(r); return { cls: "new", id: r.id }; },
+    back: () => `[{"id":${nextId - 1},"content":"안녕",…}]`,
+    tip: "💡 id와 created_at은 내가 안 보내도 데이터베이스가 자동으로 채워 줘요 (번호 자동 증가, 현재 시각)." },
+  { label: "목록 보기 (select)",
+    py: () => `sb.table("notes")\n  .select("*")\n  .order("created_at", desc=True)\n  .execute()`,
+    rest: () => `GET /rest/v1/notes\n  ?select=*\n  &order=created_at.desc\napikey: sb_secret_••••`,
+    sql: () => `SELECT * FROM notes\nORDER BY created_at DESC;`,
+    apply: () => ({ cls: "read" }),
+    back: () => `[${rows.length}개의 메모 JSON]`,
+    tip: "💡 PostgREST는 주소 뒤의 ?select=…&order=… 를 읽고 SQL을 만들어요. 그래서 우리가 SQL을 직접 안 써도 돼요." },
+  { label: "메모 지우기 (delete)",
+    py: () => `sb.table("notes")\n  .delete()\n  .eq("id", ${rows[0] ? rows[0].id : 1})\n  .execute()`,
+    rest: () => `DELETE /rest/v1/notes\n  ?id=eq.${rows[0] ? rows[0].id : 1}\napikey: sb_secret_••••`,
+    sql: () => `DELETE FROM notes\nWHERE id = ${rows[0] ? rows[0].id : 1}\nRETURNING *;`,
+    apply: () => rows.length ? { cls: "gone", id: rows[0].id } : { cls: "none" },
+    back: () => rows.length ? `[지워진 메모 1개]` : `[] (지운 게 없음 → main.py가 404)`,
+    tip: "💡 .eq(\"id\", 1)은 \"id가 1과 같은(equal) 것\"이라는 뜻이고, 주소에서는 id=eq.1 로 바뀌어요." }
+];
+const sbStage = $("sbStage");
+const sbAnim = makeAnimator(sbStage, $("sbPacket"));
+function renderRows(effect) {
+  $("miniRows").innerHTML = rows.length ? rows.map(r => {
+    let cls = "";
+    if (effect && effect.cls === "read") cls = "read";
+    else if (effect && effect.id === r.id) cls = effect.cls;
+    return `<tr class="${cls}"><td>${r.id}</td><td>${esc(r.content)}</td><td>${r.at}</td></tr>`;
+  }).join("") : `<tr><td colspan="3" style="color:#888">(비어 있음)</td></tr>`;
+}
+renderRows();
+$("sbChips").innerHTML = SB_OPS.map((o, i) => `<button class="chip${i === 0 ? " on" : ""}" data-i="${i}">${o.label}</button>`).join("");
+document.querySelectorAll("#sbChips .chip").forEach(c => c.onclick = () => {
+  document.querySelectorAll("#sbChips .chip").forEach(x => x.classList.remove("on"));
+  c.classList.add("on"); sbPlay(+c.dataset.i);
+});
+async function sbPlay(i) {
+  sbAnim.cancel(); const t = sbAnim.token();
+  const o = SB_OPS[i];
+  clearMarks(sbStage);
+  $("pyCode").textContent = o.py(); $("restCode").textContent = ""; $("sqlCode").textContent = "";
+  $("sbTip").textContent = o.tip;
+  renderRows();
+  mark($("lyPy"), "active"); await sleep(900); if (!sbAnim.alive(t)) return;
+  if (!(await sbAnim.fly($("lyPy"), $("lyRest"), "📨 HTTP 편지로 변신", null, t))) return;
+  clearMarks(sbStage); mark($("lyRest"), "active"); $("restCode").textContent = o.rest(); await sleep(1000);
+  if (!(await sbAnim.fly($("lyRest"), $("lyPg"), "🔤 SQL로 번역", null, t))) return;
+  clearMarks(sbStage); mark($("lyPg"), "active"); $("sqlCode").textContent = o.sql();
+  await sleep(500);
+  const eff = o.apply(); renderRows(eff);
+  const back = o.back();
+  await sleep(1000);
+  if (eff.cls === "gone") { rows = rows.filter(r => r.id !== eff.id); }
+  if (!(await sbAnim.fly($("lyPg"), $("lyRest"), "결과 표", "back", t))) return;
+  if (eff.cls === "gone") renderRows();
+  if (!(await sbAnim.fly($("lyRest"), $("lyPy"), back, "back", t))) return;
+  clearMarks(sbStage); mark($("lyPy"), "active");
+}
+
+/* =========================================================
+   ⑥ Railway 배포 과정
+   ========================================================= */
+const RAIL = [
+  { icon: "📤", t: "git push", s: "코드를 GitHub에 올림",
+    text: "내 컴퓨터에서 git push로 코드를 GitHub에 올려요. Railway는 GitHub 저장소와 연결되어 있어서, 새 코드가 올라오면 자동으로 알아채요.",
+    tip: "💡 .env는 .gitignore 덕분에 올라가지 않아요. 그래서 비밀키는 ③번 단계에서 따로 넣어요.",
+    log: [["p", "▶ New commit detected on main"], ["", "  Cloning repository…"]] },
+  { icon: "🔍", t: "프로젝트 파악", s: "my-api 폴더 보고 파이썬인 걸 앎",
+    text: "Root Directory로 지정한 my-api 폴더를 열어 봐요. requirements.txt가 있으니 '아, 파이썬 프로젝트구나' 하고 알아서 판단해요.",
+    tip: "💡 Railway 설정에서 Root Directory를 my-api로 꼭 지정해야 해요. (frontend나 vjeju는 Railway가 쓸 필요 없음)",
+    log: [["", "  Root directory: my-api"], ["y", "  Detected Python (requirements.txt)"]] },
+  { icon: "📦", t: "빌드", s: "파이썬 + 라이브러리 설치해 상자 만들기",
+    text: "Railway 컴퓨터에 파이썬을 깔고, requirements.txt에 적힌 fastapi, uvicorn, supabase 등을 설치해서 '컨테이너'라는 상자에 담아요. 내 컴퓨터에서 vjeju 가상환경에 pip install 했던 걸 대신 해 주는 거예요.",
+    tip: "💡 그래서 새 라이브러리를 쓰면 requirements.txt에도 꼭 적어야 해요. 안 적으면 Railway에서 ModuleNotFoundError가 나요.",
+    log: [["", "  pip install -r requirements.txt"], ["", "  Installing fastapi==0.162.2 uvicorn supabase python-dotenv …"], ["g", "  ✔ Build complete"]] },
+  { icon: "🔑", t: "Variables 주입", s: "비밀키를 환경변수로 넣어 줌",
+    text: "Railway Variables 칸에 적어 둔 SUPABASE_URL, SUPABASE_SECRET_KEY, FRONT_ORIGINS를 상자 안의 환경변수로 넣어 줘요. main.py의 os.environ[...]이 이 값을 읽어요.",
+    tip: "💡 FRONT_ORIGINS에는 Vercel 주소(https://○○.vercel.app)를 꼭 넣어야 Vercel 화면의 주문을 받아요.",
+    log: [["", "  Injecting variables: SUPABASE_URL, SUPABASE_SECRET_KEY, FRONT_ORIGINS, PORT"]] },
+  { icon: "▶️", t: "실행", s: "Procfile 명령으로 uvicorn 시작",
+    text: "Procfile에 적힌 'uvicorn main:app --host 0.0.0.0 --port $PORT'를 실행해요. ③번 섹션에서 본 main.py 시작 과정이 Railway 컴퓨터에서 그대로 일어나요.",
+    tip: "💡 0.0.0.0 = '바깥에서 오는 요청도 받겠다'는 뜻 (127.0.0.1은 자기 자신만). $PORT = Railway가 정해 준 문 번호.",
+    log: [["", "  web: uvicorn main:app --host 0.0.0.0 --port $PORT"], ["g", "  INFO: Uvicorn running on http://0.0.0.0:8080"]] },
+  { icon: "🩺", t: "확인", s: "서버가 잘 켜졌는지 확인",
+    text: "Railway가 서버가 문을 열었는지 확인해요. main.py에서 에러가 나면(예: 비밀키 누락) 여기서 실패하고 Deploy Logs에 빨간 에러가 보여요.",
+    tip: "💡 배포가 실패하면 Railway의 Deploy Logs를 먼저 보세요. KeyError: 'SUPABASE_URL' 이면 Variables 누락이에요.",
+    log: [["g", "  ✔ Deployment successful"]] },
+  { icon: "🌐", t: "주소 공개", s: "○○.up.railway.app 연결",
+    text: "Generate Domain을 누르면 https://○○.up.railway.app 주소가 생겨요. 이 주소로 온 요청을 Railway가 내 서버 상자의 $PORT 문으로 연결해 줘요.",
+    tip: "💡 이 주소를 frontend/config.js의 RAILWAY_API_URL에 넣으면 Vercel 화면이 Railway 서버와 대화해요. 브라우저에서 이 주소/health 를 열면 {\"status\":\"ok\"}가 보여야 해요.",
+    log: [["p", "  🌐 https://your-app.up.railway.app → container:$PORT"]] }
+];
+$("railSteps").innerHTML = RAIL.map((r, i) => `<div class="rs" id="rs${i}"><div class="icon">${r.icon}</div><b>${i + 1}. ${r.t}</b><small>${r.s}</small></div>`).join("");
+let railRunId = 0;
+async function railPlay() {
+  const my = ++railRunId;
+  $("railLog").innerHTML = '<span class="p">Railway 빌드 로그 (이해를 돕기 위한 예시)</span>\n';
+  for (let i = 0; i < RAIL.length; i++) {
+    if (my !== railRunId) return;
+    const r = RAIL[i];
+    RAIL.forEach((_, k) => { $("rs" + k).classList.toggle("done", k < i); $("rs" + k).classList.toggle("now", k === i); });
+    $("railBar").style.width = ((i + 1) / RAIL.length * 100) + "%";
+    $("railStepNo").textContent = `STEP ${i + 1} / ${RAIL.length}`;
+    $("railNo").textContent = `${i + 1} / ${RAIL.length}`;
+    $("railTitle").textContent = `${r.icon} ${r.t}`;
+    $("railText").textContent = r.text;
+    $("railTip").textContent = r.tip;
+    for (const [c, line] of r.log) {
+      await sleep(450); if (my !== railRunId) return;
+      $("railLog").insertAdjacentHTML("beforeend", `<span class="${c}">${esc(line)}</span>\n`);
+      $("railLog").scrollTop = 1e6;
+    }
+    await sleep(2400);
+  }
+  if (my === railRunId) $("rs" + (RAIL.length - 1)).classList.replace("now", "done");
+}
+$("railPlay").onclick = () => railPlay();
+
+/* 배포 후 요청 흐름 */
+const runStage = $("railRun");
+const runAnim = makeAnimator(runStage, $("runPacket"));
+const RUN = [
+  ["rb0", "rb1", "HTTPS POST /notes", null, "Vercel 화면이 config.js의 Railway 주소로 주문을 보내요. 주소가 https라서 내용이 암호화돼서 가요."],
+  ["rb1", "rb2", "→ :$PORT POST /notes", null, "Railway 입구가 암호를 풀고, 이 주소의 주인인 내 서버 상자의 $PORT 문으로 전달해요."],
+  ["rb2", "rb3", "insert (apikey: 비밀키)", null, "상자 안의 main.py가 ④번 6관문을 거쳐 create_note()를 실행하고, Variables의 비밀키로 Supabase에 저장을 요청해요."],
+  ["rb3", "rb2", "저장됨", "back", "Supabase가 저장된 줄을 돌려줘요."],
+  ["rb2", "rb1", "201 JSON", "back", "FastAPI가 JSON 답장을 만들고, CORS 허락 도장(Vercel 주소)을 찍어요."],
+  ["rb1", "rb0", "201 JSON", "back", "Railway가 답장을 다시 https로 감싸 브라우저에 전달. 화면에 메모가 나타나요!"]
+];
+$("runPlay").onclick = async () => {
+  runAnim.cancel(); const t = runAnim.token();
+  for (const [a, b, label, v, msg] of RUN) {
+    clearMarks(runStage); mark($(a), "active");
+    $("runMsg").textContent = msg;
+    if (!(await runAnim.fly($(a), $(b), label, v, t, 1500))) return;
+    clearMarks(runStage); mark($(b), "active"); await sleep(500);
+  }
+};
+
+/* =========================================================
+   선 그리기 & 시작
+   ========================================================= */
+function drawAll() {
+  drawWire(bigStage, $("bigWire"), ["nFront", "nApi", "nDb"]);
+  drawWire(pipeStage, $("pipeWire"), ["pClient", "st0", "st1", "st2", "st3", "st4", "st5"]);
+  drawWire(sbStage, $("sbWire"), ["lyPy", "lyRest", "lyPg"]);
+  drawWire(runStage, $("runWire"), ["rb0", "rb1", "rb2", "rb3"]);
+}
+window.addEventListener("resize", drawAll);
+bigRender();
+bootShow(0);
+setTimeout(() => {
+  drawAll();
+  bigPlay();
+  // 화면에 보일 때 한 번 자동 재생
+  const once = new Map([[pipeStage, () => pipePlay(0)], [sbStage, () => sbPlay(0)]]);
+  const io = new IntersectionObserver(es => es.forEach(e => {
+    if (e.isIntersecting && once.has(e.target)) { const f = once.get(e.target); once.delete(e.target); f(); }
+  }), { threshold: 0.4 });
+  once.forEach((_, el) => io.observe(el));
+}, 300);
+</script>
+</body>
+</html>

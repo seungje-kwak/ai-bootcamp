@@ -6,6 +6,8 @@ from pydantic import BaseModel, Field
 from dotenv import load_dotenv
 from supabase import create_client
 
+from cart import create_router as create_cart_router
+
 load_dotenv()
 
 # 로컬에선 .env를 읽고, Railway에선 Variables가 이미 들어 있음
@@ -26,6 +28,9 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
+
+# 장바구니 API (/products, /cart/...) 는 cart.py 에 있음
+app.include_router(create_cart_router(sb))
 
 
 class NoteIn(BaseModel):

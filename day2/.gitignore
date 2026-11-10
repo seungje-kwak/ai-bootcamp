@@ -1,0 +1,6 @@
+vjeju/
+.venv/
+__pycache__/
+.env
+.vercel/
+.claude/
