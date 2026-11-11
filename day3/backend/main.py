@@ -112,7 +112,10 @@ def run_collect(sido: str) -> dict:
     rows = airkorea.clean_items(raw, sido)         # 2) 가공
     if not rows:
         raise airkorea.FetchError(f"'{sido}' 측정값이 없습니다. 시도 이름을 확인하세요 (예: 제주, 서울).")
-    summary = airkorea.summarize(rows, sido)       #    요약
+    # 고장 난 측정소는 몇 시간 전 시각으로 올 때가 있음 → 각자 자기 시각으로 저장하되,
+    # 요약(평균·점검 중 수)은 가장 최신 시각의 측정소만으로 계산해야 화면 표와 숫자가 맞음
+    latest = max(r["data_time"] for r in rows)
+    summary = airkorea.summarize([r for r in rows if r["data_time"] == latest], sido)  # 요약
     # 3) 저장. upsert = 없으면 넣고 있으면 덮어쓰기 → 같은 시간을 두 번 수집해도 중복 없음
     sb.table("air_measurements").upsert(rows, on_conflict="sido,station_name,data_time").execute()
     sb.table("air_summary").upsert(summary, on_conflict="sido,data_time").execute()
