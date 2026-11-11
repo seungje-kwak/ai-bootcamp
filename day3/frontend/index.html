@@ -37,6 +37,15 @@
   button { padding: 10px 16px; border: 0; border-radius: 8px; background: var(--main); color: #fff; font: inherit; font-weight: 600; cursor: pointer; }
   button:disabled { opacity: .5; cursor: default; }
   .hint { color: var(--muted); font-size: .8rem; margin: 8px 0 0; }
+  .chart-box { background: #fff; border: 1px solid var(--line); border-radius: 12px; padding: 14px; }
+  .chart-box svg { width: 100%; height: auto; display: block; }
+  .chart-box .axis { fill: var(--muted); font-size: 11px; }
+  .chart-box .band { stroke: #e9edf1; stroke-dasharray: 3 4; }
+  .chart-box .band-label { fill: #9aa3ad; font-size: 10px; }
+  .legend { display: flex; gap: 14px; flex-wrap: wrap; color: var(--muted); font-size: .8rem; margin-top: 8px; }
+  .legend i { display: inline-block; width: 18px; height: 0; border-top: 2px solid var(--main); vertical-align: middle; margin-right: 4px; }
+  .legend i.pred { border-top-style: dashed; border-color: var(--warn); }
+  .compare { margin: 10px 0 0; font-size: .9rem; }
 </style>
 </head>
 <body>
@@ -56,6 +65,13 @@
     <div class="card"><div class="label">가장 나쁜 곳</div><div class="value" id="worst">-</div><div class="note" id="worstVal">&nbsp;</div></div>
     <div class="card"><div class="label">점검 중 측정소</div><div class="value" id="missing">-</div><div class="note" id="stationCount">&nbsp;</div></div>
     <div class="card"><div class="label">다음 1시간 예측</div><div class="value" id="fc">-</div><div class="note" id="fcNote">&nbsp;</div></div>
+  </div>
+
+  <h2>최근 24시간 추이 · 평균 PM2.5 (매시간 자동 수집)</h2>
+  <div class="chart-box">
+    <div id="chart"><p class="empty">불러오는 중…</p></div>
+    <div class="legend"><span><i></i>실제 기록</span><span><i class="pred"></i>선형회귀 예측 (다음 1시간)</span></div>
+    <p class="compare" id="compare"></p>
   </div>
 
   <h2>측정소별 현재 값 (나쁜 순)</h2>
@@ -133,9 +149,69 @@
   }
 
   function renderForecast(f) {
-    if (!f.ready) { $("fc").textContent = "-"; $("fcNote").textContent = f.message; return; }
-    $("fc").textContent = fmt(f.predicted_pm25);
-    $("fcNote").innerHTML = `<span class="grade g-${esc(f.grade)}">${esc(f.grade)}</span> · 최근 ${f.based_on}시간 기준`;
+    if (!f.ready) { $("fc").textContent = "-"; $("fcNote").textContent = f.message; }
+    else {
+      const arrow = { "증가": "↑", "감소": "↓", "유지": "→" }[f.trend] || "";
+      const sign = f.slope_per_hour > 0 ? "+" : "";
+      $("fc").textContent = fmt(f.predicted_pm25);
+      $("fcNote").innerHTML = `<span class="grade g-${esc(f.grade)}">${esc(f.grade)}</span> · ${esc(f.trend)} ${arrow} (시간당 ${sign}${fmt(f.slope_per_hour)})`;
+    }
+    // 어제 같은 시간과 비교 (매시간 쌓아 두었기 때문에 가능)
+    const y = f.yesterday_same_hour;
+    if (y && y.avg_pm25 != null && f.latest_pm25 != null) {
+      const diff = f.latest_pm25 - y.avg_pm25;
+      const word = diff > 0 ? "높아요 ▲" : diff < 0 ? "낮아요 ▼" : "같아요";
+      $("compare").textContent = `어제 같은 시간 ${fmt(y.avg_pm25)} → 지금 ${fmt(f.latest_pm25)} (${fmt(Math.abs(diff))} ${word})`;
+    } else {
+      $("compare").textContent = "어제 같은 시간 기록이 아직 없어요. 내일 이 시간부터 비교할 수 있습니다.";
+    }
+  }
+
+  // 24시간 추이 그래프 (라이브러리 없이 SVG로 직접 그림)
+  function renderChart(list, f) {
+    const pts = list.filter((s) => s.avg_pm25 != null).map((s) => ({ t: new Date(s.data_time).getTime(), v: s.avg_pm25 }));
+    if (pts.length < 2) {
+      $("chart").innerHTML = `<p class="empty">기록이 2개 이상 쌓이면 그래프가 그려져요 (지금 ${pts.length}개). 서버가 매시 20분에 자동으로 쌓습니다.</p>`;
+      return;
+    }
+    const pred = f.ready ? { t: new Date(f.next_time).getTime(), v: f.predicted_pm25 } : null;
+    const W = 720, H = 240, L = 36, R = 16, T = 14, B = 28;
+    const t0 = pts[0].t, t1 = pred ? pred.t : pts[pts.length - 1].t;
+    const vmax = Math.max(40, ...pts.map((p) => p.v), pred ? pred.v : 0) * 1.1;
+    const x = (t) => L + ((t - t0) / Math.max(1, t1 - t0)) * (W - L - R);
+    const y = (v) => T + (1 - v / vmax) * (H - T - B);
+    const hourLabel = (t) => new Date(t).toLocaleTimeString("ko-KR", { timeZone: "Asia/Seoul", hour: "numeric" });
+
+    let svg = `<svg viewBox="0 0 ${W} ${H}" role="img" aria-label="최근 평균 PM2.5 추이와 다음 1시간 예측">`;
+    // 등급 경계선 (15 좋음 / 35 보통 / 75 나쁨)
+    [[15, "좋음↓"], [35, "보통↓"], [75, "나쁨↓"]].filter(([v]) => v < vmax).forEach(([v, label]) => {
+      svg += `<line class="band" x1="${L}" x2="${W - R}" y1="${y(v)}" y2="${y(v)}"/><text class="band-label" x="${L + 4}" y="${y(v) - 3}">${v} ${label}</text>`;
+    });
+    // y축 0
+    svg += `<text class="axis" x="${L - 6}" y="${y(0) + 4}" text-anchor="end">0</text>`;
+    // 실제 기록 선 + 점
+    const path = pts.map((p, i) => `${i ? "L" : "M"}${x(p.t).toFixed(1)},${y(p.v).toFixed(1)}`).join(" ");
+    svg += `<path d="${path}" fill="none" stroke="var(--main)" stroke-width="2.5" stroke-linejoin="round"/>`;
+    pts.forEach((p) => { svg += `<circle cx="${x(p.t)}" cy="${y(p.v)}" r="3.5" fill="var(--main)"><title>${hourLabel(p.t)} · ${fmt(p.v)}</title></circle>`; });
+    // 예측 (점선)
+    if (pred) {
+      const last = pts[pts.length - 1];
+      svg += `<line x1="${x(last.t)}" y1="${y(last.v)}" x2="${x(pred.t)}" y2="${y(pred.v)}" stroke="var(--warn)" stroke-width="2" stroke-dasharray="5 4"/>`;
+      svg += `<circle cx="${x(pred.t)}" cy="${y(pred.v)}" r="5" fill="#fff" stroke="var(--warn)" stroke-width="2"><title>예측 ${hourLabel(pred.t)} · ${fmt(pred.v)}</title></circle>`;
+      svg += `<text class="axis" x="${x(pred.t)}" y="${y(pred.v) - 10}" text-anchor="end">예측 ${fmt(pred.v)}</text>`;
+    }
+    // x축 시간 라벨 (최대 6개)
+    const all = pred ? [...pts, pred] : pts;
+    const step = Math.ceil(all.length / 6);
+    all.forEach((p, i) => {
+      const lastIdx = all.length - 1;
+      if (i % step !== 0 && i !== lastIdx) return;
+      if (i !== lastIdx && lastIdx - i < step / 2) return;  // 마지막 라벨과 겹치면 생략
+      const anchor = i === 0 ? "start" : i === lastIdx ? "end" : "middle";  // 양 끝 글자가 잘리지 않게
+      svg += `<text class="axis" x="${x(p.t)}" y="${H - 8}" text-anchor="${anchor}">${hourLabel(p.t)}</text>`;
+    });
+    svg += `</svg>`;
+    $("chart").innerHTML = svg;
   }
 
   async function loadAll() {
@@ -147,7 +223,7 @@
         getJSON("/air/summary" + q + "&hours=24"),
         getJSON("/air/forecast" + q),
       ]);
-      renderRows(rows); renderSummary(summary); renderForecast(fc);
+      renderRows(rows); renderSummary(summary); renderForecast(fc); renderChart(summary, fc);
     } catch (e) {
       $("error").textContent = "데이터를 불러오지 못했습니다: " + e.message;
     }

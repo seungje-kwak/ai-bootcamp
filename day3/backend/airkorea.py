@@ -150,18 +150,30 @@ def summarize(rows: list, sido: str) -> dict:
 
 
 # ---------------------------------------------------------------- 3) 예측
-def forecast_next(values: list):
-    """최근 값들로 직선(선형회귀)을 그어 다음 1시간 값을 예측합니다.
-    라이브러리 없이 직접 계산. 값이 3개 미만이면 None.
-    실제 서비스에서는 이 자리에 scikit-learn 같은 모델을 넣으면 됩니다."""
-    ys = [v for v in values if v is not None]
-    n = len(ys)
+def forecast_next(points: list, ahead_hours: float = 1.0):
+    """시계열 선형회귀 (Linear Regression)
+
+    points = [(x, y), ...]  x: 시간(시간 단위 숫자, 예: -5, -4, … 0), y: 그때의 PM2.5
+    → 점들에 가장 잘 맞는 직선 y = a·x + b 를 구하고(최소제곱법),
+      마지막 시각보다 ahead_hours 뒤의 y 를 예측합니다.
+
+    x 에 '진짜 시간'을 쓰기 때문에 중간에 수집이 한 시간 빠져도 직선이 틀어지지 않습니다.
+    주식 차트의 추세선과 같은 원리이고, 라이브러리 없이 직접 계산합니다.
+    실제 서비스에서는 이 자리에 scikit-learn 같은 모델을 넣으면 됩니다.
+    점이 3개 미만이면 None.
+    """
+    pts = [(x, y) for x, y in points if y is not None]
+    n = len(pts)
     if n < 3:
         return None
-    mean_x = (n - 1) / 2
-    mean_y = sum(ys) / n
-    sxx = sum((x - mean_x) ** 2 for x in range(n))
-    sxy = sum((x - mean_x) * (y - mean_y) for x, y in enumerate(ys))
-    slope = sxy / sxx
-    predicted = mean_y + slope * (n - mean_x)  # x = n 이 "다음 1시간"
-    return max(0.0, round(predicted, 1))
+    mean_x = sum(x for x, _ in pts) / n
+    mean_y = sum(y for _, y in pts) / n
+    sxx = sum((x - mean_x) ** 2 for x, _ in pts)
+    if sxx == 0:
+        return None
+    sxy = sum((x - mean_x) * (y - mean_y) for x, y in pts)
+    slope = sxy / sxx                    # a: 한 시간에 얼마씩 변하나
+    intercept = mean_y - slope * mean_x  # b
+    target_x = max(x for x, _ in pts) + ahead_hours
+    predicted = slope * target_x + intercept
+    return {"predicted": max(0.0, round(predicted, 1)), "slope_per_hour": round(slope, 2)}

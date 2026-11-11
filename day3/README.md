@@ -125,8 +125,23 @@ Railway 체험 크레딧은 **$5 / 30일**입니다. 크레딧을 아끼려고 *
 
 ---
 
-## 6단계 (선택). 매시간 자동 수집 (Railway Cron)
+## 6단계. 매시간 자동 수집 + 시계열 예측
 
+**기본으로 켜져 있습니다.** 웹 서버(`main.py`)가 켜져 있는 동안 **매시 20분(한국 시간)** 마다 스스로 관공서 API를 불러 Supabase에 쌓습니다. 서버가 시작(배포·재시작)될 때도 한 번 바로 수집합니다.
+- 상태 확인: `주소/health` → `auto_collect.last_run`(마지막 수집 결과), `next_run`(다음 수집 시각)
+- 끄기: Variables 에 `AUTO_COLLECT=off` / 여러 지역: `COLLECT_SIDOS=제주,서울`
+- `DATA_MODE=sample` 이면 자동으로 꺼짐 (예시 데이터는 매번 같은 값이라)
+
+이렇게 쌓인 기록으로:
+- **선형회귀 예측** (`/air/forecast`): 최근 6시간의 평균 PM2.5 에 직선을 그어 다음 1시간 값을 예측 (기록 3개 이상부터). 기울기로 증가/감소/유지 추세도 표시
+- **어제 같은 시간 비교**: 24시간 전 기록이 생기면(내일 이 시간부터) 자동 비교
+- 화면에 **최근 24시간 추이 그래프** + 예측 점선
+
+> 로컬과 Railway가 동시에 켜져 있으면 둘 다 수집하지만, upsert 라서 같은 시간 데이터가 중복되지 않습니다.
+
+### (선택) 별도 Cron 서비스로 수집하기
+
+웹 서버 안의 자동 수집 대신 Railway Cron 을 쓰고 싶다면 (웹 서비스에는 `AUTO_COLLECT=off`):
 같은 Railway 프로젝트 → **+ New → GitHub Repo** → 같은 저장소 → 서비스 하나 더
 - Root Directory `/day3/backend`, Start Command `python start.py`
 - Variables: 웹 서비스와 같은 값 + `RUN_MODE=cron` (+ 여러 지역은 `COLLECT_SIDOS=제주,서울,부산`)
