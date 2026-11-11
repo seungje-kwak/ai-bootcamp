@@ -1,0 +1,177 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>제주 미세먼지 보드</title>
+<style>
+  :root { --main: #0e6b8c; --ok: #1f9d55; --warn: #d98e04; --err: #d64545; --line: #e3e6ea; --muted: #6b7280; }
+  * { box-sizing: border-box; }
+  body { font-family: system-ui, "Malgun Gothic", sans-serif; background: #f5f7f9; margin: 0; color: #222; }
+  main { max-width: 760px; margin: 32px auto; padding: 0 16px; }
+  h1 { color: var(--main); margin: 0 0 4px; }
+  h2 { font-size: 1rem; margin: 28px 0 10px; }
+  .sub { color: var(--muted); margin: 0; font-size: .9rem; }
+  .status { display: flex; gap: 8px; flex-wrap: wrap; margin: 18px 0; }
+  .pill { padding: 5px 12px; border-radius: 999px; background: #fff; border: 1px solid var(--line); font-size: .82rem; }
+  .pill.ok { border-color: var(--ok); color: var(--ok); }
+  .pill.err { border-color: var(--err); color: var(--err); }
+  .cards { display: grid; grid-template-columns: repeat(auto-fit, minmax(160px, 1fr)); gap: 10px; }
+  .card { background: #fff; border: 1px solid var(--line); border-radius: 12px; padding: 14px; }
+  .card .label { color: var(--muted); font-size: .8rem; }
+  .card .value { font-size: 1.6rem; font-weight: 700; margin-top: 4px; font-variant-numeric: tabular-nums; }
+  .card .note { color: var(--muted); font-size: .8rem; margin-top: 2px; }
+  table { width: 100%; border-collapse: collapse; background: #fff; border: 1px solid var(--line); border-radius: 12px; overflow: hidden; }
+  th, td { padding: 10px 12px; text-align: left; border-bottom: 1px solid var(--line); font-size: .92rem; }
+  th { background: #f0f3f6; font-weight: 600; }
+  td.num { text-align: right; font-variant-numeric: tabular-nums; }
+  tr.missing td { color: var(--muted); }
+  .grade { font-weight: 600; }
+  .g-좋음 { color: #1f6fd1; } .g-보통 { color: var(--ok); } .g-나쁨 { color: var(--warn); } .g-매우나쁨 { color: var(--err); } .g-정보없음 { color: var(--muted); }
+  .empty { color: var(--muted); text-align: center; padding: 18px; }
+  .error { color: var(--err); font-size: .9rem; min-height: 1.2em; white-space: pre-wrap; }
+  details { margin-top: 28px; background: #fff; border: 1px solid var(--line); border-radius: 12px; padding: 12px 14px; }
+  summary { cursor: pointer; font-weight: 600; }
+  form { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 12px; }
+  input { flex: 1; min-width: 140px; padding: 10px; border: 1px solid var(--line); border-radius: 8px; font: inherit; }
+  button { padding: 10px 16px; border: 0; border-radius: 8px; background: var(--main); color: #fff; font: inherit; font-weight: 600; cursor: pointer; }
+  button:disabled { opacity: .5; cursor: default; }
+  .hint { color: var(--muted); font-size: .8rem; margin: 8px 0 0; }
+</style>
+</head>
+<body>
+<main>
+  <h1>제주 미세먼지 보드</h1>
+  <p class="sub">공공데이터(에어코리아) → FastAPI(가공) → Supabase(저장) → 이 화면. 화면에는 어떤 키도 없습니다.</p>
+
+  <div class="status">
+    <span class="pill" id="apiUrl"></span>
+    <span class="pill" id="apiStatus">API 확인 중…</span>
+    <span class="pill" id="timeStatus">측정 시각 -</span>
+  </div>
+  <p class="error" id="error"></p>
+
+  <div class="cards">
+    <div class="card"><div class="label">평균 초미세먼지 (PM2.5)</div><div class="value" id="avg">-</div><div class="note" id="avgGrade">&nbsp;</div></div>
+    <div class="card"><div class="label">가장 나쁜 곳</div><div class="value" id="worst">-</div><div class="note" id="worstVal">&nbsp;</div></div>
+    <div class="card"><div class="label">점검 중 측정소</div><div class="value" id="missing">-</div><div class="note" id="stationCount">&nbsp;</div></div>
+    <div class="card"><div class="label">다음 1시간 예측</div><div class="value" id="fc">-</div><div class="note" id="fcNote">&nbsp;</div></div>
+  </div>
+
+  <h2>측정소별 현재 값 (나쁜 순)</h2>
+  <table>
+    <thead><tr><th>측정소</th><th class="num">PM10</th><th class="num">PM2.5</th><th>등급</th></tr></thead>
+    <tbody id="rows"><tr><td colspan="4" class="empty">불러오는 중…</td></tr></tbody>
+  </table>
+
+  <details>
+    <summary>관리자: 지금 수집하기</summary>
+    <form id="collectForm">
+      <input id="sido" value="제주" aria-label="시도">
+      <input id="token" type="password" placeholder="관리자 토큰 (ADMIN_TOKEN)" aria-label="관리자 토큰" required>
+      <button id="collectBtn">수집</button>
+    </form>
+    <p class="hint">토큰은 코드에 저장되지 않고 요청 헤더(X-Admin-Token)로만 보냅니다. /docs 화면에서 해도 같습니다.</p>
+    <p class="error" id="collectMsg"></p>
+  </details>
+</main>
+
+<script src="config.js"></script>
+<script>
+  const API = window.API_BASE;
+  const SIDO = "제주";
+  const $ = (id) => document.getElementById(id);
+  const fmt = (v) => (v === null || v === undefined ? "-" : Number(v).toLocaleString("ko-KR", { maximumFractionDigits: 1 }));
+  const esc = (s) => String(s).replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
+  $("apiUrl").textContent = "API: " + API;
+
+  function setPill(el, ok, text) { el.textContent = text; el.className = "pill " + (ok ? "ok" : "err"); }
+
+  async function getJSON(path, options) {
+    const res = await fetch(API + path, options);
+    const body = await res.json().catch(() => ({}));
+    if (!res.ok) throw new Error(body.detail || res.status + " " + res.statusText);
+    return body;
+  }
+
+  async function checkHealth() {
+    try {
+      const h = await getJSON("/health");
+      setPill($("apiStatus"), true, "API 연결됨 · " + (h.mode === "sample" ? "예시 데이터" : "실제 관공서 API"));
+    } catch (e) {
+      setPill($("apiStatus"), false, "API 연결 실패");
+      $("error").textContent = "백엔드에 연결할 수 없습니다. 서버가 켜져 있는지, FRONT_ORIGINS에 이 주소(" + location.origin + ")가 있는지 확인하세요.";
+      throw e;
+    }
+  }
+
+  function renderRows(rows) {
+    if (!rows.length) {
+      $("rows").innerHTML = '<tr><td colspan="4" class="empty">아직 수집된 데이터가 없습니다. 아래 "관리자: 지금 수집하기"를 먼저 실행하세요.</td></tr>';
+      return;
+    }
+    $("rows").innerHTML = rows.map((r) => `
+      <tr class="${r.is_missing ? "missing" : ""}">
+        <td>${esc(r.station_name)}</td>
+        <td class="num">${fmt(r.pm10)}</td>
+        <td class="num">${fmt(r.pm25)}</td>
+        <td><span class="grade g-${esc(r.grade)}">${r.is_missing ? "점검 중" : esc(r.grade)}</span></td>
+      </tr>`).join("");
+    const t = new Date(rows[0].data_time);
+    $("timeStatus").textContent = "측정 시각 " + t.toLocaleString("ko-KR", { timeZone: "Asia/Seoul", month: "long", day: "numeric", hour: "2-digit", minute: "2-digit" });
+  }
+
+  function renderSummary(list) {
+    const s = list[list.length - 1];
+    if (!s) return;
+    $("avg").textContent = fmt(s.avg_pm25);
+    $("avgGrade").innerHTML = `<span class="grade g-${esc(s.grade)}">${esc(s.grade)}</span> · ㎍/㎥`;
+    $("worst").textContent = s.worst_station || "-";
+    $("worstVal").textContent = s.worst_pm25 != null ? "PM2.5 " + fmt(s.worst_pm25) : "";
+    $("missing").textContent = s.missing_count + "곳";
+    $("stationCount").textContent = "전체 " + s.station_count + "곳 중";
+  }
+
+  function renderForecast(f) {
+    if (!f.ready) { $("fc").textContent = "-"; $("fcNote").textContent = f.message; return; }
+    $("fc").textContent = fmt(f.predicted_pm25);
+    $("fcNote").innerHTML = `<span class="grade g-${esc(f.grade)}">${esc(f.grade)}</span> · 최근 ${f.based_on}시간 기준`;
+  }
+
+  async function loadAll() {
+    $("error").textContent = "";
+    const q = "?sido=" + encodeURIComponent(SIDO);
+    try {
+      const [rows, summary, fc] = await Promise.all([
+        getJSON("/air/latest" + q),
+        getJSON("/air/summary" + q + "&hours=24"),
+        getJSON("/air/forecast" + q),
+      ]);
+      renderRows(rows); renderSummary(summary); renderForecast(fc);
+    } catch (e) {
+      $("error").textContent = "데이터를 불러오지 못했습니다: " + e.message;
+    }
+  }
+
+  $("collectForm").addEventListener("submit", async (ev) => {
+    ev.preventDefault();
+    const btn = $("collectBtn");
+    btn.disabled = true; $("collectMsg").textContent = "수집 중…";
+    try {
+      const r = await getJSON("/collect?sido=" + encodeURIComponent($("sido").value.trim() || SIDO), {
+        method: "POST",
+        headers: { "X-Admin-Token": $("token").value },
+      });
+      $("collectMsg").textContent = `완료: 받음 ${r.received} · 저장 ${r.saved} · 누락 ${r.missing}`;
+      await loadAll();
+    } catch (e) {
+      $("collectMsg").textContent = "수집 실패: " + e.message;
+    } finally {
+      btn.disabled = false;
+    }
+  });
+
+  checkHealth().then(loadAll).catch(() => {});
+</script>
+</body>
+</html>
