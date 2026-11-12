@@ -33,7 +33,7 @@ Run `scripts/reset_emma.py` again before every rehearsal (13.5).
 | Setting | When empty | When filled |
 |---|---|---|
 | `SUPABASE_URL`, `SUPABASE_SERVICE_KEY` | Local JSON store (`backend/local_db.json`) | Supabase tables |
-| `LLM_API_KEY` | Rule-based planner (10.8) | Claude (`LLM_MODEL`, default `claude-opus-5-5`) with structured output; if it fails twice, falls back to the rule planner (`LLM_FALLBACK_RULES=false` returns 502 `LLM_FAILED` instead) |
+| `LLM_API_KEY` | Rule-based planner (10.8) | LLM picks the stops. `LLM_PROVIDER=gemini` (default, model `gemini-3.1-flash-lite`, JSON schema output, temperature 0.3) or `claude` (model `claude-opus-5-5`). `LLM_MODEL` overrides the model. If it fails twice, falls back to the rule planner (`LLM_FALLBACK_RULES=false` returns 502 `LLM_FAILED` instead) |
 | `REQUIRE_VERIFIED` | `false`: places with no photo or verification date are still candidates | `true`: F-1 applies (turn on before the demo) |
 
 Frontend: `NEXT_PUBLIC_API_URL` is the only variable (`frontend/.env.local`).

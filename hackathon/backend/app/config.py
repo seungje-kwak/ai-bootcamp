@@ -18,8 +18,15 @@ def _bool(name: str, default: bool) -> bool:
 # --- environment (11.3) ---
 SUPABASE_URL = os.getenv("SUPABASE_URL", "").strip()
 SUPABASE_SERVICE_KEY = os.getenv("SUPABASE_SERVICE_KEY", "").strip()
-LLM_API_KEY = os.getenv("LLM_API_KEY", "").strip()
-LLM_MODEL = os.getenv("LLM_MODEL", "").strip() or "claude-opus-5-5"
+# LLM_PROVIDER: "gemini" (default) or "claude". The key goes in LLM_API_KEY (GEMINI_API_KEY also works).
+LLM_PROVIDER = (os.getenv("LLM_PROVIDER", "").strip().lower() or "gemini")
+LLM_API_KEY = (os.getenv("LLM_API_KEY", "").strip()
+               or (os.getenv("GEMINI_API_KEY", "").strip() if LLM_PROVIDER == "gemini" else ""))
+# gemini-3.1-flash-lite: answered the planner prompt in 1-2 s on 2026-11-12, while gemini-3.8-flash /
+# 3.5-flash returned 503 "high demand" and gemini-2.5-flash is closed to new users. Override with LLM_MODEL.
+_DEFAULT_MODEL = {"gemini": "gemini-3.1-flash-lite", "claude": "claude-opus-5-5"}
+LLM_MODEL = os.getenv("LLM_MODEL", "").strip() or _DEFAULT_MODEL.get(LLM_PROVIDER, "gemini-3.1-flash-lite")
+LLM_TEMPERATURE = 0.3  # 10.8 (Gemini only; Claude Opus 5.5 does not accept temperature)
 ALLOWED_ORIGINS = [o.strip() for o in os.getenv("ALLOWED_ORIGINS", "http://localhost:3000").split(",") if o.strip()]
 REQUIRE_VERIFIED = _bool("REQUIRE_VERIFIED", False)
 # P1 (US-22): when the LLM fails twice, fall back to the rule planner instead of 502.

@@ -26,9 +26,10 @@ app.add_middleware(
 
 @app.on_event("startup")
 def _startup() -> None:
-    log.info("store=%s llm=%s model=%s require_verified=%s",
+    log.info("store=%s llm=%s provider=%s model=%s require_verified=%s",
              "supabase" if config.USE_SUPABASE else "local",
-             "on" if config.USE_LLM else "off (rule planner)", config.LLM_MODEL, config.REQUIRE_VERIFIED)
+             "on" if config.USE_LLM else "off (rule planner)", config.LLM_PROVIDER, config.LLM_MODEL,
+             config.REQUIRE_VERIFIED)
 
 
 def _course_response(course_id: str) -> dict:
@@ -41,7 +42,8 @@ def _course_response(course_id: str) -> dict:
 
 @app.get("/")
 def health() -> dict:
-    return {"ok": True, "store": "supabase" if config.USE_SUPABASE else "local", "llm": config.USE_LLM}
+    return {"ok": True, "store": "supabase" if config.USE_SUPABASE else "local",
+            "llm": f"{config.LLM_PROVIDER}:{config.LLM_MODEL}" if config.USE_LLM else False}
 
 
 @app.get("/places")

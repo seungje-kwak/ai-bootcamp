@@ -1,9 +1,10 @@
-"""LLM step (10.3-10.5). Claude picks place ids, order, stay_min and reason_en; Python does the rest.
+"""LLM step (10.3-10.5). The LLM picks place ids, order, stay_min and reason_en; Python does the rest.
 
-Only used when LLM_API_KEY is set. Structured output (output_config.format) guarantees JSON in the
-LLMCourse shape; Pydantic still validates it (V-1).
-Note: Claude Opus 5.5 does not accept `temperature`, so 10.8's "temperature 0.3" is replaced by
-low effort + Python-side fixed first stops / keep_if_possible for stable results.
+Only used when LLM_API_KEY is set. LLM_PROVIDER picks the backend:
+- gemini (default): google-genai, JSON output constrained by response_json_schema, temperature 0.3 (10.8)
+- claude: Anthropic SDK structured output. Claude Opus 5.5 does not accept `temperature`, so it uses
+  low effort instead.
+Either way Pydantic validates the result (V-1) and planner.validate() drops unknown ids (V-2).
 """
 from __future__ import annotations
 
@@ -65,29 +66,106 @@ OUTPUT_SCHEMA = {
     "additionalProperties": False,
 }
 
-_client = None
-
-
-def _get_client():
-    global _client
-    if _client is None:
-        import anthropic
-
-        # Our own retry policy is 10.8 (one retry), so the SDK does not retry on its own.
-        _client = anthropic.Anthropic(api_key=config.LLM_API_KEY, timeout=config.LLM_TIMEOUT_SEC, max_retries=0)
-    return _client
-
-
 class LLMError(Exception):
     pass
 
 
 def call_llm(llm_input: dict) -> LLMCourse:
-    """One attempt. Raises LLMError on timeout, API error, refusal, bad JSON or schema mismatch."""
+    """One attempt. Raises LLMError on timeout, API error, refusal, bad JSON or schema mismatch.
+    The caller (planner.run_pipeline) retries once, as 10.8 says."""
+    if config.LLM_PROVIDER == "claude":
+        return _call_claude(llm_input)
+    return _call_gemini(llm_input)
+
+
+# --------------------------------------------------------------------------- Gemini
+# Gemini's JSON schema subset: keep it plain (no additionalProperties); Pydantic checks the rest.
+GEMINI_SCHEMA = {
+    "type": "object",
+    "properties": {
+        "items": {
+            "type": "array",
+            "items": {
+                "type": "object",
+                "properties": {k: v for k, v in OUTPUT_SCHEMA["properties"]["items"]["items"]["properties"].items()},
+                "required": ["place_id", "order", "stay_min", "reason_en", "is_rest_stop"],
+            },
+        }
+    },
+    "required": ["items"],
+}
+
+_gemini_client = None
+
+
+def _get_gemini():
+    global _gemini_client
+    if _gemini_client is None:
+        from google import genai
+        from google.genai import types
+
+        _gemini_client = genai.Client(
+            api_key=config.LLM_API_KEY,
+            http_options=types.HttpOptions(timeout=config.LLM_TIMEOUT_SEC * 1000),  # milliseconds
+        )
+    return _gemini_client
+
+
+def _call_gemini(llm_input: dict) -> LLMCourse:
+    import httpx
+    from google.genai import errors, types
+
+    try:
+        resp = _get_gemini().models.generate_content(
+            model=config.LLM_MODEL,
+            contents=json.dumps(llm_input, ensure_ascii=False),
+            config=types.GenerateContentConfig(
+                system_instruction=SYSTEM_PROMPT,
+                temperature=config.LLM_TEMPERATURE,
+                response_mime_type="application/json",
+                response_json_schema=GEMINI_SCHEMA,
+            ),
+        )
+    except errors.ClientError as e:  # 4xx: bad key, unknown model, quota
+        raise LLMError(f"gemini client error {e.code}: {e.message}") from e
+    except errors.ServerError as e:  # 5xx
+        raise LLMError(f"gemini server error {e.code}") from e
+    except errors.APIError as e:
+        raise LLMError(f"gemini api error {e.code}") from e
+    except httpx.TimeoutException as e:
+        raise LLMError("gemini timeout") from e
+    except httpx.HTTPError as e:
+        raise LLMError(f"gemini connection: {e}") from e
+
+    text = resp.text  # None when blocked or cut off
+    if not text:
+        reason = resp.candidates[0].finish_reason if resp.candidates else "no candidates"
+        raise LLMError(f"gemini returned no text ({reason})")
+    try:
+        return LLMCourse.model_validate_json(text)
+    except Exception as e:  # V-1
+        raise LLMError(f"invalid output: {e}") from e
+
+
+# --------------------------------------------------------------------------- Claude
+_claude_client = None
+
+
+def _get_claude():
+    global _claude_client
+    if _claude_client is None:
+        import anthropic
+
+        # Our own retry policy is 10.8 (one retry), so the SDK does not retry on its own.
+        _claude_client = anthropic.Anthropic(api_key=config.LLM_API_KEY, timeout=config.LLM_TIMEOUT_SEC, max_retries=0)
+    return _claude_client
+
+
+def _call_claude(llm_input: dict) -> LLMCourse:
     import anthropic
 
     try:
-        resp = _get_client().beta.messages.create(
+        resp = _get_claude().beta.messages.create(
             model=config.LLM_MODEL,
             max_tokens=4000,
             system=SYSTEM_PROMPT,
