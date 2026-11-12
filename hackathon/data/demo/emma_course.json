@@ -1,0 +1,42 @@
+{
+  "_note": "Emma demo course (13장). Times and move info are computed by backend/scripts/reset_emma.py with the 10.6 rules. Reasons were written by hand from places.description_en / food_options only (R-03).",
+  "id": "e33a0000-0000-4000-8000-000000000001",
+  "tier": "free",
+  "start_time": "10:00",
+  "user_profile": {
+    "interests": ["photo", "market", "cafe"],
+    "fitness_level": 2,
+    "max_walk_min": 20,
+    "avoid_slopes": false,
+    "condition_today": "normal",
+    "diet": "vegan",
+    "duration": "full_day",
+    "conditions": { "indoor_only": false, "low_walking": false }
+  },
+  "items": [
+    {
+      "place_id": 1,
+      "reason_en": "You said you enjoy photo spots. This wave-carved rock on the north shore looks like a dragon's head rising from the sea."
+    },
+    {
+      "place_id": 20,
+      "reason_en": "You said you enjoy markets. Jeju City's oldest downtown shopping street, with a car-free section and small cafés."
+    },
+    {
+      "place_id": 21,
+      "reason_en": "A lunch stop where you can order for one, with a separately labelled vegan section and an English menu."
+    },
+    {
+      "place_id": 6,
+      "reason_en": "You said you enjoy markets. Jeju's biggest permanent market, a covered maze of stalls with tangerines and local snacks."
+    },
+    {
+      "place_id": 9,
+      "reason_en": "You said you enjoy photo spots. A grey-sand beach with a pair of red and white horse-shaped lighthouses on the breakwater."
+    },
+    {
+      "place_id": 2,
+      "reason_en": "Red-pillared halls and pavilions in the old city center, on flat ground with little walking."
+    }
+  ]
+}

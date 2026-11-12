@@ -1,0 +1,57 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  --ink: #17252a;
+  --muted: #5d6b70;
+  --line: #e3e8e6;
+  --paper: #ffffff;
+  --bg: #f4f1ea;
+  --sea: #1f7a8c;
+  --sea-soft: #e3f1f4;
+  --tangerine: #f28c28;
+  --tangerine-soft: #fff1e2;
+  --leaf: #4f7d3a;
+}
+
+html,
+body {
+  background: var(--bg);
+  color: var(--ink);
+}
+
+body {
+  -webkit-font-smoothing: antialiased;
+}
+
+.app-shell {
+  max-width: 430px;
+  margin: 0 auto;
+  min-height: 100dvh;
+  background: var(--paper);
+  position: relative;
+  box-shadow: 0 0 0 1px var(--line);
+}
+
+@keyframes shimmer {
+  0% { background-position: -200px 0; }
+  100% { background-position: 200px 0; }
+}
+.skeleton {
+  background: linear-gradient(90deg, #eceae4 0px, #f6f4ef 80px, #eceae4 160px);
+  background-size: 400px 100%;
+  animation: shimmer 1.2s infinite linear;
+}
+
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
+.spinner {
+  width: 28px;
+  height: 28px;
+  border-radius: 9999px;
+  border: 3px solid var(--sea-soft);
+  border-top-color: var(--sea);
+  animation: spin 0.9s linear infinite;
+}

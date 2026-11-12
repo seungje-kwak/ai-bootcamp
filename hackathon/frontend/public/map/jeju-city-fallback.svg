@@ -1,0 +1,41 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1000 700" preserveAspectRatio="none">
+  <!-- 7.8 fallback map: sea (top), land (bottom), one coastline, a few oreum. No text, no roads.
+       Coastline follows the guide points: (x%*10, y%*7). Image edges == MAP_CONFIG.bounds. -->
+  <defs>
+    <linearGradient id="sea" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#9fd3e6"/>
+      <stop offset="1" stop-color="#c6e6f1"/>
+    </linearGradient>
+    <linearGradient id="land" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#eef3df"/>
+      <stop offset="1" stop-color="#dbe8c6"/>
+    </linearGradient>
+    <radialGradient id="oreum" cx="0.5" cy="0.6" r="0.6">
+      <stop offset="0" stop-color="#a9c98a"/>
+      <stop offset="1" stop-color="#c8dcb0"/>
+    </radialGradient>
+  </defs>
+  <rect width="1000" height="700" fill="url(#sea)"/>
+  <!-- gentle waves -->
+  <g fill="none" stroke="#ffffff" stroke-opacity="0.55" stroke-width="3" stroke-linecap="round">
+    <path d="M60 120 q20 -10 40 0 t40 0"/>
+    <path d="M300 70 q20 -10 40 0 t40 0"/>
+    <path d="M620 50 q20 -10 40 0 t40 0"/>
+    <path d="M140 230 q20 -10 40 0 t40 0"/>
+    <path d="M470 85 q20 -10 40 0 t40 0"/>
+  </g>
+  <!-- land -->
+  <path d="M0 350 C 50 335, 95 322, 125 310 C 170 290, 215 235, 250 200 C 300 165, 360 140, 417 130
+           C 470 122, 530 128, 583 130 C 630 130, 670 116, 708 110 C 770 100, 830 88, 875 80
+           C 920 72, 965 60, 1000 50 L 1000 700 L 0 700 Z"
+        fill="url(#land)" stroke="#f7f1dc" stroke-width="10" stroke-linejoin="round"/>
+  <!-- inland contour hints (rising toward Hallasan in the south) -->
+  <g fill="none" stroke="#c3d6a8" stroke-width="3" stroke-opacity="0.7">
+    <path d="M0 560 C 200 520, 420 540, 620 500 S 900 470, 1000 450"/>
+    <path d="M0 640 C 230 610, 470 625, 690 590 S 920 565, 1000 555"/>
+  </g>
+  <!-- oreum: Dodubong (23.3%, 31.4%) and Sarabong (88.3%, 18.6%), plus one inland -->
+  <ellipse cx="233" cy="232" rx="34" ry="20" fill="url(#oreum)"/>
+  <ellipse cx="883" cy="142" rx="38" ry="22" fill="url(#oreum)"/>
+  <ellipse cx="560" cy="610" rx="70" ry="34" fill="url(#oreum)"/>
+</svg>

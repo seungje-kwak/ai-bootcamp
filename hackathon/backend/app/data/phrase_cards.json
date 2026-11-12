@@ -1,0 +1,296 @@
+[
+  {
+    "id": 1,
+    "place_id": null,
+    "situation": "restaurant",
+    "text_en": "Table for one, please.",
+    "text_ko": "한 명이에요."
+  },
+  {
+    "id": 2,
+    "place_id": null,
+    "situation": "restaurant",
+    "text_en": "Can I order a single portion?",
+    "text_ko": "1인분도 주문할 수 있어요?"
+  },
+  {
+    "id": 3,
+    "place_id": null,
+    "situation": "restaurant",
+    "text_en": "Do you have an English menu?",
+    "text_ko": "영어 메뉴 있어요?"
+  },
+  {
+    "id": 4,
+    "place_id": null,
+    "situation": "restaurant",
+    "text_en": "I'm vegan. No meat, fish, eggs or dairy, please.",
+    "text_ko": "저는 비건이에요. 고기, 생선, 달걀, 유제품은 빼 주세요."
+  },
+  {
+    "id": 5,
+    "place_id": null,
+    "situation": "restaurant",
+    "text_en": "I'm vegetarian. No meat or fish, please.",
+    "text_ko": "저는 채식주의자예요. 고기랑 생선은 빼 주세요."
+  },
+  {
+    "id": 6,
+    "place_id": null,
+    "situation": "restaurant",
+    "text_en": "Does this have pork in it?",
+    "text_ko": "이거 돼지고기 들어가요?"
+  },
+  {
+    "id": 7,
+    "place_id": null,
+    "situation": "restaurant",
+    "text_en": "Not spicy, please.",
+    "text_ko": "안 맵게 해 주세요."
+  },
+  {
+    "id": 8,
+    "place_id": null,
+    "situation": "restaurant",
+    "text_en": "Can I get the rest to go?",
+    "text_ko": "남은 거 포장해 주세요."
+  },
+  {
+    "id": 9,
+    "place_id": null,
+    "situation": "restaurant",
+    "text_en": "Can I pay by card?",
+    "text_ko": "카드 결제 돼요?"
+  },
+  {
+    "id": 10,
+    "place_id": null,
+    "situation": "taxi",
+    "text_en": "Please take me to this address.",
+    "text_ko": "이 주소로 가 주세요."
+  },
+  {
+    "id": 11,
+    "place_id": null,
+    "situation": "taxi",
+    "text_en": "Could you call a taxi for me?",
+    "text_ko": "택시 좀 불러 주실 수 있어요?"
+  },
+  {
+    "id": 12,
+    "place_id": null,
+    "situation": "bus",
+    "text_en": "Does this bus go to Jeju City Hall?",
+    "text_ko": "이 버스 제주시청 가요?"
+  },
+  {
+    "id": 13,
+    "place_id": null,
+    "situation": "general",
+    "text_en": "Where is the restroom?",
+    "text_ko": "화장실이 어디예요?"
+  },
+  {
+    "id": 14,
+    "place_id": null,
+    "situation": "general",
+    "text_en": "Is there somewhere I can sit and rest?",
+    "text_ko": "앉아서 쉴 수 있는 곳 있어요?"
+  },
+  {
+    "id": 15,
+    "place_id": 6,
+    "situation": "market",
+    "text_en": "How much is this?",
+    "text_ko": "이거 얼마예요?"
+  },
+  {
+    "id": 16,
+    "place_id": 6,
+    "situation": "market",
+    "text_en": "Can I buy just one?",
+    "text_ko": "하나만 살 수 있어요?"
+  },
+  {
+    "id": 17,
+    "place_id": 6,
+    "situation": "market",
+    "text_en": "Can I try a little?",
+    "text_ko": "조금 맛봐도 돼요?"
+  },
+  {
+    "id": 18,
+    "place_id": 6,
+    "situation": "market",
+    "text_en": "Please pack it so I can take it on the plane.",
+    "text_ko": "비행기에 가지고 탈 수 있게 포장해 주세요."
+  },
+  {
+    "id": 19,
+    "place_id": 6,
+    "situation": "night_market",
+    "text_en": "One of these, please. I'll eat it here.",
+    "text_ko": "이거 하나 주세요. 여기서 먹을게요."
+  },
+  {
+    "id": 20,
+    "place_id": 18,
+    "situation": "market",
+    "text_en": "Is the market open today?",
+    "text_ko": "오늘 오일장 열어요?"
+  },
+  {
+    "id": 21,
+    "place_id": 18,
+    "situation": "market",
+    "text_en": "Can I buy a small amount of tangerines?",
+    "text_ko": "귤 조금만 살 수 있어요?"
+  },
+  {
+    "id": 22,
+    "place_id": 18,
+    "situation": "market",
+    "text_en": "Where is the food section?",
+    "text_ko": "먹거리 파는 곳이 어디예요?"
+  },
+  {
+    "id": 23,
+    "place_id": 20,
+    "situation": "shopping",
+    "text_en": "Do you have this in a different size?",
+    "text_ko": "이거 다른 사이즈 있어요?"
+  },
+  {
+    "id": 24,
+    "place_id": 20,
+    "situation": "shopping",
+    "text_en": "Can I get a tax refund?",
+    "text_ko": "택스 리펀 돼요?"
+  },
+  {
+    "id": 25,
+    "place_id": 4,
+    "situation": "ticket",
+    "text_en": "Is admission free?",
+    "text_ko": "입장료 무료예요?"
+  },
+  {
+    "id": 26,
+    "place_id": 5,
+    "situation": "ticket",
+    "text_en": "One adult ticket, please.",
+    "text_ko": "성인 한 장 주세요."
+  },
+  {
+    "id": 27,
+    "place_id": 5,
+    "situation": "ticket",
+    "text_en": "Is there a locker for my bag?",
+    "text_ko": "가방 맡길 물품보관함 있어요?"
+  },
+  {
+    "id": 30,
+    "place_id": 16,
+    "situation": "ticket",
+    "text_en": "One adult ticket, please. Can I play the games inside?",
+    "text_ko": "성인 한 장 주세요. 안에서 게임해 볼 수 있어요?"
+  },
+  {
+    "id": 32,
+    "place_id": 2,
+    "situation": "ticket",
+    "text_en": "One adult ticket, please.",
+    "text_ko": "성인 한 장 주세요."
+  },
+  {
+    "id": 33,
+    "place_id": 3,
+    "situation": "ticket",
+    "text_en": "Is there a video or guide in English?",
+    "text_ko": "영어로 된 영상이나 안내가 있어요?"
+  },
+  {
+    "id": 34,
+    "place_id": 1,
+    "situation": "photo",
+    "text_en": "Could you take a photo of me?",
+    "text_ko": "사진 한 장 찍어 주실 수 있어요?"
+  },
+  {
+    "id": 35,
+    "place_id": 7,
+    "situation": "hike",
+    "text_en": "Which way to the top?",
+    "text_ko": "정상은 어느 쪽이에요?"
+  },
+  {
+    "id": 36,
+    "place_id": 8,
+    "situation": "hike",
+    "text_en": "How long does it take to the top?",
+    "text_ko": "정상까지 얼마나 걸려요?"
+  },
+  {
+    "id": 37,
+    "place_id": 9,
+    "situation": "beach",
+    "text_en": "Where is the bus stop to Jeju City?",
+    "text_ko": "제주시내 가는 버스 정류장이 어디예요?"
+  },
+  {
+    "id": 38,
+    "place_id": 10,
+    "situation": "walk",
+    "text_en": "Is this path flat?",
+    "text_ko": "이 길 평평해요?"
+  },
+  {
+    "id": 42,
+    "place_id": 21,
+    "situation": "restaurant",
+    "text_en": "Which dishes are vegan?",
+    "text_ko": "비건 메뉴는 어떤 거예요?"
+  },
+  {
+    "id": 43,
+    "place_id": 21,
+    "situation": "restaurant",
+    "text_en": "Is there a prayer room?",
+    "text_ko": "기도실 있어요?"
+  },
+  {
+    "id": 44,
+    "place_id": 22,
+    "situation": "restaurant",
+    "text_en": "One pad thai, vegan please - no egg, no fish sauce.",
+    "text_ko": "팟타이 하나 비건으로 주세요. 달걀이랑 피시소스는 빼 주세요."
+  },
+  {
+    "id": 45,
+    "place_id": 23,
+    "situation": "restaurant",
+    "text_en": "One bracken beef soup (gosari yukgaejang), please.",
+    "text_ko": "고사리육개장 하나 주세요."
+  },
+  {
+    "id": 46,
+    "place_id": 24,
+    "situation": "restaurant",
+    "text_en": "One pork noodle soup (gogi guksu), please.",
+    "text_ko": "고기국수 하나 주세요."
+  },
+  {
+    "id": 49,
+    "place_id": 27,
+    "situation": "cafe",
+    "text_en": "One Chilseong latte, please.",
+    "text_ko": "칠성라떼 하나 주세요."
+  },
+  {
+    "id": 50,
+    "place_id": 15,
+    "situation": "restaurant",
+    "text_en": "Can I order just one dish for one person?",
+    "text_ko": "한 사람이 한 가지만 시켜도 돼요?"
+  }
+]

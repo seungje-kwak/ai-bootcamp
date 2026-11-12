@@ -1,0 +1,51 @@
+﻿id,place_id,situation,text_en,text_ko
+1,,restaurant,"Table for one, please.",한 명이에요.
+2,,restaurant,Can I order a single portion?,1인분도 주문할 수 있어요?
+3,,restaurant,Do you have an English menu?,영어 메뉴 있어요?
+4,,restaurant,"I'm vegan. No meat, fish, eggs or dairy, please.","저는 비건이에요. 고기, 생선, 달걀, 유제품은 빼 주세요."
+5,,restaurant,"I'm vegetarian. No meat or fish, please.",저는 채식주의자예요. 고기랑 생선은 빼 주세요.
+6,,restaurant,Does this have pork in it?,이거 돼지고기 들어가요?
+7,,restaurant,"Not spicy, please.",안 맵게 해 주세요.
+8,,restaurant,Can I get the rest to go?,남은 거 포장해 주세요.
+9,,restaurant,Can I pay by card?,카드 결제 돼요?
+10,,taxi,Please take me to this address.,이 주소로 가 주세요.
+11,,taxi,Could you call a taxi for me?,택시 좀 불러 주실 수 있어요?
+12,,bus,Does this bus go to Jeju City Hall?,이 버스 제주시청 가요?
+13,,general,Where is the restroom?,화장실이 어디예요?
+14,,general,Is there somewhere I can sit and rest?,앉아서 쉴 수 있는 곳 있어요?
+15,6,market,How much is this?,이거 얼마예요?
+16,6,market,Can I buy just one?,하나만 살 수 있어요?
+17,6,market,Can I try a little?,조금 맛봐도 돼요?
+18,6,market,Please pack it so I can take it on the plane.,비행기에 가지고 탈 수 있게 포장해 주세요.
+19,6,night_market,"One of these, please. I'll eat it here.",이거 하나 주세요. 여기서 먹을게요.
+20,18,market,Is the market open today?,오늘 오일장 열어요?
+21,18,market,Can I buy a small amount of tangerines?,귤 조금만 살 수 있어요?
+22,18,market,Where is the food section?,먹거리 파는 곳이 어디예요?
+23,20,shopping,Do you have this in a different size?,이거 다른 사이즈 있어요?
+24,20,shopping,Can I get a tax refund?,택스 리펀 돼요?
+25,4,ticket,Is admission free?,입장료 무료예요?
+26,5,ticket,"One adult ticket, please.",성인 한 장 주세요.
+27,5,ticket,Is there a locker for my bag?,가방 맡길 물품보관함 있어요?
+28,11,ticket,"One adult ticket, please.",성인 한 장 주세요.
+29,13,guide,Is there an English audio guide?,영어 오디오 가이드 있어요?
+30,16,ticket,"One adult ticket, please. Can I play the games inside?",성인 한 장 주세요. 안에서 게임해 볼 수 있어요?
+31,17,ticket,How long does it take to walk around?,다 둘러보는 데 얼마나 걸려요?
+32,2,ticket,"One adult ticket, please.",성인 한 장 주세요.
+33,3,ticket,Is there a video or guide in English?,영어로 된 영상이나 안내가 있어요?
+34,1,photo,Could you take a photo of me?,사진 한 장 찍어 주실 수 있어요?
+35,7,hike,Which way to the top?,정상은 어느 쪽이에요?
+36,8,hike,How long does it take to the top?,정상까지 얼마나 걸려요?
+37,9,beach,Where is the bus stop to Jeju City?,제주시내 가는 버스 정류장이 어디예요?
+38,10,walk,Is this path flat?,이 길 평평해요?
+39,12,beach,Can I swim here now?,지금 여기서 수영해도 돼요?
+40,14,walk,Which trail is the easiest?,제일 쉬운 산책로가 어디예요?
+41,19,ticket,Can I feed the deer?,노루한테 먹이 줘도 돼요?
+42,21,restaurant,Which dishes are vegan?,비건 메뉴는 어떤 거예요?
+43,21,restaurant,Is there a prayer room?,기도실 있어요?
+44,22,restaurant,"One pad thai, vegan please - no egg, no fish sauce.",팟타이 하나 비건으로 주세요. 달걀이랑 피시소스는 빼 주세요.
+45,23,restaurant,"One bracken beef soup (gosari yukgaejang), please.",고사리육개장 하나 주세요.
+46,24,restaurant,"One pork noodle soup (gogi guksu), please.",고기국수 하나 주세요.
+47,25,cafe,"One Mundo Einspänner, please. I'll have it here.",문도슈페너 하나 주세요. 먹고 갈게요.
+48,26,restaurant,"One yeolmu guksu, please.",열무국수 하나 주세요.
+49,27,cafe,"One Chilseong latte, please.",칠성라떼 하나 주세요.
+50,15,restaurant,Can I order just one dish for one person?,한 사람이 한 가지만 시켜도 돼요?

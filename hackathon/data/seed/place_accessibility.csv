@@ -1,0 +1,28 @@
+﻿place_id,walking_level,terrain,has_stairs,wheelchair_ok,indoor,has_seating,restroom,fatigue_score,note
+1,2,paved viewing area by the parking lot; steps down to slippery basalt shoreline for a lower viewpoint; ~200 m street walk to Yongyeon pond and its suspension bridge,true,,false,,true,2,accessible_restroom=True
+2,1,flat walled compound; stone-slab paths over sand/gravel courtyards and lawn; buildings sit on raised stone platforms with a few steps,true,false,false,,true,2,wheelchair: partial
+3,1,flat wooded grounds; paved/stone paths with some dirt sections; gentle ramp at entrance,,false,false,true,true,1,wheelchair: partial; accessible_restroom=True
+4,1,flat paved forecourt; indoor galleries on multiple levels with elevator,true,true,true,true,true,2,accessible_restroom=True
+5,1,wide stone staircase to main entrance with ramp alternative; indoor galleries; outdoor garden with rock and stone-carving displays,true,true,true,true,true,2,accessible_restroom=True
+6,1,flat paved alleys under a covered arcade; very crowded in the evening and at weekends,,,false,,true,2,indoor: mixed (indoor+outdoor)
+7,3,"uphill paved and dirt paths through pine forest, with stone staircases (e.g. to the Mochungsa memorial tower)",true,false,false,true,true,3,
+8,3,short steep climb on earth/timber step trails under trees; open grassy summit,true,false,false,,true,2,
+9,1,flat sand beach; wooden boardwalk and paved paths through the pine grove; walk along the breakwater to the lighthouses,,false,false,true,true,1,wheelchair: partial
+10,2,paved and gravel garden paths on a gentle hillside; steeper forest-bath trail up the oreum slope,,true,false,true,true,2,indoor: mixed (indoor+outdoor); accessible_restroom=True
+11,1,flat indoor galleries; paved/lawn forecourt with outdoor sculptures,false,true,true,,true,1,
+12,1,sand beach; narrow paved/deck seaside promenade; arched footbridge (~11 deg); optional Seoubong cement/dirt path with slopes,true,false,false,true,true,2,wheelchair: partial; accessible_restroom=True
+13,2,mostly flat paved paths with some unpaved sections; ~330 m gentle uphill (3-5 deg) to memorial tower; ramps beside steps at altar/plaza,true,false,false,,true,2,wheelchair: partial; indoor: mixed (indoor+outdoor); accessible_restroom=True
+14,2,"gentle forest deck paths and coir-mat (야자매트) trails, no steps on main routes; optional oreum trail is steeper",false,false,false,true,true,2,wheelchair: partial; accessible_restroom=True
+15,1,small courtyard with level changes; slopes up to ~13 deg to the tavern building,true,false,false,true,,1,indoor: mixed (indoor+outdoor); accessible_restroom=False
+16,1,"indoor building (B1 café + 1F-3F exhibitions), elevator, step-free per VisitJeju",false,true,true,true,true,1,accessible_restroom=True
+17,3,"large outdoor site in forest/grassland; paved walking paths with stone exhibits on gravel beside them; several indoor halls, some below ground level (B2-1F)",,false,false,true,true,4,wheelchair: partial; indoor: mixed (indoor+outdoor); accessible_restroom=True
+18,2,flat paved ground; large grid of roofed market aisles plus open-air areas; very crowded on market days,false,false,false,,true,3,wheelchair: partial; indoor: mixed (indoor+outdoor)
+19,3,"level area near entrance (exhibition hall, fenced deer enclosure); 2.6 km forest/oreum observation trail around Geochin Oreum with slopes",,false,false,true,true,3,wheelchair: partial; indoor: mixed (indoor+outdoor); accessible_restroom=True
+20,1,flat paved pedestrian street (car-free section about 360 m); some shop entrances have a few steps,,,false,,true,2,indoor: mixed (indoor+outdoor)
+21,1,,,,true,true,,1,restaurant/cafe - 접근성 미확인
+22,1,,,,true,true,,1,restaurant/cafe - 접근성 미확인
+23,1,,,,true,true,,1,restaurant/cafe - 접근성 미확인
+24,1,,,,true,true,,1,restaurant/cafe - 접근성 미확인
+25,1,,,,true,true,,1,restaurant/cafe - 접근성 미확인
+26,1,,,,true,true,,1,restaurant/cafe - 접근성 미확인
+27,1,,,,true,true,,1,restaurant/cafe - 접근성 미확인
