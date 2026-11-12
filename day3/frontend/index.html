@@ -4,6 +4,8 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>제주 미세먼지 보드</title>
+<!-- 지도: Leaflet + OpenStreetMap (API 키 필요 없음) -->
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.css">
 <style>
   :root { --main: #0e6b8c; --ok: #1f9d55; --warn: #d98e04; --err: #d64545; --line: #e3e6ea; --muted: #6b7280; }
   * { box-sizing: border-box; }
@@ -46,6 +48,23 @@
   .legend i { display: inline-block; width: 18px; height: 0; border-top: 2px solid var(--main); vertical-align: middle; margin-right: 4px; }
   .legend i.pred { border-top-style: dashed; border-color: var(--warn); }
   .compare { margin: 10px 0 0; font-size: .9rem; }
+  /* 지도 */
+  .map-wrap { display: grid; grid-template-columns: 1fr 240px; gap: 10px; }
+  @media (max-width: 640px) { .map-wrap { grid-template-columns: 1fr; } }
+  #map { height: 400px; border: 1px solid var(--line); border-radius: 12px; z-index: 0; cursor: crosshair; }
+  .pick { background: #fff; border: 1px solid var(--line); border-radius: 12px; padding: 14px; }
+  .pick h3 { margin: 0 0 2px; font-size: 1.15rem; }
+  .pick .meta { color: var(--muted); font-size: .8rem; margin: 0 0 10px; }
+  .pick .big { font-size: 2.2rem; font-weight: 700; font-variant-numeric: tabular-nums; line-height: 1.1; }
+  .pick dl { display: grid; grid-template-columns: auto 1fr; gap: 4px 10px; margin: 10px 0 0; font-size: .9rem; }
+  .pick dt { color: var(--muted); }
+  .pick dd { margin: 0; font-variant-numeric: tabular-nums; }
+  .pm-pin { width: 34px; height: 34px; border-radius: 50%; color: #fff; font: 700 12px/34px system-ui, sans-serif; text-align: center; border: 2px solid #fff; box-shadow: 0 1px 4px rgba(0,0,0,.35); }
+  .pm-pin.on { outline: 3px solid #111; }
+  .b-좋음 { background: #1f6fd1; } .b-보통 { background: var(--ok); } .b-나쁨 { background: var(--warn); } .b-매우나쁨 { background: var(--err); } .b-정보없음 { background: #9aa3ad; }
+  .map-legend { display: flex; gap: 10px; flex-wrap: wrap; color: var(--muted); font-size: .78rem; margin-top: 8px; }
+  .map-legend span::before { content: ""; display: inline-block; width: 10px; height: 10px; border-radius: 50%; margin-right: 4px; vertical-align: -1px; background: var(--c); }
+  tr.selected td { background: #fff7e0; }
 </style>
 </head>
 <body>
@@ -65,6 +84,19 @@
     <div class="card"><div class="label">가장 나쁜 곳</div><div class="value" id="worst">-</div><div class="note" id="worstVal">&nbsp;</div></div>
     <div class="card"><div class="label">점검 중 측정소</div><div class="value" id="missing">-</div><div class="note" id="stationCount">&nbsp;</div></div>
     <div class="card"><div class="label">다음 1시간 예측</div><div class="value" id="fc">-</div><div class="note" id="fcNote">&nbsp;</div></div>
+  </div>
+
+  <h2>지도에서 지역을 클릭하세요</h2>
+  <div class="map-wrap">
+    <div id="map" role="application" aria-label="제주 측정소 지도. 클릭하면 가장 가까운 측정소의 미세먼지를 보여 줍니다"></div>
+    <div class="pick" id="pick">
+      <h3>지역 선택</h3>
+      <p class="meta">지도 아무 곳이나 클릭하면 가장 가까운 측정소의 미세먼지를 보여 줍니다. 동그라미 숫자는 PM2.5 입니다.</p>
+    </div>
+  </div>
+  <div class="map-legend">
+    <span style="--c:#1f6fd1">좋음 0~15</span><span style="--c:var(--ok)">보통 16~35</span><span style="--c:var(--warn)">나쁨 36~75</span><span style="--c:var(--err)">매우나쁨 76~</span><span style="--c:#9aa3ad">점검 중</span>
+    <span style="--c:transparent">· 측정소 위치는 읍·동 기준 대략 위치</span>
   </div>
 
   <h2>최근 24시간 추이 · 평균 PM2.5 (매시간 자동 수집)</h2>
@@ -92,6 +124,7 @@
   </details>
 </main>
 
+<script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js"></script>
 <script src="config.js"></script>
 <script>
   const API = window.API_BASE;
@@ -127,7 +160,7 @@
       return;
     }
     $("rows").innerHTML = rows.map((r) => `
-      <tr class="${r.is_missing ? "missing" : ""}">
+      <tr class="${r.is_missing ? "missing" : ""}" data-name="${esc(r.station_name)}" style="cursor:pointer">
         <td>${esc(r.station_name)}</td>
         <td class="num">${fmt(r.pm10)}</td>
         <td class="num">${fmt(r.pm25)}</td>
@@ -214,6 +247,103 @@
     $("chart").innerHTML = svg;
   }
 
+  // ---------------------------------------------------------------- 지도
+  // 에어코리아 제주 측정소 위치 (읍·동 기준 대략 좌표 [위도, 경도])
+  const STATIONS = {
+    "이도동": [33.5005, 126.5330], "연동": [33.4888, 126.4930], "노형로": [33.4836, 126.4770],
+    "화북동": [33.5190, 126.5690], "제주항": [33.5195, 126.5430], "조천읍": [33.5383, 126.6350],
+    "애월읍": [33.4627, 126.3310], "한림읍": [33.4118, 126.2667], "고산리": [33.2938, 126.1628],
+    "대정읍": [33.2240, 126.2510], "강정동": [33.2340, 126.4740], "동홍동": [33.2614, 126.5690],
+    "남원읍": [33.2793, 126.7196], "성산읍": [33.4370, 126.9100],
+  };
+  const NEAR_LIMIT_M = 20000;  // 이보다 멀면 "근처 측정소 없음" (바다 한가운데 등)
+  let map = null, markers = {}, clickDot = null, latestRows = [], selected = null;
+
+  function initMap() {
+    if (!window.L) { $("map").innerHTML = '<p class="empty">지도를 불러오지 못했습니다 (인터넷 연결 확인).</p>'; return; }
+    map = L.map("map", { scrollWheelZoom: false });
+    map.fitBounds(L.latLngBounds(Object.values(STATIONS)), { padding: [24, 24] });  // 측정소가 모두 보이게
+    L.tileLayer("https://tile.openstreetmap.org/{z}/{x}/{y}.png", {
+      maxZoom: 18, attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>',
+    }).addTo(map);
+    map.on("click", (e) => selectNearest(e.latlng));  // 지도 아무 곳이나 클릭 → 가장 가까운 측정소
+  }
+
+  function rowOf(name) { return latestRows.find((r) => r.station_name === name); }
+
+  function renderMap(rows) {
+    latestRows = rows;
+    if (!map) return;
+    Object.values(markers).forEach((m) => m.remove());
+    markers = {};
+    for (const [name, pos] of Object.entries(STATIONS)) {
+      const r = rowOf(name);
+      const grade = !r || r.is_missing ? "정보없음" : r.grade;
+      const label = !r || r.pm25 == null ? "-" : fmt(r.pm25);
+      const icon = L.divIcon({ className: "", iconSize: [34, 34], iconAnchor: [17, 17],
+        html: `<div class="pm-pin b-${esc(grade)}${selected === name ? " on" : ""}">${label}</div>` });
+      markers[name] = L.marker(pos, { icon, title: name, keyboard: true })
+        .bindTooltip(name, { direction: "top", offset: [0, -16] })
+        .on("click", (e) => { L.DomEvent.stopPropagation(e); selectStation(name); })
+        .addTo(map);
+    }
+    if (selected) selectStation(selected, { keepView: true });
+  }
+
+  function selectNearest(latlng) {
+    let best = null, bestDist = Infinity;
+    for (const [name, pos] of Object.entries(STATIONS)) {
+      const d = map.distance(latlng, pos);
+      if (d < bestDist) { best = name; bestDist = d; }
+    }
+    if (clickDot) clickDot.remove();
+    clickDot = L.circleMarker(latlng, { radius: 5, color: "#111", weight: 2, fillOpacity: 0.2 }).addTo(map);
+    if (bestDist > NEAR_LIMIT_M) {
+      $("pick").innerHTML = `<h3>근처 측정소 없음</h3><p class="meta">가장 가까운 측정소가 ${fmt(bestDist / 1000)}km 떨어져 있어요. 제주 섬 안쪽을 클릭해 보세요.</p>`;
+      return;
+    }
+    selectStation(best, { distance: bestDist, from: latlng });
+  }
+
+  function selectStation(name, opts = {}) {
+    selected = name;
+    const r = rowOf(name);
+    // 지도 표시: 선택한 측정소 테두리 + 클릭 지점과 연결선
+    Object.entries(markers).forEach(([n, m]) => { const el = m.getElement()?.querySelector(".pm-pin"); if (el) el.classList.toggle("on", n === name); });
+    if (opts.from) {
+      if (clickDot.line) clickDot.line.remove();
+      clickDot.line = L.polyline([opts.from, STATIONS[name]], { color: "#111", weight: 1, dashArray: "4 4" }).addTo(map);
+    } else if (!opts.keepView && map) {
+      if (clickDot) { clickDot.line?.remove(); clickDot.remove(); clickDot = null; }
+      map.panTo(STATIONS[name]);
+    }
+    // 표에서도 같은 측정소 강조
+    document.querySelectorAll("#rows tr").forEach((tr) => tr.classList.toggle("selected", tr.dataset.name === name));
+
+    const where = opts.distance != null ? `클릭한 곳에서 가장 가까운 측정소 · ${fmt(opts.distance / 1000)}km` : "측정소";
+    if (!r) {
+      $("pick").innerHTML = `<h3>${esc(name)}</h3><p class="meta">${where}</p><p class="big">-</p><p class="meta">최신 시각 자료가 없습니다 (점검 중이거나 지연).</p>`;
+      return;
+    }
+    const t = new Date(r.data_time).toLocaleString("ko-KR", { timeZone: "Asia/Seoul", month: "long", day: "numeric", hour: "2-digit", minute: "2-digit" });
+    $("pick").innerHTML = `
+      <h3>${esc(name)}</h3>
+      <p class="meta">${where}</p>
+      <div class="label" style="color:var(--muted);font-size:.8rem">초미세먼지 PM2.5</div>
+      <div class="big">${fmt(r.pm25)}<small style="font-size:.9rem;font-weight:400;color:var(--muted)"> ㎍/㎥</small></div>
+      <div><span class="grade g-${esc(r.grade)}">${r.is_missing ? "점검 중" : esc(r.grade)}</span></div>
+      <dl>
+        <dt>미세먼지 PM10</dt><dd>${fmt(r.pm10)} ㎍/㎥</dd>
+        <dt>측정 시각</dt><dd>${t}</dd>
+      </dl>`;
+  }
+
+  // 표의 줄을 클릭해도 지도에서 그 측정소로 이동
+  $("rows").addEventListener("click", (e) => {
+    const tr = e.target.closest("tr[data-name]");
+    if (tr && STATIONS[tr.dataset.name]) selectStation(tr.dataset.name);
+  });
+
   async function loadAll() {
     $("error").textContent = "";
     const q = "?sido=" + encodeURIComponent(SIDO);
@@ -223,7 +353,7 @@
         getJSON("/air/summary" + q + "&hours=24"),
         getJSON("/air/forecast" + q),
       ]);
-      renderRows(rows); renderSummary(summary); renderForecast(fc); renderChart(summary, fc);
+      renderRows(rows); renderSummary(summary); renderForecast(fc); renderChart(summary, fc); renderMap(rows);
     } catch (e) {
       $("error").textContent = "데이터를 불러오지 못했습니다: " + e.message;
     }
@@ -247,6 +377,7 @@
     }
   });
 
+  initMap();
   checkHealth().then(loadAll).catch(() => {});
 </script>
 </body>
