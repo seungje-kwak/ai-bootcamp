@@ -3,7 +3,7 @@
 The spec is [prd-mypace-jeju.md](prd-mypace-jeju.md). Field names, enums, and paths follow PRD chapters 8, 9 and 10 exactly.
 
 ```
-frontend/   Next.js 14 + Tailwind (screens 1-5, illustrated map)       → Vercel (Root Directory: frontend)
+frontend/   Next.js 14 + Tailwind (screens 1-5, Kakao map)             → Vercel (Root Directory: frontend)
 backend/    FastAPI (6 endpoints, filter → LLM/rules → validate → timing) → Railway (Root Directory: backend)
 data/       seed CSVs (seed/), Emma demo course (demo/emma_course.json)
 ```
@@ -36,7 +36,12 @@ Run `scripts/reset_emma.py` again before every rehearsal (13.5).
 | `LLM_API_KEY` | Rule-based planner (10.8) | LLM picks the stops. `LLM_PROVIDER=gemini` (default, model `gemini-3.1-flash-lite`, JSON schema output, temperature 0.3) or `claude` (model `claude-opus-5-5`). `LLM_MODEL` overrides the model. If it fails twice, falls back to the rule planner (`LLM_FALLBACK_RULES=false` returns 502 `LLM_FAILED` instead) |
 | `REQUIRE_VERIFIED` | `false`: places with no photo or verification date are still candidates | `true`: F-1 applies (turn on before the demo) |
 
-Frontend: `NEXT_PUBLIC_API_URL` is the only variable (`frontend/.env.local`).
+Frontend (`frontend/.env.local`, and the same names in Vercel):
+
+| Setting | When empty | When filled |
+|---|---|---|
+| `NEXT_PUBLIC_API_URL` | — (required, include `https://` in Vercel) | Backend address |
+| `NEXT_PUBLIC_KAKAO_MAP_KEY` | Fallback SVG map (PRD 7.8) | Kakao map (PRD 7). Use the app's **JavaScript key** and register `http://localhost:3000` and the Vercel URL under Platform → Web → Site domain in Kakao Developers. If the SDK fails to load (unregistered domain, blocked script) the fallback SVG map is shown automatically. Vercel needs a redeploy after changing it |
 
 ## Switching to Supabase
 
@@ -50,4 +55,4 @@ Q-05 note: PostgREST reads `order=` in a URL as the sort option, so the backend 
 
 - category: `history_culture`, `museum` → `culture`; `market_shopping` → `market`; `park`, `oreum_hike` → `nature`; `beach` → `photo`; `restaurant` → `food`. Yongduam Rock and Dodubong Peak are overridden to `photo`.
 - terrain: free-text description → `flat` / `slope` / `steep`; closed_days: free text → `["mon".."sun"]`; price_level: free/low/mid/high → 0-3.
-- **8 places outside the map bounds (7.2) are excluded** (Q-13): Jeju Museum of Art, Hamdeok Beach, Jeju 4·3 Peace Park, Jeolmul Forest, Jeju Stone Park, Roe Deer Observation Center, Cafe Delmoondo, and Chammatna Gimbap (no coordinates). Widening the range means changing `bounds`/`aspectRatio` in `frontend/config/map.ts`, `BOUNDS` in `build_places.py`, and the fallback SVG together.
+- **8 places outside the map bounds (7.2) are excluded** (Q-13): Jeju Museum of Art, Hamdeok Beach, Jeju 4·3 Peace Park, Jeolmul Forest, Jeju Stone Park, Roe Deer Observation Center, Cafe Delmoondo, and Chammatna Gimbap (no coordinates). Widening the range means changing `bounds` in `frontend/config/map.ts`, `BOUNDS` in `build_places.py`, and the fallback SVG together (PRD Q-27).
