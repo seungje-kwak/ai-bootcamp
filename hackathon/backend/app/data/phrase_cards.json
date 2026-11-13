@@ -189,11 +189,32 @@
     "text_ko": "가방 맡길 물품보관함 있어요?"
   },
   {
+    "id": 28,
+    "place_id": 11,
+    "situation": "ticket",
+    "text_en": "One adult ticket, please.",
+    "text_ko": "성인 한 장 주세요."
+  },
+  {
+    "id": 29,
+    "place_id": 13,
+    "situation": "guide",
+    "text_en": "Is there an English audio guide?",
+    "text_ko": "영어 오디오 가이드 있어요?"
+  },
+  {
     "id": 30,
     "place_id": 16,
     "situation": "ticket",
     "text_en": "One adult ticket, please. Can I play the games inside?",
     "text_ko": "성인 한 장 주세요. 안에서 게임해 볼 수 있어요?"
+  },
+  {
+    "id": 31,
+    "place_id": 17,
+    "situation": "ticket",
+    "text_en": "How long does it take to walk around?",
+    "text_ko": "다 둘러보는 데 얼마나 걸려요?"
   },
   {
     "id": 32,
@@ -245,6 +266,27 @@
     "text_ko": "이 길 평평해요?"
   },
   {
+    "id": 39,
+    "place_id": 12,
+    "situation": "beach",
+    "text_en": "Can I swim here now?",
+    "text_ko": "지금 여기서 수영해도 돼요?"
+  },
+  {
+    "id": 40,
+    "place_id": 14,
+    "situation": "walk",
+    "text_en": "Which trail is the easiest?",
+    "text_ko": "제일 쉬운 산책로가 어디예요?"
+  },
+  {
+    "id": 41,
+    "place_id": 19,
+    "situation": "ticket",
+    "text_en": "Can I feed the deer?",
+    "text_ko": "노루한테 먹이 줘도 돼요?"
+  },
+  {
     "id": 42,
     "place_id": 21,
     "situation": "restaurant",
@@ -278,6 +320,13 @@
     "situation": "restaurant",
     "text_en": "One pork noodle soup (gogi guksu), please.",
     "text_ko": "고기국수 하나 주세요."
+  },
+  {
+    "id": 47,
+    "place_id": 25,
+    "situation": "cafe",
+    "text_en": "One Mundo Einspänner, please. I'll have it here.",
+    "text_ko": "문도슈페너 하나 주세요. 먹고 갈게요."
   },
   {
     "id": 49,
