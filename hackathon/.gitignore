@@ -4,5 +4,4 @@ node_modules/
 __pycache__/
 .env
 .env.local
-backend/local_db.json
 backend/*.tmp

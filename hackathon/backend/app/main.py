@@ -26,8 +26,8 @@ app.add_middleware(
 
 @app.on_event("startup")
 def _startup() -> None:
-    log.info("store=%s llm=%s provider=%s model=%s require_verified=%s",
-             "supabase" if config.USE_SUPABASE else "local",
+    get_store()  # fail at startup, not on the first request, when Supabase is not configured
+    log.info("store=supabase llm=%s provider=%s model=%s require_verified=%s",
              "on" if config.USE_LLM else "off (rule planner)", config.LLM_PROVIDER, config.LLM_MODEL,
              config.REQUIRE_VERIFIED)
 
@@ -42,7 +42,7 @@ def _course_response(course_id: str) -> dict:
 
 @app.get("/")
 def health() -> dict:
-    return {"ok": True, "store": "supabase" if config.USE_SUPABASE else "local",
+    return {"ok": True, "store": "supabase",
             "llm": f"{config.LLM_PROVIDER}:{config.LLM_MODEL}" if config.USE_LLM else False}
 
 

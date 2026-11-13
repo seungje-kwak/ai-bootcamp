@@ -2,7 +2,7 @@
 
 Run before every rehearsal and right before the presentation:
     backend/.venv/Scripts/python.exe backend/scripts/reset_emma.py
-Writes to Supabase when SUPABASE_URL/SUPABASE_SERVICE_KEY are set in backend/.env, else to backend/local_db.json.
+Writes to Supabase. SUPABASE_URL and SUPABASE_SERVICE_KEY must be set in backend/.env.
 """
 from __future__ import annotations
 
@@ -42,7 +42,7 @@ def main() -> int:
              for n, r in enumerate(rows, start=1)]
     store.replace_course(course, items)
 
-    print(f"Emma course reset ({'supabase' if config.USE_SUPABASE else 'local'}): /course/{demo['id']}")
+    print(f"Emma course reset: /course/{demo['id']}")
     for it in items:
         p = places[it["place_id"]]
         move = f"{it['move_min']} min {it['move_method']}" if it["move_method"] else "start"

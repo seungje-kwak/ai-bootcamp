@@ -1,6 +1,6 @@
-"""Data access. LocalStore (JSON file) by default, SupabaseStore when SUPABASE_URL/SUPABASE_SERVICE_KEY are set.
+"""Data access. Supabase only: SUPABASE_URL and SUPABASE_SERVICE_KEY must be set in backend/.env.
 
-Both stores expose the same methods and return plain dicts:
+The store returns plain dicts:
   place        -> PRD 9.3 `Place` (with nested accessibility / food_options)
   course row   -> {id, user_profile, tier, created_at}
   item row     -> {course_id, order, place_id, start_time, stay_min, move_method, move_min,
@@ -9,8 +9,6 @@ Both stores expose the same methods and return plain dicts:
 from __future__ import annotations
 
 import copy
-import json
-import threading
 import time
 from datetime import datetime, timezone
 from typing import Any, Optional, Protocol
@@ -33,93 +31,6 @@ class Store(Protocol):
     def set_tier(self, course_id: str, tier: str) -> None: ...
     def add_report(self, place_id: int, type_: str) -> dict: ...
     def replace_course(self, course: dict, items: list[dict]) -> None: ...
-
-
-def _load_json(name: str) -> Any:
-    return json.loads((config.LOCAL_DATA_DIR / name).read_text(encoding="utf-8"))
-
-
-# ---------------------------------------------------------------------------
-class LocalStore:
-    """Places come from app/data/*.json (built from data/seed). Courses persist to backend/local_db.json."""
-
-    def __init__(self) -> None:
-        self._lock = threading.Lock()
-        self._places = _load_json("places.json")
-        self._cards = _load_json("phrase_cards.json")
-        self._mtime = -1.0
-        self._db: dict = {"courses": {}, "course_items": {}, "place_reports": []}
-        self._reload()
-
-    def _reload(self) -> None:
-        """Pick up writes from other processes (e.g. scripts/reset_emma.py while the server runs)."""
-        f = config.LOCAL_DB_FILE
-        if f.exists() and f.stat().st_mtime != self._mtime:
-            self._db = json.loads(f.read_text(encoding="utf-8"))
-            self._mtime = f.stat().st_mtime
-
-    def _save(self) -> None:
-        tmp = config.LOCAL_DB_FILE.with_suffix(".tmp")
-        tmp.write_text(json.dumps(self._db, ensure_ascii=False, indent=1), encoding="utf-8")
-        tmp.replace(config.LOCAL_DB_FILE)
-        self._mtime = config.LOCAL_DB_FILE.stat().st_mtime
-
-    def list_places(self) -> list[dict]:
-        return copy.deepcopy(self._places)
-
-    def list_phrase_cards(self) -> list[dict]:
-        return copy.deepcopy(self._cards)
-
-    def get_course(self, course_id: str) -> Optional[dict]:
-        self._reload()
-        c = self._db["courses"].get(course_id)
-        return copy.deepcopy(c) if c else None
-
-    def get_items(self, course_id: str) -> list[dict]:
-        self._reload()
-        items = self._db["course_items"].get(course_id, [])
-        return sorted(copy.deepcopy(items), key=lambda i: i["order"])
-
-    def create_course(self, course: dict, items: list[dict]) -> None:
-        with self._lock:
-            self._reload()
-            self._db["courses"][course["id"]] = copy.deepcopy(course)
-            self._db["course_items"][course["id"]] = copy.deepcopy(items)
-            self._save()
-
-    def replace_course(self, course: dict, items: list[dict]) -> None:
-        self.create_course(course, items)
-
-    def apply_replan(self, course_id, user_profile, statuses, delete_orders, new_items, report_place_id) -> None:
-        with self._lock:
-            self._reload()
-            self._db["courses"][course_id]["user_profile"] = copy.deepcopy(user_profile)
-            kept = []
-            for it in self._db["course_items"].get(course_id, []):
-                if it["order"] in delete_orders:
-                    continue
-                if it["order"] in statuses:
-                    it["status"] = statuses[it["order"]]
-                kept.append(it)
-            kept.extend(copy.deepcopy(new_items))
-            self._db["course_items"][course_id] = sorted(kept, key=lambda i: i["order"])
-            if report_place_id is not None:
-                self._db["place_reports"].append({"place_id": report_place_id, "type": "closed", "created_at": now_iso()})
-            self._save()
-
-    def set_tier(self, course_id: str, tier: str) -> None:
-        with self._lock:
-            self._reload()
-            self._db["courses"][course_id]["tier"] = tier
-            self._save()
-
-    def add_report(self, place_id: int, type_: str) -> dict:
-        row = {"place_id": place_id, "type": type_, "created_at": now_iso()}
-        with self._lock:
-            self._reload()
-            self._db["place_reports"].append(row)
-            self._save()
-        return row
 
 
 # ---------------------------------------------------------------------------
@@ -239,5 +150,7 @@ _store: Optional[Store] = None
 def get_store() -> Store:
     global _store
     if _store is None:
-        _store = SupabaseStore() if config.USE_SUPABASE else LocalStore()
+        if not config.USE_SUPABASE:
+            raise RuntimeError("SUPABASE_URL and SUPABASE_SERVICE_KEY must be set (backend/.env or Railway variables).")
+        _store = SupabaseStore()
     return _store

@@ -35,9 +35,8 @@ LLM_FALLBACK_RULES = _bool("LLM_FALLBACK_RULES", True)
 USE_SUPABASE = bool(SUPABASE_URL and SUPABASE_SERVICE_KEY)
 USE_LLM = bool(LLM_API_KEY)
 
-# Local store (used when Supabase is not configured)
-LOCAL_DATA_DIR = BACKEND_DIR / "app" / "data"
-LOCAL_DB_FILE = BACKEND_DIR / "local_db.json"
+# Seed files built by scripts/build_places.py and uploaded by scripts/seed_supabase.py
+SEED_DATA_DIR = BACKEND_DIR / "app" / "data"
 
 # --- planner constants (10.6) ---
 DETOUR_FACTOR = 1.3

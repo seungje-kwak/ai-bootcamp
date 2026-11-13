@@ -24,8 +24,8 @@ def main() -> int:
     from supabase import create_client
 
     sb = create_client(config.SUPABASE_URL, config.SUPABASE_SERVICE_KEY)
-    places = json.loads((config.LOCAL_DATA_DIR / "places.json").read_text(encoding="utf-8"))
-    cards = json.loads((config.LOCAL_DATA_DIR / "phrase_cards.json").read_text(encoding="utf-8"))
+    places = json.loads((config.SEED_DATA_DIR / "places.json").read_text(encoding="utf-8"))
+    cards = json.loads((config.SEED_DATA_DIR / "phrase_cards.json").read_text(encoding="utf-8"))
 
     place_rows, acc_rows, food_rows = [], [], []
     for p in places:
