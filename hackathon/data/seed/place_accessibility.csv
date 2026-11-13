@@ -26,3 +26,50 @@
 25,1,,,,true,true,,1,restaurant/cafe - 접근성 미확인
 26,1,,,,true,true,,1,restaurant/cafe - 접근성 미확인
 27,1,,,,true,true,,1,restaurant/cafe - 접근성 미확인
+28,,,,,false,,,,VisitJeju barrier-free field: assistance need 'very difficult' (아주 어려움); guidance/information facilities on site.
+29,,,,,false,,,,
+30,,,,,true,,,,
+31,,,,,true,,true,,"VisitJeju: elevator, restrooms, free Wi-Fi; barrier-free assistance need 'very difficult' (아주 어려움)."
+32,,,,true,true,,true,,"VisitJeju barrier-free: assistance need 'easy'; independent access, no level difference, accessible restroom, elevator, disabled parking, manual wheelchair rental. Official site: free wheelchair and stroller rental at 1F desk (ID required), power-wheelchair charger, nursing room, sign-language guide, lockers."
+33,,,,,false,,,,
+34,,,,,false,,true,,
+35,,,,,true,,,,
+36,,,,,false,,,,VisitJeju barrier-free field: assistance need 'very difficult' (아주 어려움).
+37,,,,,false,,,,
+38,,,,,false,,,,
+39,,,,,,,,,"VisitJeju tags it 무장애관광 (barrier-free) and rates assistance need as 'Difficult' (어려움); no KTO 무장애 entry found, so no facility details."
+40,,,,,true,,,,
+41,,,,true,false,,true,,"KTO 무장애: step-free route to entrance, wheelchair accessible, passage available, restroom, parking, braille signs. Adjacent Tapdong Beach Stage (KTO 무장애): ramp, step-free main entrance, wheelchair rental, restroom, nursing room, 2 parking spaces."
+42,,,,true,,,,,KTO 무장애: no step on the route to the entrance or at the main entrance; wheelchair accessible.
+43,,,,,false,,,,
+44,,"Mostly step-free, with some stone paths",,,false,true,,,KTO 무장애: 2 parking spaces across from the public parking lot; route mostly step-free but has stone paths. KTO text mentions benches in the park.
+45,,,,,false,,,,VisitJeju rates assistance need as 'Very Difficult' (아주 어려움). No KTO 무장애 entry found.
+46,,,,,true,,,,VisitJeju rates assistance need as 'Easy' (쉬움). No KTO 무장애 entry found.
+47,,,,,false,,,,
+48,,,,,false,,,,
+49,,,,,false,,,,
+50,,,,,false,,,,
+51,,,,,false,,,,
+52,,,,,false,,,,
+53,,,,,false,,true,,"VisitJeju: trail is wooden deck, ~23 min to summit at adult pace; perimeter forest trail ~40 min; restroom at entrance; exercise equipment at summit."
+54,,,,,false,,,,
+55,,,,,false,,,,
+56,,,,,false,,,,
+57,,,,,false,,,,
+58,,,,false,true,,true,,Official site: use of wheelchairs and strollers is restricted (휠체어 및 유모차 이용이 제한되어 있습니다).
+59,,,,,false,,,,
+60,,,,,true,,true,,"VisitJeju assistance-need rating (dpassistneedscd): 아주 어려움; VisitJeju convenience: 공용주차장, 현금결제, 카드결제, 화장실, 음료대, 유도 및 안내시설, 경보 및 피난시설"
+61,,,,,true,,true,,VisitJeju assistance-need rating (dpassistneedscd): 아주 어려움; VisitJeju convenience: 화장실
+62,,,,,true,,,,
+63,,,,,true,,true,,"VisitJeju assistance-need rating (dpassistneedscd): 아주 어려움; VisitJeju convenience: 공용주차장, 현금결제, 카드결제, 화장실, 편의점, 음료대, 유도 및 안내시설, 경보 및 피난시설"
+64,,,,,true,,true,,"VisitJeju assistance-need rating (dpassistneedscd): 아주 어려움; VisitJeju convenience: 공용주차장, 현금결제, 카드결제, 화장실"
+65,,,,,true,,true,,"VisitJeju convenience: 공용주차장, 현금결제, 카드결제, 화장실, 무료 WIFI, 음료대"
+66,,,,,true,,true,,"VisitJeju assistance-need rating (dpassistneedscd): 쉬움; VisitJeju convenience: 현금결제, 카드결제, 화장실, 무료 WIFI"
+67,,,,,true,,,,
+68,,,,,true,,,,
+69,,,,,true,,true,,"VisitJeju assistance-need rating (dpassistneedscd): 아주 어려움; VisitJeju convenience: 공용주차장, 현금결제, 카드결제, 화장실, 음료대, 유도 및 안내시설, 경보 및 피난시설, 무료 WIFI"
+70,,,,,true,,true,,"VisitJeju assistance-need rating (dpassistneedscd): 아주 어려움; VisitJeju convenience: 공용주차장, 현금결제, 카드결제, 화장실, 편의점, 음료대"
+71,,,,,true,,true,,"VisitJeju convenience: 카드결제, 현금결제, 화장실, 무료 WIFI"
+72,,,,,true,,true,,"VisitJeju convenience: 현금결제, 카드결제, 화장실, 음료대"
+73,,,,,true,,true,,"VisitJeju convenience: 공용주차장, 화장실, 무료 WIFI"
+74,,,,,true,,true,,"VisitJeju convenience: 공용주차장, 현금결제, 카드결제, 화장실"
