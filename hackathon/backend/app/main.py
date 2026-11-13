@@ -54,7 +54,7 @@ def list_places() -> dict:
 @app.post("/courses", status_code=201)
 def create_course(req: CreateCourseRequest) -> dict:
     store = get_store()
-    course, items = planner.new_course(store.list_places(), req.user_profile.model_dump(), req.start_time)
+    course, items = planner.new_course(store.list_places(), req.user_profile.model_dump(), req.start_time, req.end_time)
     store.create_course(course, items)
     return _course_response(course["id"])
 

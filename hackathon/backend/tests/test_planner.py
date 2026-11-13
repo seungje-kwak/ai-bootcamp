@@ -10,6 +10,8 @@ from app.course_view import build_course
 from app.errors import ApiError
 from app.schemas import LLMCourse, LLMItem
 
+from conftest import END, START
+
 
 def merged(items: list[dict], res: planner.ReplanResult) -> list[dict]:
     """The item list the store would hold after apply_replan."""
@@ -19,7 +21,7 @@ def merged(items: list[dict], res: planner.ReplanResult) -> list[dict]:
 
 @pytest.fixture()
 def course(places, emma):
-    return planner.new_course(places, emma, None)
+    return planner.new_course(places, emma, START, END)
 
 
 # ----------------------------------------------------------------------------- US-02
@@ -44,7 +46,7 @@ def test_llm_ghost_id_never_reaches_the_course(places, by_id, emma, monkeypatch)
         ])
     monkeypatch.setattr(config, "USE_LLM", True)
     monkeypatch.setattr(planner, "call_llm", fake)
-    _, items = planner.new_course(places, emma, None)
+    _, items = planner.new_course(places, emma, START, END)
     assert len(items) == 2 and all(i["place_id"] in by_id for i in items)
 
 
@@ -58,7 +60,7 @@ def test_vegan_course_only_has_vegan_food_places(course, by_id):
 def test_times_and_moves_follow_10_6(course, by_id, emma):
     _, items = course
     first = items[0]
-    assert (first["start_time"], first["move_method"], first["move_min"]) == (config.DEFAULT_START, None, None)
+    assert (first["start_time"], first["move_method"], first["move_min"]) == (START, None, None)
     t = planner.to_min(first["start_time"]) + first["stay_min"]
     for a, b in zip(items, items[1:]):
         method, mins = planner.move_between(by_id[a["place_id"]], by_id[b["place_id"]], emma["max_walk_min"])
@@ -83,7 +85,7 @@ def test_llm_failing_twice_gives_502_when_fallback_is_off(places, emma, monkeypa
     monkeypatch.setattr(config, "LLM_FALLBACK_RULES", False)
     monkeypatch.setattr(planner, "call_llm", _failing_llm(calls))
     with pytest.raises(ApiError) as e:
-        planner.new_course(places, emma, None)
+        planner.new_course(places, emma, START, END)
     assert (e.value.status_code, e.value.detail["code"]) == (502, "LLM_FAILED")
     assert len(calls) == 2  # one retry (10.8)
 
@@ -93,7 +95,7 @@ def test_llm_failing_twice_falls_back_to_rules_by_default(places, by_id, emma, m
     monkeypatch.setattr(config, "USE_LLM", True)
     monkeypatch.setattr(config, "LLM_FALLBACK_RULES", True)
     monkeypatch.setattr(planner, "call_llm", _failing_llm(calls))
-    _, items = planner.new_course(places, emma, None)
+    _, items = planner.new_course(places, emma, START, END)
     assert len(calls) == 2 and items and all(i["place_id"] in by_id for i in items)
 
 
@@ -154,7 +156,7 @@ def test_replan_on_a_stop_that_does_not_exist_is_404(places, course):
 
 # ----------------------------------------------------------------------------- US-16 / US-17 (P1)
 def test_hungry_puts_a_food_place_next(places, by_id, emma):
-    c, items = planner.new_course(places, emma, "14:00")  # after lunch time: no food stop in the plan yet
+    c, items = planner.new_course(places, emma, "14:00", "18:00")  # after lunch time: no food stop in the plan yet
     res = planner.replan(places, c, items, "hungry", 1)
     first = by_id[res.new_items[0]["place_id"]]
     assert first["category"] == "food" and first["food_options"]["vegan"]
@@ -175,10 +177,11 @@ def test_free_course_shows_three_stops_and_leaks_nothing(places, by_id, course):
     assert (out["total_items"], out["locked_count"]) == (len(items), len(items) - 3)
     body = json.dumps(out, ensure_ascii=False)
     shown = {i["place_id"] for i in out["items"]}
+    shown_reasons = {i["reason_en"] for i in out["items"]}   # the rule planner reuses sentences between places
     for it in items[3:]:
         if it["place_id"] not in shown:
             assert by_id[it["place_id"]]["name_en"] not in body
-            assert it["reason_en"] not in body
+            assert it["reason_en"] in shown_reasons or it["reason_en"] not in body
     assert all(i["phrase_cards"] == [] for i in out["items"])
     assert not any(k.startswith("_") for k in out["user_profile"])
 

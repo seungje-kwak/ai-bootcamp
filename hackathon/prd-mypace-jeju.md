@@ -2,7 +2,7 @@
 
 | 항목 | 내용 |
 |---|---|
-| 문서 버전 | v0.9 (2026-11-13: 일정·데모·발표 관련 남은 문구 정리. 미정 사항을 15장에서 13장으로 옮김) · v0.8 (2026-11-13: 이틀 일정, 데모 시나리오 장, 리스크 장을 삭제) · v0.7 (2026-11-13: 대체 SVG 지도를 명세에서 뺌(코드에는 테스트 화면용으로 남김), 7장 정리. 지도 범위는 유지하고 출발 위치·지역 입력 기능은 P2로) · v0.6 (2026-11-13: 6장에 실제 화면 요소를 적음. 404 버튼은 온보딩으로) · v0.5 (2026-11-13: 5장. US-20을 P0로, US-02의 502 조건, 대표 메뉴 표시 규칙, P1 상태, 테스트 위치) · v0.4 (2026-11-13: 4장을 구현 상태에 맞춤. P1 상태 열, 카카오맵을 P0로, 장소 수) · v0.3 (2026-11-13: 1장을 구현에 맞춤. 문서 위치, 저장소 구조, LLM 제공자, Supabase 필수) · v0.2 (2026-11-12: 지도를 일러스트에서 카카오맵으로 변경, 7장) |
+| 문서 버전 | v0.10 (2026-11-13: 여행 시간 설정. 온보딩 5단계에서 시작·끝 시각을 고르고 `duration`을 없앰. `places`에 `open_time`·`close_time`, 영업시간 필터 F-10, 오류 `INVALID_TIME_WINDOW`. 상세는 `tasks/prd-trip-time.md`) · v0.9 (2026-11-13: 일정·데모·발표 관련 남은 문구 정리. 미정 사항을 15장에서 13장으로 옮김) · v0.8 (2026-11-13: 이틀 일정, 데모 시나리오 장, 리스크 장을 삭제) · v0.7 (2026-11-13: 대체 SVG 지도를 명세에서 뺌(코드에는 테스트 화면용으로 남김), 7장 정리. 지도 범위는 유지하고 출발 위치·지역 입력 기능은 P2로) · v0.6 (2026-11-13: 6장에 실제 화면 요소를 적음. 404 버튼은 온보딩으로) · v0.5 (2026-11-13: 5장. US-20을 P0로, US-02의 502 조건, 대표 메뉴 표시 규칙, P1 상태, 테스트 위치) · v0.4 (2026-11-13: 4장을 구현 상태에 맞춤. P1 상태 열, 카카오맵을 P0로, 장소 수) · v0.3 (2026-11-13: 1장을 구현에 맞춤. 문서 위치, 저장소 구조, LLM 제공자, Supabase 필수) · v0.2 (2026-11-12: 지도를 일러스트에서 카카오맵으로 변경, 7장) |
 | 작성일 | 2026-11-12 |
 | 용도 | 팀원 3명(A 프론트, B 백엔드, C 데이터·기획)이 각자 AI 코딩 도구에 넣고 개발하는 공통 기준 문서 |
 | 둘 곳 | 저장소의 `hackathon/prd-mypace-jeju.md`. 세 사람이 같은 파일을 본다 |
@@ -450,14 +450,18 @@ P0가 배포 환경에서 끝난 뒤, 아래 순서대로 한다. 2026-11-13 기
 | | | | 오르막 피하기: Avoid uphill 켬 → `true`, 끔 → `false` | `avoid_slopes` |
 | 3. 오늘 컨디션 | How do you feel today? | 하나 | Great → `great`, Okay → `normal`, A bit tired → `tired` | `condition_today` |
 | 4. 식단 | Any food needs? | 하나 | No restrictions → `none`, Vegan → `vegan`, Vegetarian → `vegetarian`, Halal → `halal` | `diet` |
-| 5. 일정 | How long is your day? | 하나 | Half day → `half_day`, Full day → `full_day` | `duration` |
+| 5. 일정 | When is your day? | 선택 상자 2개 | Start: `08:00`~`16:00`, 30분 단위. End: Start + 2시간부터 Start + 10시간과 `22:00` 중 이른 시각까지, 30분 단위 | 없음. 요청의 `start_time`, `end_time`으로 보낸다 (9.5) |
 
 동작
 
 - 한 화면에 한 단계를 보여준다. 위에 진행 표시("2 / 5"), 아래에 Back과 Next가 있다. 1단계의 Back은 랜딩(`/`)으로 간다.
 - 2단계는 항목마다 소제목을 둔다: "Energy level", "How long can you walk at a time?".
 - 선택값은 단계를 오가도 남아 있다 (프론트 상태로 보관).
-- 5단계의 버튼은 "Create my day"다. 누르면 위 표의 값으로 `user_profile`을 만들어 `POST /courses`를 보낸다 (9.5).
+- 5단계는 기본 `<select>` 두 개("Start", "End")와 그 아래의 길이 표시(예: "4 h 30 min")다. 시각은 24시간 형식이다.
+- Start의 처음 값은 기기의 현재 시각을 30분 단위로 올린 값이다 (14:10 → 14:30). 08:00 전이면 `08:00`, 16:00 뒤면 `10:00`이다. End의 처음 값은 Start + 4시간이다 (상한을 넘으면 상한).
+- Start를 바꿔서 End가 허용 범위를 벗어나면 End를 Start + 4시간(상한 적용)으로 다시 맞춘다.
+- 5단계의 버튼은 "Create my day"다. 누르면 위 표의 값으로 `user_profile`을 만들고 `start_time`, `end_time`과 함께 `POST /courses`를 보낸다 (9.5).
+- 서버가 `INVALID_TIME_WINDOW`를 돌려주면 5단계에 머물며 "Please check your start and end time."를 보여준다.
 - 성공하면 응답의 `id`로 `/course/{id}`로 이동한다.
 
 상태
@@ -767,7 +771,9 @@ export function toPercent(lat, lng, b = MAP_CONFIG.bounds) {
 | `image_url` | text, null 허용 | `place-images` 버킷에 올린 사진의 공개 URL | 비어 있음 |
 | `image_source` | text, null 허용 | 사진 출처 표기 (Q-16) | 비어 있음 |
 | `avg_stay_min` | integer | 평균 체류 시간(분) | 있음 |
-| `opening_hours` | text, null 허용 | 영업 시간. 형식 미정 (Q-14) | 비어 있음 |
+| `opening_hours` | text, null 허용 | 영업 시간을 적은 문장. 화면 표시용이고 코드는 읽지 않는다 (Q-14) | 있음 |
+| `open_time` | text, null 허용 | 여는 시각 `"HH:MM"`. 계절·요일로 다르면 가장 짧은 기본 시간을 적는다 | 있음 |
+| `close_time` | text, null 허용 | 문 닫는 시각 `"HH:MM"` (입장 마감이 아니다). 자정 이후까지 열면 `"24:00"`. `open_time`과 둘 다 `null`이면 항상 열려 있다는 뜻이고, 하나만 `null`일 수는 없다 | 있음 |
 | `closed_days` | text[], 기본값 빈 배열 | 휴무 요일. `mon`~`sun` [제안] (Q-14) | 비어 있음 |
 | `price_level` | integer, null 허용 | 가격대. 기준 미정 (Q-14) | 비어 있음 |
 | `last_verified_at` | date, null 허용 | 마지막 확인일 (Q-15) | 비어 있음 |
@@ -862,7 +868,8 @@ export function toPercent(lat, lng, b = MAP_CONFIG.bounds) {
 | `avoid_slopes` | `true`, `false` | 2. 체력·몸 상태 | 후보 필터 F-5 |
 | `condition_today` | `great`, `normal`, `tired` | 3. 오늘 컨디션 | 후보 필터 F-4, LLM 입력 |
 | `diet` | `none`, `vegan`, `vegetarian`, `halal` | 4. 식단 | 후보 필터 F-3 |
-| `duration` | `half_day`, `full_day` | 5. 일정 | 코스 길이 (10.6) |
+| `start_time`, `end_time` | `"HH:MM"` | 없음. 서버가 요청의 값을 넣는다 (9.5) | 코스 시작·종료 시각 (10.3, 10.6), 재구성의 종료 시각 (10.7) |
+| `duration` | `half_day`, `full_day` | 없음. 요청으로 받지 않는다 | v0.9까지 저장된 옛 코스에만 있다. `end_time`이 없으면 재구성이 이 값으로 종료 시각을 계산한다 (10.3) |
 | `conditions` | `{ "indoor_only": boolean, "low_walking": boolean }` | 없음. 서버가 붙인다 | 재구성으로 켜진 조건. 처음에는 둘 다 `false` (10.7) |
 
 ### 8.10 데이터를 넣을 때 지킬 규칙 (C)
@@ -910,6 +917,7 @@ export function toPercent(lat, lng, b = MAP_CONFIG.bounds) {
 | 404 | `PLACE_NOT_FOUND` | 없는 장소 ID | 일반 오류 문구 |
 | 409 | `NO_CANDIDATES` | 조건에 맞는 후보가 모자라 일정을 만들 수 없음 | 6.2, 6.4의 문구 |
 | 502 | `LLM_FAILED` | LLM 호출이나 검증이 재시도 뒤에도 실패 | 6.2, 6.4의 문구 + 다시 시도 |
+| 422 | `INVALID_TIME_WINDOW` | `start_time`, `end_time`이 9.5의 범위를 벗어남 | 6.2의 문구. 온보딩 5단계에 머문다 |
 | 422 | 없음 | 요청 형식이 틀림. FastAPI 기본 응답이라 `detail`이 배열이다 | 일반 오류 문구. 개발 중에 잡아야 하는 버그다 |
 
 프론트 규칙: `detail.code`가 문자열이면 그 코드로 분기한다. 아니면 "Something went wrong."과 Retry를 보여준다.
@@ -963,6 +971,8 @@ type Place = {
   image_source: string | null;
   avg_stay_min: number;
   opening_hours: string | null;
+  open_time: string | null;           // "HH:MM". close_time과 둘 다 null이면 항상 열려 있음
+  close_time: string | null;          // "HH:MM" 또는 "24:00"
   closed_days: string[];              // "mon" ~ "sun"
   price_level: number | null;
   last_verified_at: string | null;    // "YYYY-MM-DD"
@@ -978,8 +988,10 @@ type UserProfile = {
   avoid_slopes: boolean;
   condition_today: "great" | "normal" | "tired";
   diet: "none" | "vegan" | "vegetarian" | "halal";
-  duration: "half_day" | "full_day";
   conditions: { indoor_only: boolean; low_walking: boolean };   // 응답에만 있다
+  start_time?: string;                // "HH:MM". 응답에만 있다
+  end_time?: string;                  // "HH:MM". 응답에만 있다
+  duration?: "half_day" | "full_day"; // 옛 코스의 응답에만 있다
 };
 
 type CourseItem = {
@@ -1098,8 +1110,11 @@ type Course = {
 
 | 요청 필드 | 필수 | 값 |
 |---|---|---|
-| `user_profile` | 예 | 8.9의 키 7개. `conditions`는 보내지 않는다 |
-| `start_time` | 아니오 | `"HH:MM"`. 없으면 `"10:00"` [제안] (Q-06) |
+| `user_profile` | 예 | 8.9의 키 6개 (`interests`~`diet`). `conditions`, `start_time`, `end_time`은 넣지 않는다. `duration`을 넣으면 422다 |
+| `start_time` | 예 | `"HH:MM"`. `08:00` 이상 `16:00` 이하, 분은 `00` 또는 `30` |
+| `end_time` | 예 | `"HH:MM"`. 분은 `00` 또는 `30`, `22:00` 이하, `start_time`보다 120분 이상 600분 이하 뒤 |
+
+두 시각이 위 범위를 벗어나면 422 `INVALID_TIME_WINDOW`다. 서버는 두 값을 저장하는 `user_profile`에 넣는다.
 
 요청
 
@@ -1111,10 +1126,10 @@ type Course = {
     "max_walk_min": 20,
     "avoid_slopes": false,
     "condition_today": "normal",
-    "diet": "vegan",
-    "duration": "full_day"
+    "diet": "vegan"
   },
-  "start_time": "10:00"
+  "start_time": "10:00",
+  "end_time": "18:00"
 }
 ```
 
@@ -1132,8 +1147,9 @@ type Course = {
     "avoid_slopes": false,
     "condition_today": "normal",
     "diet": "vegan",
-    "duration": "full_day",
-    "conditions": { "indoor_only": false, "low_walking": false }
+    "conditions": { "indoor_only": false, "low_walking": false },
+    "start_time": "10:00",
+    "end_time": "18:00"
   },
   "total_items": 6,
   "locked_count": 3,
@@ -1368,6 +1384,7 @@ type Course = {
 | F-6 날씨 | `conditions.indoor_only`가 `true`면 `indoor = true`만 남긴다 | "비가 와요"를 누르면 켜진다 |
 | F-7 점심 | `needs_lunch`가 `false`면 `category`가 `food`인 후보를 뺀다. 고정된 첫 정차는 예외다 [제안] | 식사가 두 번 들어가지 않게 한다 |
 | F-8 재구성 때 제외 | `done`이나 `current`인 장소, 이번에 닫혔다고 신고한 장소를 뺀다 | |
+| F-10 영업시간 | 장소의 영업시간(`open_time`~`close_time`)과 여행 시간(재구성은 남은 시간)이 겹치는 길이가 `avg_stay_min`보다 짧으면 뺀다. 둘 다 `null`인 장소는 항상 통과한다 | F-1~F-6, F-8 다음에 적용한다. 고정된 첫 정차는 도착 시각부터 체류가 끝날 때까지 열려 있는 후보에서만 고른다 |
 | F-9 개수 | 20곳이 넘으면 `interests`에 있는 `category`를 먼저 남기고 20곳에서 자른다. `needs_lunch`가 `true`면 `food` 후보를 3곳 이상 남긴다 [제안] | |
 
 후보가 모자랄 때 [제안]
@@ -1400,6 +1417,7 @@ type Course = {
   },
   "trip": {
     "start_time": "10:00",
+    "end_time": "18:00",
     "time_budget_min": 480,
     "min_items": 5,
     "max_items": 7,
@@ -1475,16 +1493,18 @@ type Course = {
 
 | 필드 | 새 코스 | 재구성 |
 |---|---|---|
-| `trip.start_time` | 요청의 `start_time`. 없으면 `"10:00"` | 10.7의 시작 시각 |
-| `trip.time_budget_min` | `half_day`는 240, `full_day`는 480 [제안] (Q-06) | 코스 종료 시각 − `trip.start_time` |
-| `trip.min_items`, `trip.max_items` | `half_day`는 3~4, `full_day`는 5~7 [제안] | 1 ~ (남은 분 ÷ 70을 내림한 값, 최소 1) [제안] |
+| `trip.start_time` | 요청의 `start_time` | 10.7의 시작 시각 |
+| `trip.end_time` | 요청의 `end_time` | 코스 종료 시각 |
+| `trip.time_budget_min` | `end_time` − `start_time` | 코스 종료 시각 − `trip.start_time` |
+| `trip.min_items`, `trip.max_items` | 여행 길이 `h`(시간)로 정한다. 최소 = `max(2, 반올림(h × 0.65))`, 최대 = `max(최소, 반올림(h × 0.9))`, `반올림(x) = floor(x + 0.5)`. 2시간 → 2~2, 4시간 → 3~4, 8시간 → 5~7, 10시간 → 7~9 | 1 ~ (남은 분 ÷ 70을 내림한 값, 최소 1) [제안] |
 | `trip.needs_lunch` | 10.2 | 10.2 |
 | `trip.indoor_only`, `trip.low_walking` | 둘 다 `false` | `user_profile.conditions`의 값 |
 | `trip.origin` | `null` | 10.7의 출발 위치 |
 | `replan` | `null` | `reason`, `fixed_first_place_id`, `keep_if_possible` (10.7) |
 | `candidates` | 10.2를 통과한 장소 | 10.2를 통과한 장소 |
 
-- 코스 종료 시각 = 1번 항목의 `start_time` + 240분 또는 480분.
+- 코스 종료 시각 = `user_profile.end_time`. 이 값이 없는 옛 코스(`duration`만 있음)는 1번 항목의 `start_time` + 240분(`half_day`) 또는 480분(`full_day`)이다.
+- 후보마다 `open_time`, `close_time`을 넣는다 (`avg_stay_min` 다음).
 - `min_items`와 `max_items`는 후보 수보다 클 수 없다.
 
 ### 10.4 시스템 프롬프트
@@ -1499,6 +1519,7 @@ Hard rules
 2. Use each place at most once.
 3. Choose between trip.min_items and trip.max_items places.
 4. The total of stay_min plus rough travel time between stops must fit within trip.time_budget_min.
+   The whole stay at a place must be inside its opening hours: between the candidate's open_time and close_time (both null means always open).
 5. If trip.needs_lunch is true, include exactly one place whose category is "food", placed so that it starts between 11:30 and 13:30.
 6. If replan.fixed_first_place_id is set, that place must be the first item.
 7. If replan.keep_if_possible is not empty, keep those places in that order unless another hard rule forbids it.
@@ -1598,8 +1619,11 @@ class LLMCourse(BaseModel):
 | `WALK_M_PER_MIN` | 67 | 도보 속도 (약 4km/h) |
 | `TAXI_M_PER_MIN` | 333 | 택시 속도 (약 20km/h) |
 | `TAXI_EXTRA_MIN` | 5 | 택시를 잡고 타고 내리는 시간 |
-| `HALF_DAY_MIN`, `FULL_DAY_MIN` | 240, 480 | 반나절과 하루의 길이(분) (Q-06) |
-| `DEFAULT_START` | "10:00" | 코스 시작 시각 기본값 (Q-06) |
+| `MIN_START`, `MAX_START` | "08:00", "16:00" | 시작 시각의 범위 (9.5) |
+| `MAX_END` | "22:00" | 가장 늦은 종료 시각 |
+| `MIN_TRIP_MIN`, `MAX_TRIP_MIN` | 120, 600 | 여행 길이(분)의 범위 |
+| `TIME_STEP_MIN` | 30 | 시작·종료 시각의 단위(분) |
+| `HALF_DAY_MIN`, `FULL_DAY_MIN` | 240, 480 | 옛 코스(`duration`만 있음)를 재구성할 때만 쓰는 길이(분) |
 
 계산 규칙
 
@@ -1610,6 +1634,7 @@ class LLMCourse(BaseModel):
 5. 그 뒤 항목의 `start_time` = 앞 항목의 `start_time` + 앞 항목의 `stay_min` + 이 항목의 `move_min`. 5분 단위로 올린다.
 6. 재구성으로 새로 만든 첫 항목은 출발 위치(10.7)에서 오는 이동으로 계산한다.
 7. 끝나는 시각이 코스 종료 시각을 넘는 항목은 뒤에서부터 뺀다. 1개는 남긴다.
+8. 영업시간 밖인 항목(`start_time`이 `open_time`보다 이르거나, `start_time` + `stay_min`이 `close_time`보다 늦음)은 코스에서 빼고 남은 항목의 시각을 1번부터 다시 계산한다. 그런 항목이 없을 때까지 반복한다. `open_time`이 `null`인 장소는 항상 통과한다. 다 빼서 항목이 없으면 409 `NO_CANDIDATES`다. 규칙 플래너는 처음부터 이런 장소를 고르지 않는다.
 
 검산. 9.6 예시 코스의 값이다 (`max_walk_min`은 20).
 
@@ -1628,6 +1653,7 @@ class LLMCourse(BaseModel):
 | 그대로 두는 항목 | `done`, `current` | `done`, `current` | `done`, `current` | `done` |
 | 다시 만드는 범위 | `current` 다음부터 | `current` 다음부터 | `current` 다음부터 | `current` 항목부터 (닫힌 장소를 지운다) |
 | 시작 시각 | `current`의 `start_time` + `stay_min` | 왼쪽과 같음 | 왼쪽과 같음 | `current`의 `start_time` |
+| 종료 시각 | `user_profile.end_time` (옛 코스는 10.3) | 왼쪽과 같음 | 왼쪽과 같음 | 왼쪽과 같음 |
 | 출발 위치 | `current` 장소 | `current` 장소 | `current` 장소 | 닫힌 장소 (사용자가 지금 서 있는 곳) |
 | 바뀌는 조건 | `conditions.indoor_only = true` | `conditions.low_walking = true` | 없음 | 닫힌 장소를 후보에서 뺀다 |
 | 조건이 이후에도 남는가 | 남는다 | 남는다 | 해당 없음 | 닫힌 장소는 이 코스에서 계속 빠진다 |
@@ -1756,7 +1782,7 @@ LLM 설정 [제안]: temperature를 낮게(예: 0.3) 두어 결과가 덜 흔들
 | Q-11 | 현재 일정은 어떻게 정하나? 사용자가 누르는 방식인가, 시계 기준인가? | 사용자가 "Done, next stop"을 누른다. 실제 시각과 일정이 어긋날 수 있어 시계 기준은 쓰지 않는다 | 6.4, 9.7 | A |
 | Q-12 | `is_rest_stop`은 누가 어떤 기준으로 채우나? | LLM 출력에 넣는다 | 8.7, 10.4, 10.5 | B |
 | Q-13 | 지도 범위 밖의 장소는 어떻게 하나? | DB에 넣지 않는다. 프론트는 범위 밖 좌표를 그리지 않는다 | 7.10, 8.10 | C, A |
-| Q-14 | `opening_hours`, `closed_days`, `price_level`, `allergens`의 형식은? | `closed_days`만 `mon`~`sun` 배열로 정해 필터에 쓴다. 나머지는 형식을 정할 때까지 화면에 쓰지 않는다 | 8.2, 8.4, 10.2 | C |
+| Q-14 | `opening_hours`, `closed_days`, `price_level`, `allergens`의 형식은? | `closed_days`는 `mon`~`sun` 배열로 정해 필터에 쓴다. 영업시간은 `open_time`·`close_time`(`"HH:MM"`)을 따로 두어 필터와 시각 계산에 쓰고(v0.10), `opening_hours` 문장은 그대로 둔다. 나머지는 형식을 정할 때까지 화면에 쓰지 않는다 | 8.2, 8.4, 10.2 | C |
 | Q-15 | "마지막 확인일"은 무엇을 어떻게 확인한 날인가? 영업 여부를 어디서 확인하면 확인한 것으로 보나? | 없음. 확인 방법을 설명할 수 있어야 한다 | 8.2 | C |
 | Q-16 | 사진 출처(`image_source`)를 어떤 형식으로 적나? 사진마다 이용 조건을 어떻게 확인하나? | 출처 기관 이름을 영어로 적는다. 이용 조건은 사진을 받을 때 확인한다 | 6.3, 8.2 | C |
 | Q-17 | "배고파요"와 "문 닫았어요"는 남은 일정 전체를 LLM으로 다시 만드나, 식당 하나 끼우기와 한 곳 바꾸기만 규칙으로 처리하나? | 팀이 정한 대로 LLM으로 다시 만들고 첫 정차만 Python이 고정한다. 규칙만으로 처리하면 더 빠르고 결과가 일정하다 | 10.7 | B |

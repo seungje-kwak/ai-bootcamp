@@ -25,6 +25,7 @@ Hard rules
 2. Use each place at most once.
 3. Choose between trip.min_items and trip.max_items places.
 4. The total of stay_min plus rough travel time between stops must fit within trip.time_budget_min.
+   The whole stay at a place must be inside its opening hours: between the candidate's open_time and close_time (both null means always open).
 5. If trip.needs_lunch is true, include exactly one place whose category is "food", placed so that it starts between 11:30 and 13:30.
 6. If replan.fixed_first_place_id is set, that place must be the first item.
 7. If replan.keep_if_possible is not empty, keep those places in that order unless another hard rule forbids it.

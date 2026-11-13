@@ -27,17 +27,23 @@ class UserProfileIn(BaseModel):
     avoid_slopes: bool
     condition_today: Literal["great", "normal", "tired"]
     diet: Literal["none", "vegan", "vegetarian", "halal"]
-    duration: Literal["half_day", "full_day"]
 
 
 class UserProfile(UserProfileIn):
+    """What is stored. The server adds `conditions`, `start_time` and `end_time`.
+    Courses saved before the trip-time change have `duration` instead of the two times."""
     model_config = ConfigDict(extra="ignore")
     conditions: Conditions = Conditions()
+    start_time: Optional[str] = None
+    end_time: Optional[str] = None
 
 
 class CreateCourseRequest(BaseModel):
+    """Both times are required "HH:MM" strings. Their range is checked in planner.check_time_window,
+    which answers 422 INVALID_TIME_WINDOW in the 9.2 error shape."""
     user_profile: UserProfileIn
-    start_time: Optional[str] = Field(default=None, pattern=r"^([01]\d|2[0-3]):[0-5]\d$")
+    start_time: str
+    end_time: str
 
 
 class ReplanRequest(BaseModel):

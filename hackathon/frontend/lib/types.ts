@@ -43,6 +43,8 @@ export type Place = {
   image_source: string | null;
   avg_stay_min: number;
   opening_hours: string | null;
+  open_time: string | null; // "HH:MM"; both null = always open
+  close_time: string | null; // "HH:MM" or "24:00"
   closed_days: string[];
   price_level: number | null;
   last_verified_at: string | null;
@@ -58,11 +60,15 @@ export type UserProfileInput = {
   avoid_slopes: boolean;
   condition_today: "great" | "normal" | "tired";
   diet: "none" | "vegan" | "vegetarian" | "halal";
-  duration: "half_day" | "full_day";
 };
 
+// The server adds conditions, start_time and end_time. Courses saved before the trip-time change
+// have `duration` instead of the two times.
 export type UserProfile = UserProfileInput & {
   conditions: { indoor_only: boolean; low_walking: boolean };
+  start_time?: string;
+  end_time?: string;
+  duration?: "half_day" | "full_day";
 };
 
 export type CourseItem = {

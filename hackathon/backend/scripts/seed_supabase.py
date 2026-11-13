@@ -1,5 +1,8 @@
 """Upload app/data/places.json + phrase_cards.json to Supabase (upsert, safe to re-run).
 
+Each place row carries open_time / close_time ("HH:MM", or both null = always open), so the `places`
+table needs those two columns: run sql/schema.sql again on an older database before seeding.
+
 Prereq: run sql/schema.sql in the Supabase SQL editor and put SUPABASE_URL / SUPABASE_SERVICE_KEY in backend/.env.
     backend/.venv/Scripts/python.exe backend/scripts/build_places.py
     backend/.venv/Scripts/python.exe backend/scripts/seed_supabase.py

@@ -2,7 +2,6 @@
   "_note": "Emma demo course (13장). Times and move info are computed by backend/scripts/reset_emma.py with the 10.6 rules. Reasons were written by hand from places.description_en / food_options only (R-03).",
   "id": "e33a0000-0000-4000-8000-000000000001",
   "tier": "free",
-  "start_time": "10:00",
   "user_profile": {
     "interests": ["photo", "market", "cafe"],
     "fitness_level": 2,
@@ -10,7 +9,8 @@
     "avoid_slopes": false,
     "condition_today": "normal",
     "diet": "vegan",
-    "duration": "full_day",
+    "start_time": "10:00",
+    "end_time": "18:00",
     "conditions": { "indoor_only": false, "low_walking": false }
   },
   "items": [
