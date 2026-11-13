@@ -5,6 +5,7 @@ import { useRef, useState } from "react";
 import { api, ApiError } from "@/lib/api";
 import type { Category, UserProfileInput } from "@/lib/types";
 import { PrimaryButton } from "@/components/States";
+import { defaultEnd, defaultStart, endForStart, endOptions, lengthLabel, startOptions, toHHMM } from "@/lib/tripTime";
 
 // 6.2 — values are the API contract (8.9).
 const INTERESTS: { label: string; value: Category; icon: string }[] = [
@@ -23,7 +24,8 @@ type Draft = {
   avoid_slopes: boolean;
   condition_today?: "great" | "normal" | "tired";
   diet?: "none" | "vegan" | "vegetarian" | "halal";
-  duration?: "half_day" | "full_day";
+  start: number; // minutes from midnight
+  end: number;
 };
 
 const TITLES = [
@@ -31,10 +33,48 @@ const TITLES = [
   "How do you like to move?",
   "How do you feel today?",
   "Any food needs?",
-  "How long is your day?",
+  "When is your day?",
 ];
 
-type Status = { kind: "idle" } | { kind: "loading" } | { kind: "error" } | { kind: "nocandidates" };
+type Status =
+  | { kind: "idle" }
+  | { kind: "loading" }
+  | { kind: "error" }
+  | { kind: "nocandidates" }
+  | { kind: "badtime" };
+
+// Same border, corners and text size as Choice.
+const SELECT_CLASS =
+  "mt-2 w-full rounded-2xl border-2 border-line bg-white px-4 py-3.5 text-[16px] font-medium text-ink focus:border-sea focus:outline-none";
+
+function TimeSelect({
+  id,
+  label,
+  value,
+  options,
+  onChange,
+}: {
+  id: string;
+  label: string;
+  value: number;
+  options: number[];
+  onChange: (min: number) => void;
+}) {
+  return (
+    <div>
+      <label htmlFor={id} className="font-semibold">
+        {label}
+      </label>
+      <select id={id} className={SELECT_CLASS} value={value} onChange={(e) => onChange(Number(e.target.value))}>
+        {options.map((m) => (
+          <option key={m} value={m}>
+            {toHHMM(m)}
+          </option>
+        ))}
+      </select>
+    </div>
+  );
+}
 
 function Choice({
   selected,
@@ -62,7 +102,11 @@ function Choice({
 export default function Onboarding() {
   const router = useRouter();
   const [step, setStep] = useState(0);
-  const [d, setD] = useState<Draft>({ interests: [], avoid_slopes: false });
+  const [d, setD] = useState<Draft>(() => {
+    // The device clock; the traveler is in Jeju, so this is taken as Korean time.
+    const start = defaultStart(new Date());
+    return { interests: [], avoid_slopes: false, start, end: defaultEnd(start) };
+  });
   const [status, setStatus] = useState<Status>({ kind: "idle" });
   const inFlight = useRef(false);
 
@@ -71,7 +115,7 @@ export default function Onboarding() {
     d.fitness_level != null && d.max_walk_min != null,
     d.condition_today != null,
     d.diet != null,
-    d.duration != null,
+    endOptions(d.start).includes(d.end),
   ];
 
   async function submit() {
@@ -85,14 +129,16 @@ export default function Onboarding() {
       avoid_slopes: d.avoid_slopes,
       condition_today: d.condition_today!,
       diet: d.diet!,
-      duration: d.duration!,
     };
     try {
-      const course = await api.createCourse(profile);
+      const course = await api.createCourse(profile, toHHMM(d.start), toHHMM(d.end));
       router.push(`/course/${course.id}`);
     } catch (e) {
       inFlight.current = false;
-      setStatus({ kind: e instanceof ApiError && e.code === "NO_CANDIDATES" ? "nocandidates" : "error" });
+      const code = e instanceof ApiError ? e.code : null;
+      setStatus({
+        kind: code === "NO_CANDIDATES" ? "nocandidates" : code === "INVALID_TIME_WINDOW" ? "badtime" : "error",
+      });
     }
   }
 
@@ -217,18 +263,38 @@ export default function Onboarding() {
             </Choice>
           ))}
 
-        {step === 4 &&
-          (
-            [
-              ["Half day", "half_day", "About 4 hours"],
-              ["Full day", "full_day", "About 8 hours"],
-            ] as const
-          ).map(([label, v, sub]) => (
-            <Choice key={v} selected={d.duration === v} onClick={() => setD({ ...d, duration: v })}>
-              <span className="block">{label}</span>
-              <span className="block text-sm text-muted font-normal">{sub}</span>
-            </Choice>
-          ))}
+        {step === 4 && (
+          <div className="space-y-5">
+            <TimeSelect
+              id="trip-start"
+              label="Start"
+              value={d.start}
+              options={startOptions()}
+              onChange={(start) => {
+                setD({ ...d, start, end: endForStart(start, d.end) });
+                if (status.kind === "badtime") setStatus({ kind: "idle" });
+              }}
+            />
+            <TimeSelect
+              id="trip-end"
+              label="End"
+              value={d.end}
+              options={endOptions(d.start)}
+              onChange={(end) => {
+                setD({ ...d, end });
+                if (status.kind === "badtime") setStatus({ kind: "idle" });
+              }}
+            />
+            <p className="text-muted" aria-live="polite">
+              {lengthLabel(d.start, d.end)}
+            </p>
+            {status.kind === "badtime" && (
+              <p role="alert" className="rounded-2xl bg-tangerine-soft border border-[#f6c99a] p-4 font-semibold">
+                Please check your start and end time.
+              </p>
+            )}
+          </div>
+        )}
 
         {status.kind === "error" && (
           <div role="alert" className="rounded-2xl bg-tangerine-soft border border-[#f6c99a] p-4">

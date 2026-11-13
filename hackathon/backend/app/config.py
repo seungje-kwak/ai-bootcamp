@@ -43,9 +43,16 @@ DETOUR_FACTOR = 1.3
 WALK_M_PER_MIN = 67
 TAXI_M_PER_MIN = 333
 TAXI_EXTRA_MIN = 5
+# Trip time window (tasks/prd-trip-time.md FR-3). The traveler picks start and end in the onboarding.
+MIN_START = "08:00"
+MAX_START = "16:00"
+MAX_END = "22:00"
+MIN_TRIP_MIN = 120
+MAX_TRIP_MIN = 600
+TIME_STEP_MIN = 30
+# Only for replanning old courses whose user_profile has `duration` and no `end_time` (FR-11).
 HALF_DAY_MIN = 240
 FULL_DAY_MIN = 480
-DEFAULT_START = "10:00"
 LUNCH_WINDOW = ("12:00", "13:00")
 
 LLM_TIMEOUT_SEC = 20

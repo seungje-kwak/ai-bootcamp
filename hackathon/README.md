@@ -47,14 +47,30 @@ Frontend (`frontend/.env.local`, and the same names in Vercel):
 
 ## Setting up Supabase (required)
 
-1. Run `backend/sql/schema.sql` in the Supabase SQL editor (7 tables, RLS on).
+1. Run `backend/sql/schema.sql` in the Supabase SQL editor (7 tables, RLS on). It is safe to run again: on a database made before 2026-11-13 it adds the `places.open_time` and `places.close_time` columns.
 2. Put `SUPABASE_URL` and `SUPABASE_SERVICE_KEY` in `backend/.env`.
 3. `scripts/seed_supabase.py` (upload places, accessibility, food_options, phrase_cards), then `scripts/reset_emma.py`.
+
+### Adding opening hours to an existing database (trip time, 2026-11-13)
+
+The planner keeps a stop only when the whole stay is inside the place's `open_time`-`close_time`. Until the two columns exist and are filled, every place counts as always open. Do these in order:
+
+1. In the Supabase SQL editor run `backend/sql/schema.sql` again, or only these lines:
+   ```sql
+   alter table places add column if not exists open_time  text check (open_time ~ '^([01][0-9]|2[0-3]):[0-5][0-9]$');
+   alter table places add column if not exists close_time text check (close_time ~ '^(([01][0-9]|2[0-3]):[0-5][0-9]|24:00)$');
+   ```
+2. `scripts/build_places.py` (reads `open_time` / `close_time` from `data/seed/places.csv`; stops on a badly formed value).
+3. `scripts/seed_supabase.py` (upsert; fills the new columns). Seeding before step 1 fails because the columns are missing.
+4. `scripts/reset_emma.py` (the demo course now carries `start_time` and `end_time` in `user_profile`).
+
+Deploy the backend and the frontend together: the old frontend sends `duration`, which the new backend answers with 422.
 
 Q-05 note: PostgREST reads `order=` in a URL as the sort option, so the backend never filters `course_items` by the `"order"` column. A re-plan replaces a course's items by `course_id` and restores the old rows if the insert fails. Keep this in mind when writing new Supabase queries.
 
 ## Seed normalization (scripts/build_places.py)
 
 - category: `history_culture`, `museum` → `culture`; `market_shopping` → `market`; `park`, `oreum_hike` → `nature`; `beach` → `photo`; `restaurant` → `food`. Yongduam Rock and Dodubong Peak are overridden to `photo`.
+- open_time / close_time: `"HH:MM"` columns in `data/seed/places.csv`, both empty = always open, `24:00` = open past midnight. They were filled from the `opening_hours` text by `data/seed/add_open_close.py` (shortest regular hours; places whose text gives no hours are left empty). The build stops on a value like `9:00` or when open is not before close.
 - terrain: free-text description → `flat` / `slope` / `steep`; closed_days: free text → `["mon".."sun"]`; price_level: free/low/mid/high → 0-3.
-- **8 places outside the map bounds (7.2) are excluded** (Q-13): Jeju Museum of Art, Hamdeok Beach, Jeju 4·3 Peace Park, Jeolmul Forest, Jeju Stone Park, Roe Deer Observation Center, Cafe Delmoondo, and Chammatna Gimbap (no coordinates). The range stays as it is for now; it will be revisited with the planned "start location / area" feature (PRD Q-27). Changing it means changing `bounds` in `frontend/config/map.ts`, `BOUNDS` in `build_places.py`, and the test-only map image together.
+- **`BOUNDS` in `build_places.py` covers Jeju main island** (lat 33.10-33.58, lng 126.13-126.99), the range `app/data/places.json` was built with when the Jeju-wide places were added on 2026-11-13: 1,065 places are kept and only Chammatna Gimbap (no coordinates) is skipped. The map in `frontend/config/map.ts` and the test-only map image still show Jeju City only; widening them belongs to the "start area" work (`tasks/prd-start-area.md`).

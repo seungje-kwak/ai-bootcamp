@@ -15,12 +15,25 @@ create table if not exists places (
   image_url         text,
   image_source      text,
   avg_stay_min      integer not null,
-  opening_hours     text,
-  closed_days       text[] not null default '{}',
+  opening_hours     text,                -- shown to people; the planner reads open_time / close_time
+  open_time         text check (open_time ~ '^([01][0-9]|2[0-3]):[0-5][0-9]$'),
+  close_time        text check (close_time ~ '^(([01][0-9]|2[0-3]):[0-5][0-9]|24:00)$'),
+  closed_days      text[] not null default '{}',
   price_level       integer,
   last_verified_at  date,
-  source_date       date
+  source_date       date,
+  -- both null = always open; close_time '24:00' = open past midnight
+  constraint places_open_close check ((open_time is null) = (close_time is null) and open_time < close_time)
 );
+
+-- For a database made before open_time / close_time existed (safe to run again):
+alter table places add column if not exists open_time  text check (open_time ~ '^([01][0-9]|2[0-3]):[0-5][0-9]$');
+alter table places add column if not exists close_time text check (close_time ~ '^(([01][0-9]|2[0-3]):[0-5][0-9]|24:00)$');
+do $$ begin
+  alter table places add constraint places_open_close
+    check ((open_time is null) = (close_time is null) and open_time < close_time);
+exception when duplicate_object then null;
+end $$;
 
 create table if not exists place_accessibility (
   place_id                   integer primary key references places(id) on delete cascade,

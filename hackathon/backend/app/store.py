@@ -38,6 +38,7 @@ class SupabaseStore:
     """Tables from sql/schema.sql. Writes happen only after the planner succeeded (10.7 step 5)."""
 
     PLACE_TTL_SEC = 60
+    PAGE_SIZE = 1000
 
     def __init__(self) -> None:
         from supabase import create_client  # imported lazily so local mode needs no network
@@ -55,9 +56,15 @@ class SupabaseStore:
     def list_places(self) -> list[dict]:
         if self._places_cache and time.time() - self._places_cache[0] < self.PLACE_TTL_SEC:
             return copy.deepcopy(self._places_cache[1])
-        rows = (self._sb.table("places")
-                .select("*, place_accessibility(*), food_options(*)")
-                .order("id").execute().data)
+        # Supabase returns at most 1000 rows per request, so read the table page by page.
+        rows: list[dict] = []
+        while True:
+            page = (self._sb.table("places")
+                    .select("*, place_accessibility(*), food_options(*)")
+                    .order("id").range(len(rows), len(rows) + self.PAGE_SIZE - 1).execute().data)
+            rows += page
+            if len(page) < self.PAGE_SIZE:
+                break
         places = []
         for r in rows:
             acc = self._one(r.pop("place_accessibility", None))

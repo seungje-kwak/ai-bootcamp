@@ -13,7 +13,7 @@ from pathlib import Path
 BACKEND = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(BACKEND))
 
-from app import config, planner  # noqa: E402
+from app import planner  # noqa: E402
 from app.schemas import LLMItem  # noqa: E402
 from app.store import get_store, now_iso  # noqa: E402
 
@@ -29,13 +29,18 @@ def main() -> int:
         print(f"ERROR: places not in DB: {missing}")
         return 1
 
-    start = planner.to_min(demo["start_time"])
-    budget = config.HALF_DAY_MIN if demo["user_profile"]["duration"] == "half_day" else config.FULL_DAY_MIN
-    ctx = planner.TripCtx(profile=demo["user_profile"], start_min=start, end_min=start + budget,
+    profile = demo["user_profile"]
+    start, end = planner.check_time_window(profile["start_time"], profile["end_time"])
+    ctx = planner.TripCtx(profile=profile, start_min=start, end_min=end,
                           min_items=1, max_items=len(demo["items"]), needs_lunch=False)
     entries = [LLMItem(place_id=i["place_id"], order=n, stay_min=places[i["place_id"]]["avg_stay_min"],
                        reason_en=i["reason_en"]) for n, i in enumerate(demo["items"], start=1)]
     rows = planner.schedule(entries, places, ctx)
+    if len(rows) != len(entries):  # schedule() drops stops outside the trip time or their opening hours
+        kept = {r["place_id"] for r in rows}
+        print(f"ERROR: stops outside the trip time or opening hours: "
+              f"{[e.place_id for e in entries if e.place_id not in kept]}")
+        return 1
 
     course = {"id": demo["id"], "user_profile": demo["user_profile"], "tier": demo["tier"], "created_at": now_iso()}
     items = [{"course_id": demo["id"], "order": n, **r, "status": "current" if n == 1 else "upcoming"}

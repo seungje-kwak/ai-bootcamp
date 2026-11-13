@@ -50,8 +50,8 @@ async function request<T>(path: string, init?: RequestInit): Promise<T> {
 
 export const api = {
   places: () => request<{ places: Place[] }>("/places"),
-  createCourse: (user_profile: UserProfileInput, start_time?: string) =>
-    request<Course>("/courses", { method: "POST", body: JSON.stringify({ user_profile, start_time }) }),
+  createCourse: (user_profile: UserProfileInput, start_time: string, end_time: string) =>
+    request<Course>("/courses", { method: "POST", body: JSON.stringify({ user_profile, start_time, end_time }) }),
   getCourse: (id: string) => request<Course>(`/courses/${encodeURIComponent(id)}`),
   replan: (id: string, reason: ReplanReason, current_order: number) =>
     request<Course>(`/courses/${encodeURIComponent(id)}/replan`, {

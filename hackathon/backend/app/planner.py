@@ -6,6 +6,7 @@ from __future__ import annotations
 
 import logging
 import math
+import re
 import uuid
 from dataclasses import dataclass, field
 from datetime import datetime, timedelta, timezone
@@ -46,6 +47,61 @@ def round_up5(m: int) -> int:
 
 def today_kst_dow() -> str:
     return WEEKDAYS[datetime.now(KST).weekday()]
+
+
+# --------------------------------------------------------------------------- trip window (trip-time FR-3, FR-6)
+_HHMM = re.compile(r"^([01]\d|2[0-3]):[0-5]\d$")
+
+
+def check_time_window(start_time: str, end_time: str) -> tuple[int, int]:
+    """Minutes of a valid start/end pair. Anything else is 422 INVALID_TIME_WINDOW."""
+    def bad(message: str) -> ApiError:
+        return ApiError(422, "INVALID_TIME_WINDOW", message)
+
+    if not _HHMM.match(start_time or "") or not _HHMM.match(end_time or ""):
+        raise bad("start_time and end_time must look like HH:MM.")
+    start, end = to_min(start_time), to_min(end_time)
+    if start % config.TIME_STEP_MIN or end % config.TIME_STEP_MIN:
+        raise bad("Times must be on the hour or half hour.")
+    if not to_min(config.MIN_START) <= start <= to_min(config.MAX_START):
+        raise bad(f"start_time must be between {config.MIN_START} and {config.MAX_START}.")
+    if end > to_min(config.MAX_END):
+        raise bad(f"end_time must be {config.MAX_END} or earlier.")
+    if not config.MIN_TRIP_MIN <= end - start <= config.MAX_TRIP_MIN:
+        raise bad(f"The day must be {config.MIN_TRIP_MIN // 60} to {config.MAX_TRIP_MIN // 60} hours long.")
+    return start, end
+
+
+def item_bounds(trip_min: int) -> tuple[int, int]:
+    """FR-6 with h = trip_min / 60: min = max(2, round(h * 0.65)), max = max(min, round(h * 0.9)),
+    round(x) = floor(x + 0.5). Whole-number arithmetic so 0.65 and 0.9 do not pick up float error."""
+    lo = max(2, (trip_min * 13 + 600) // 1200)
+    hi = max(lo, (trip_min * 3 + 100) // 200)
+    return lo, hi
+
+
+# --------------------------------------------------------------------------- opening hours (trip-time FR-8)
+def open_window(p: dict) -> Optional[tuple[int, int]]:
+    """(open, close) in minutes, or None when the place is always open (both fields null)."""
+    o, c = p.get("open_time"), p.get("close_time")
+    if not o or not c:
+        return None
+    return to_min(o), to_min(c)      # "24:00" -> 1440
+
+
+def fits_hours(p: dict, start_min: int, stay_min: int) -> bool:
+    w = open_window(p)
+    return w is None or (start_min >= w[0] and start_min + stay_min <= w[1])
+
+
+def hours_filter(places: list[dict], start_min: int, end_min: int) -> list[dict]:
+    """F-10: drop a place when its opening hours and the trip overlap for less than avg_stay_min."""
+    out = []
+    for p in places:
+        w = open_window(p)
+        if w is None or min(w[1], end_min) - max(w[0], start_min) >= p["avg_stay_min"]:
+            out.append(p)
+    return out
 
 
 # --------------------------------------------------------------------------- distance (10.6)
@@ -102,7 +158,7 @@ def _passes_diet(p: dict, diet: str) -> bool:
 
 
 def base_filter(places: list[dict], profile: dict, exclude_ids: set[int], level_bonus: int = 0) -> list[dict]:
-    """F-1..F-6 and F-8. F-7 (lunch) and F-9 (count) are applied afterwards."""
+    """F-1..F-6 and F-8. F-10 (opening hours), F-7 (lunch) and F-9 (count) are applied afterwards."""
     cond = profile.get("conditions") or {}
     allowed = int(profile["fitness_level"])
     if profile["condition_today"] == "tired" or cond.get("low_walking"):
@@ -227,6 +283,8 @@ def rule_plan(cands: list[dict], ctx: TripCtx, fixed_first: Optional[dict]) -> L
             a = arrival(p)
             if a + p["avg_stay_min"] > ctx.end_min:
                 continue
+            if not fits_hours(p, a, p["avg_stay_min"]):                      # FR-8
+                continue
             is_food = p["category"] == "food"
             if is_food and lunch_done:
                 continue
@@ -263,6 +321,7 @@ def build_llm_input(cands: list[dict], ctx: TripCtx, fixed_first_id: Optional[in
                                        "condition_today", "diet")},
         "trip": {
             "start_time": to_hhmm(ctx.start_min),
+            "end_time": to_hhmm(ctx.end_min),
             "time_budget_min": ctx.end_min - ctx.start_min,
             "min_items": ctx.min_items,
             "max_items": ctx.max_items,
@@ -279,6 +338,7 @@ def build_llm_input(cands: list[dict], ctx: TripCtx, fixed_first_id: Optional[in
             "id": c["id"], "name_en": c["name_en"], "category": c["category"],
             "description_en": c["description_en"], "lat": c["lat"], "lng": c["lng"],
             "avg_stay_min": c["avg_stay_min"],
+            "open_time": c.get("open_time"), "close_time": c.get("close_time"),
             "walking_level": c["accessibility"]["walking_level"], "terrain": c["accessibility"]["terrain"],
             "indoor": c["accessibility"]["indoor"], "fatigue_score": c["accessibility"]["fatigue_score"],
             "food": ({k: c["food_options"][k] for k in ("solo_ok", "vegan", "vegetarian", "halal",
@@ -311,7 +371,7 @@ def validate(out: LLMCourse, cands_by_id: dict[int, dict], fixed_first: Optional
 
 
 # --------------------------------------------------------------------------- timing (10.6)
-def schedule(entries: list[LLMItem], places_by_id: dict[int, dict], ctx: TripCtx) -> list[dict]:
+def _timed_rows(entries: list[LLMItem], places_by_id: dict[int, dict], ctx: TripCtx) -> list[dict]:
     max_walk = int(ctx.profile["max_walk_min"])
     rows, prev, t = [], ctx.origin, ctx.start_min
     for e in entries:
@@ -323,11 +383,27 @@ def schedule(entries: list[LLMItem], places_by_id: dict[int, dict], ctx: TripCtx
             start = round_up5(t + mins)
         rows.append({"place_id": p["id"], "start_time": to_hhmm(start), "stay_min": e.stay_min,
                      "move_method": method, "move_min": mins, "reason_en": e.reason_en[:300],
-                     "is_rest_stop": bool(e.is_rest_stop), "_end": start + e.stay_min})
+                     "is_rest_stop": bool(e.is_rest_stop), "_start": start, "_end": start + e.stay_min})
         prev, t = p, start + e.stay_min
-    while len(rows) > 1 and rows[-1]["_end"] > ctx.end_min:                         # rule 7
-        rows.pop()
+    return rows
+
+
+def schedule(entries: list[LLMItem], places_by_id: dict[int, dict], ctx: TripCtx) -> list[dict]:
+    entries = list(entries)
+    while True:
+        rows = _timed_rows(entries, places_by_id, ctx)
+        while len(rows) > 1 and rows[-1]["_end"] > ctx.end_min:                     # rule 7
+            rows.pop()
+        # FR-8: drop the first stop that is outside its opening hours, then time the rest again
+        bad = next((n for n, r in enumerate(rows)
+                    if not fits_hours(places_by_id[r["place_id"]], r["_start"], r["stay_min"])), None)
+        if bad is None:
+            break
+        del entries[bad]
+        if not entries:
+            raise ApiError(409, "NO_CANDIDATES", "No places are open at these times.")
     for r in rows:
+        r.pop("_start")
         r.pop("_end")
     return rows
 
@@ -340,15 +416,23 @@ def _nearest(origin: dict, pool: list[dict]) -> Optional[dict]:
 def run_pipeline(places: list[dict], ctx: TripCtx, min_candidates: int) -> list[dict]:
     """10.2 -> 10.6. Returns schedule rows (without order/status/course_id)."""
     places_by_id = {p["id"]: p for p in places}
-    base = base_filter(places, ctx.profile, ctx.exclude_ids)
+    def filtered(level_bonus: int) -> list[dict]:
+        ok = base_filter(places, ctx.profile, ctx.exclude_ids, level_bonus=level_bonus)
+        return hours_filter(ok, ctx.start_min, ctx.end_min)                           # F-10
+
+    base = filtered(0)
     if len(base) < min_candidates:
-        base = base_filter(places, ctx.profile, ctx.exclude_ids, level_bonus=1)
+        base = filtered(1)
 
     fixed_first = None
     if ctx.fixed_first_category:
         origin = ctx.origin
-        same = [p for p in base if p["category"] == ctx.fixed_first_category]
-        fixed_first = _nearest(origin, same) or (_nearest(origin, base) if ctx.fixed_first_any else None)
+        max_walk = int(ctx.profile["max_walk_min"])
+        # the fixed first stop must be open for its whole stay when the traveler gets there (FR-8)
+        open_on_arrival = [p for p in base if fits_hours(
+            p, round_up5(ctx.start_min + move_between(origin, p, max_walk)[1]), p["avg_stay_min"])]
+        same = [p for p in open_on_arrival if p["category"] == ctx.fixed_first_category]
+        fixed_first = _nearest(origin, same) or (_nearest(origin, open_on_arrival) if ctx.fixed_first_any else None)
         if fixed_first is None:
             raise ApiError(409, "NO_CANDIDATES", "No places fit right now.")
 
@@ -382,15 +466,14 @@ def run_pipeline(places: list[dict], ctx: TripCtx, min_candidates: int) -> list[
     return schedule(entries, places_by_id, ctx)
 
 
-def new_course(places: list[dict], profile_in: dict, start_time: Optional[str]) -> tuple[dict, list[dict]]:
+def new_course(places: list[dict], profile_in: dict, start_time: str, end_time: str) -> tuple[dict, list[dict]]:
+    start, end = check_time_window(start_time, end_time)
     profile = dict(profile_in)
     profile["conditions"] = {"indoor_only": False, "low_walking": False}
-    start = to_min(start_time or config.DEFAULT_START)
-    half = profile["duration"] == "half_day"
-    budget = config.HALF_DAY_MIN if half else config.FULL_DAY_MIN
-    ctx = TripCtx(profile=profile, start_min=start, end_min=start + budget,
-                  min_items=3 if half else 5, max_items=4 if half else 7,
-                  needs_lunch=window_has_lunch(start, start + budget))
+    profile["start_time"], profile["end_time"] = start_time, end_time      # server-owned, like conditions
+    min_items, max_items = item_bounds(end - start)
+    ctx = TripCtx(profile=profile, start_min=start, end_min=end, min_items=min_items, max_items=max_items,
+                  needs_lunch=window_has_lunch(start, end))
     rows = run_pipeline(places, ctx, min_candidates=2)
     course_id = str(uuid.uuid4())
     from .store import now_iso
@@ -421,8 +504,11 @@ def replan(places: list[dict], course: dict, items: list[dict], reason: str, cur
     statuses = {i["order"]: ("done" if i["order"] < current_order else
                              "current" if i["order"] == current_order else "upcoming") for i in items}
 
-    budget = config.HALF_DAY_MIN if profile["duration"] == "half_day" else config.FULL_DAY_MIN
-    end_min = to_min(items[0]["start_time"]) + budget
+    if profile.get("end_time"):
+        end_min = to_min(profile["end_time"])
+    else:  # course saved before the trip-time change: only `duration` (FR-11)
+        budget = config.HALF_DAY_MIN if profile.get("duration") == "half_day" else config.FULL_DAY_MIN
+        end_min = to_min(items[0]["start_time"]) + budget
     cur_place = places_by_id.get(current["place_id"])
     if cur_place is None:
         raise ApiError(404, "PLACE_NOT_FOUND", "Place not found.")

@@ -4,6 +4,7 @@
 - terrain: free-text description -> flat / slope / steep
 - closed_days: free text -> ["mon".."sun"]
 - price_level: free/low/mid/high -> 0/1/2/3
+- open_time / close_time: "HH:MM" or both empty (always open). A badly formed value stops the build
 - places outside the map bounds (7.2) are skipped (Q-13 default)
 
 Run:  backend/.venv/Scripts/python.exe backend/scripts/build_places.py
@@ -20,8 +21,9 @@ ROOT = Path(__file__).resolve().parents[2]
 SEED = ROOT / "data" / "seed"
 OUT = ROOT / "backend" / "app" / "data"
 
-# Same values as frontend/config/map.ts (7.2)
-BOUNDS = {"lngMin": 126.44, "lngMax": 126.56, "latMin": 33.46, "latMax": 33.53}
+# Jeju main island. This is the range app/data/places.json was built with on 2026-11-13
+# (data/seed_jeju_all/README.md). frontend/config/map.ts still shows Jeju City only.
+BOUNDS = {"lngMin": 126.13, "lngMax": 126.99, "latMin": 33.10, "latMax": 33.58}
 
 CATEGORY_MAP = {
     "nature": "nature",
@@ -100,6 +102,25 @@ def image_source_of(raw: str) -> str | None:
     return s
 
 
+HHMM = re.compile(r"^([01]\d|2[0-3]):[0-5]\d$")
+
+
+def parse_open_close(pid: int, open_raw: str, close_raw: str) -> tuple[str | None, str | None]:
+    """Both empty -> (None, None) = always open. close_time may be "24:00" (open past midnight)."""
+    o, c = (open_raw or "").strip(), (close_raw or "").strip()
+    if not o and not c:
+        return None, None
+    if not o or not c:
+        raise ValueError(f"place {pid}: open_time and close_time must both be set or both be empty ({o!r}, {c!r})")
+    if not HHMM.match(o):
+        raise ValueError(f"place {pid}: open_time {o!r} is not HH:MM")
+    if c != "24:00" and not HHMM.match(c):
+        raise ValueError(f"place {pid}: close_time {c!r} is not HH:MM")
+    if o >= c:
+        raise ValueError(f"place {pid}: open_time {o} must be earlier than close_time {c}")
+    return o, c
+
+
 def in_bounds(lat: float, lng: float) -> bool:
     return BOUNDS["latMin"] <= lat <= BOUNDS["latMax"] and BOUNDS["lngMin"] <= lng <= BOUNDS["lngMax"]
 
@@ -123,6 +144,7 @@ def main() -> int:
             skipped.append((pid, r["name_en"], "no accessibility row"))
             continue
 
+        open_time, close_time = parse_open_close(pid, r.get("open_time", ""), r.get("close_time", ""))
         category = CATEGORY_OVERRIDE.get(pid) or CATEGORY_MAP.get(r["category"].strip(), "culture")
         f = food.get(pid)
         food_options = None
@@ -151,6 +173,8 @@ def main() -> int:
             "image_source": image_source_of(r["image_source"]) if r["image_url"].strip() else None,
             "avg_stay_min": to_int(r["avg_stay_min"]) or 45,
             "opening_hours": r["opening_hours"].strip() or None,
+            "open_time": open_time,
+            "close_time": close_time,
             "closed_days": parse_closed_days(r["closed_days"]),
             "price_level": PRICE_MAP.get(r["price_level"].strip().lower()),
             "last_verified_at": r["last_verified_at"].strip() or None,
@@ -194,4 +218,8 @@ def main() -> int:
 
 
 if __name__ == "__main__":
-    sys.exit(main())
+    try:
+        sys.exit(main())
+    except ValueError as e:
+        print(f"ERROR: {e}")
+        sys.exit(1)

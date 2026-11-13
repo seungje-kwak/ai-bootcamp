@@ -18,8 +18,9 @@ from app import config, planner  # noqa: E402
 
 EMMA = {
     "interests": ["photo", "market", "cafe"], "fitness_level": 2, "max_walk_min": 20, "avoid_slopes": False,
-    "condition_today": "normal", "diet": "vegan", "duration": "full_day",
+    "condition_today": "normal", "diet": "vegan",
 }
+START, END = "10:00", "18:00"   # the 8-hour day the older tests were written for
 
 
 @pytest.fixture(scope="session")
