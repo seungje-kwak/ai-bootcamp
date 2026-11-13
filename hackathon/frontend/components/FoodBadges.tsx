@@ -1,4 +1,6 @@
-import type { FoodOptions } from "@/lib/types";
+import type { FoodOptions, UserProfile } from "@/lib/types";
+
+type Diet = UserProfile["diet"];
 
 const BADGES: { key: keyof FoodOptions; label: string }[] = [
   { key: "solo_ok", label: "Solo OK" },
@@ -9,9 +11,12 @@ const BADGES: { key: keyof FoodOptions; label: string }[] = [
 ];
 
 // US-06: only `true` values become badges; no food_options -> no badge area at all.
-export function FoodBadges({ food }: { food: FoodOptions | null }) {
+// The signature menu is not known to fit a diet, so it is shown only to travelers with no restriction (6.3).
+export function FoodBadges({ food, diet = "none" }: { food: FoodOptions | null; diet?: Diet }) {
   if (!food) return null;
   const on = BADGES.filter((b) => food[b.key] === true);
+  const showMenu = Boolean(food.signature_menu_en) && diet === "none";
+  if (on.length === 0 && !showMenu) return null;
   return (
     <div className="mt-2">
       {on.length > 0 && (
@@ -26,7 +31,7 @@ export function FoodBadges({ food }: { food: FoodOptions | null }) {
           ))}
         </div>
       )}
-      {food.signature_menu_en && <p className="mt-1.5 text-sm text-ink">Try: {food.signature_menu_en}</p>}
+      {showMenu && <p className="mt-1.5 text-sm text-ink">Try: {food.signature_menu_en}</p>}
     </div>
   );
 }

@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import type { CourseItem, Tier } from "@/lib/types";
+import type { CourseItem, Tier, UserProfile } from "@/lib/types";
 import { CategoryIcon, CATEGORY_META } from "./CategoryIcon";
 import { DriverCard } from "./DriverCard";
 import { FoodBadges } from "./FoodBadges";
@@ -30,12 +30,14 @@ export function MoveInfo({ item }: { item: CourseItem }) {
 export function StopCard({
   item,
   tier,
+  diet = "none",
   size = "normal",
   isNew = false,
   children,
 }: {
   item: CourseItem;
   tier: Tier;
+  diet?: UserProfile["diet"];
   size?: "normal" | "large";
   isNew?: boolean;
   children?: React.ReactNode;
@@ -84,7 +86,7 @@ export function StopCard({
           )}
         </div>
         <p className="mt-3 text-[15px] leading-relaxed">{item.reason_en}</p>
-        <FoodBadges food={p.food_options} />
+        <FoodBadges food={p.food_options} diet={diet} />
         <PhraseCards item={item} tier={tier} />
         <button
           onClick={() => setDriverOpen(true)}

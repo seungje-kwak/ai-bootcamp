@@ -177,6 +177,7 @@ export default function TripPage() {
           <StopCard
             item={current}
             tier={course.tier}
+            diet={course.user_profile.diet}
             size="large"
             isNew={newKeys.has(`${current.order}:${current.place_id}`)}
           >

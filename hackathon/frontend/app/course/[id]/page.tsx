@@ -56,7 +56,7 @@ export default function CoursePage() {
           course.items.map((it) => (
             <div key={it.order}>
               <MoveInfo item={it} />
-              <StopCard item={it} tier={course.tier} />
+              <StopCard item={it} tier={course.tier} diet={course.user_profile.diet} />
             </div>
           ))
         )}

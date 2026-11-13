@@ -11,13 +11,14 @@ export function PlacePhoto({ place, className = "h-40" }: { place: Place; classN
   if (!place.image_url || failed) {
     return (
       <div
-        className={`${className} w-full flex flex-col items-center justify-center gap-1 text-white/90`}
+        className={`${className} w-full flex items-center justify-center text-white/90`}
         style={{ background: meta.color }}
+        role="img"
+        aria-label={`${place.name_en} (no photo yet)`}
       >
         <span className="text-4xl" aria-hidden>
           {meta.icon}
         </span>
-        <span className="text-xs">Photo coming soon</span>
       </div>
     );
   }
