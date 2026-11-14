@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { MAP_CONFIG } from "@/config/map";
+import { type LatLng, MAP_CONFIG, toPercent } from "@/config/map";
 import type { CourseItem, Place } from "@/lib/types";
 import { FallbackMap } from "./FallbackMap";
 import { KakaoMap } from "./KakaoMap";
@@ -12,18 +12,25 @@ export type MapSelect = (s: Selected) => void;
 
 // 7장: Kakao map when NEXT_PUBLIC_KAKAO_MAP_KEY is set and the SDK loads; otherwise the fallback SVG (7.1).
 // Both draw the same markers and line; the bottom card (7.7) lives here so it is shared.
+// `center` is the first view when the course has no stops: the center of the traveler's area.
 export function JejuMap({
   items,
   places = [],
   tripMode = false,
+  center,
 }: {
   items: CourseItem[];
   places?: Place[];
   tripMode?: boolean;
+  center?: LatLng;
 }) {
   const [selected, setSelected] = useState<Selected | null>(null);
   const [kakaoFailed, setKakaoFailed] = useState(false);
   const useKakao = Boolean(MAP_CONFIG.kakaoKey) && !kakaoFailed;
+
+  // The fallback SVG cannot show a stop outside the old town: no map then, the page still lists the stops.
+  const fitsFallback = items.every((it) => toPercent(it.place.lat, it.place.lng, MAP_CONFIG.fallbackBounds).inBounds);
+  if (!useKakao && !fitsFallback) return null;
 
   return (
     <div className="relative">
@@ -32,6 +39,7 @@ export function JejuMap({
           items={items}
           places={places}
           tripMode={tripMode}
+          center={center}
           onSelect={setSelected}
           onError={(e) => {
             console.warn("Kakao map unavailable, using the fallback map:", e);

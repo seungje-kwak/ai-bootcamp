@@ -40,7 +40,7 @@ def tiny_place(pid: int, lat: float, open_time, close_time, stay: int = 60, cate
     """A made-up place next to Jeju City Hall, a short walk from the others."""
     return {
         "id": pid, "name_en": f"Place {pid}", "name_ko": f"장소 {pid}", "category": category,
-        "description_en": "A test place.", "lat": lat, "lng": 126.5312, "address_ko": "제주시",
+        "description_en": "A test place.", "lat": lat, "lng": 126.5312, "address_ko": "제주시", "area_id": "jeju-city",
         "image_url": None, "image_source": None, "avg_stay_min": stay, "opening_hours": None,
         "open_time": open_time, "close_time": close_time, "closed_days": [], "price_level": None,
         "last_verified_at": None, "source_date": None,
@@ -88,11 +88,12 @@ def test_build_places_accepts_empty_and_midnight():
 
 # ----------------------------------------------------------------------------- US-T02 request and window
 def test_request_needs_both_times_and_rejects_duration(emma):
-    ok = CreateCourseRequest.model_validate({"user_profile": emma, "start_time": "10:00", "end_time": "14:00"})
+    area = {"area_id": "jeju-city"}
+    ok = CreateCourseRequest.model_validate({"user_profile": emma, "start_time": "10:00", "end_time": "14:00", **area})
     assert (ok.start_time, ok.end_time) == ("10:00", "14:00")
-    for body in ({"user_profile": emma, "start_time": "10:00"},
-                 {"user_profile": emma, "end_time": "14:00"},
-                 {"user_profile": dict(emma, duration="half_day"), "start_time": "10:00", "end_time": "14:00"}):
+    for body in ({"user_profile": emma, "start_time": "10:00", **area},
+                 {"user_profile": emma, "end_time": "14:00", **area},
+                 {"user_profile": dict(emma, duration="half_day"), "start_time": "10:00", "end_time": "14:00", **area}):
         with pytest.raises(ValueError):
             CreateCourseRequest.model_validate(body)
 

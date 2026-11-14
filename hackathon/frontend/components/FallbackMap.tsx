@@ -7,6 +7,8 @@ import { CATEGORY_META } from "./CategoryIcon";
 import type { MapSelect } from "./JejuMap";
 
 const MARKER_PX = 28;
+// The SVG shows the old town only, so positions are taken inside that range.
+const inSvg = (lat: number, lng: number) => toPercent(lat, lng, MAP_CONFIG.fallbackBounds);
 
 // 7.10: the fallback SVG cannot zoom, so push course markers apart (in px, for the current box width)
 // until they stop overlapping.
@@ -68,14 +70,14 @@ export function FallbackMap({
   const markers = useMemo(() => {
     const inB = [...items]
       .sort((a, b) => a.order - b.order)
-      .map((it) => ({ it, ...toPercent(it.place.lat, it.place.lng) }))
+      .map((it) => ({ it, ...inSvg(it.place.lat, it.place.lng) }))
       .filter((m) => m.inBounds); // 7.5: never draw out-of-bounds points
     const spreadPts = spread(inB, widthPx);
     return inB.map((m, i) => ({ ...m, ...spreadPts[i] }));
   }, [items, widthPx]);
   const others = places
     .filter((p) => !courseIds.has(p.id))
-    .map((p) => ({ p, ...toPercent(p.lat, p.lng) }))
+    .map((p) => ({ p, ...inSvg(p.lat, p.lng) }))
     .filter((o) => o.inBounds);
 
   return (

@@ -44,7 +44,8 @@ def test_full_flow(client, sb, emma):
     course_id = None
     try:
         # US-02: create, saved rows, same content on GET
-        r = client.post("/courses", json={"user_profile": emma, "start_time": "10:00", "end_time": "18:00"})
+        r = client.post("/courses", json={"user_profile": emma, "start_time": "10:00", "end_time": "18:00",
+                                         "area_id": "jeju-city"})
         assert r.status_code == 201 and COURSE_KEYS <= set(r.json())
         course = r.json()
         course_id = course["id"]
@@ -99,4 +100,4 @@ def test_unknown_course_is_404(client):
 
 def test_bad_profile_is_422(client, emma):
     assert client.post("/courses", json={"user_profile": dict(emma, interests=[]), "start_time": "10:00",
-                                         "end_time": "18:00"}).status_code == 422
+                                         "end_time": "18:00", "area_id": "jeju-city"}).status_code == 422

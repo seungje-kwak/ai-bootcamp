@@ -1,7 +1,8 @@
 """Upload app/data/places.json + phrase_cards.json to Supabase (upsert, safe to re-run).
 
-Each place row carries open_time / close_time ("HH:MM", or both null = always open), so the `places`
-table needs those two columns: run sql/schema.sql again on an older database before seeding.
+Uploads app/data/areas.json first, because places.area_id points at areas.id.
+Each place row carries open_time / close_time ("HH:MM", or both null = always open), and area_id,
+so the `places` table needs those columns: run sql/schema.sql again on an older database before seeding.
 
 Prereq: run sql/schema.sql in the Supabase SQL editor and put SUPABASE_URL / SUPABASE_SERVICE_KEY in backend/.env.
     backend/.venv/Scripts/python.exe backend/scripts/build_places.py
@@ -27,6 +28,7 @@ def main() -> int:
     from supabase import create_client
 
     sb = create_client(config.SUPABASE_URL, config.SUPABASE_SERVICE_KEY)
+    areas = json.loads((config.SEED_DATA_DIR / "areas.json").read_text(encoding="utf-8"))
     places = json.loads((config.SEED_DATA_DIR / "places.json").read_text(encoding="utf-8"))
     cards = json.loads((config.SEED_DATA_DIR / "phrase_cards.json").read_text(encoding="utf-8"))
 
@@ -40,12 +42,13 @@ def main() -> int:
         if food:
             food_rows.append({"place_id": p["id"], **food})
 
+    sb.table("areas").upsert(areas).execute()
     sb.table("places").upsert(place_rows).execute()
     sb.table("place_accessibility").upsert(acc_rows).execute()
     if food_rows:
         sb.table("food_options").upsert(food_rows).execute()
     sb.table("phrase_cards").upsert(cards).execute()
-    print(f"upserted places={len(place_rows)} accessibility={len(acc_rows)} food_options={len(food_rows)} "
+    print(f"upserted areas={len(areas)} places={len(place_rows)} accessibility={len(acc_rows)} food_options={len(food_rows)} "
           f"phrase_cards={len(cards)}")
     return 0
 

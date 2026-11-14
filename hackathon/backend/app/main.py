@@ -2,11 +2,12 @@
 from __future__ import annotations
 
 import logging
+from typing import Optional
 
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
-from . import config, planner
+from . import areas, config, planner
 from .course_view import build_course
 from .errors import ApiError
 from .schemas import CreateCourseRequest, PurchaseRequest, ReplanRequest, ReportRequest
@@ -46,15 +47,27 @@ def health() -> dict:
             "llm": f"{config.LLM_PROVIDER}:{config.LLM_MODEL}" if config.USE_LLM else False}
 
 
+@app.get("/areas")
+def list_areas() -> dict:
+    store = get_store()
+    return {"areas": areas.summaries(store.list_areas(), store.list_places())}
+
+
 @app.get("/places")
-def list_places() -> dict:
-    return {"places": get_store().list_places()}
+def list_places(area_id: Optional[str] = None) -> dict:
+    places = get_store().list_places()
+    if area_id is not None:
+        places = [p for p in places if p["area_id"] == area_id]
+    return {"places": places}
 
 
 @app.post("/courses", status_code=201)
 def create_course(req: CreateCourseRequest) -> dict:
     store = get_store()
-    course, items = planner.new_course(store.list_places(), req.user_profile.model_dump(), req.start_time, req.end_time)
+    places = store.list_places()
+    areas.check_area(req.area_id, store.list_areas(), places)
+    course, items = planner.new_course(places, req.user_profile.model_dump(), req.start_time, req.end_time,
+                                       req.area_id)
     store.create_course(course, items)
     return _course_response(course["id"])
 

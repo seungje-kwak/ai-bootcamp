@@ -30,18 +30,22 @@ class UserProfileIn(BaseModel):
 
 
 class UserProfile(UserProfileIn):
-    """What is stored. The server adds `conditions`, `start_time` and `end_time`.
-    Courses saved before the trip-time change have `duration` instead of the two times."""
+    """What is stored. The server adds `conditions`, `start_time`, `end_time` and `area_id`.
+    Courses saved before the trip-time change have `duration` instead of the two times, and
+    courses saved before areas existed have no `area_id`."""
     model_config = ConfigDict(extra="ignore")
     conditions: Conditions = Conditions()
+    area_id: Optional[str] = None
     start_time: Optional[str] = None
     end_time: Optional[str] = None
 
 
 class CreateCourseRequest(BaseModel):
     """Both times are required "HH:MM" strings. Their range is checked in planner.check_time_window,
-    which answers 422 INVALID_TIME_WINDOW in the 9.2 error shape."""
+    which answers 422 INVALID_TIME_WINDOW in the 9.2 error shape. `area_id` is checked in
+    areas.check_area, which answers 422 INVALID_AREA."""
     user_profile: UserProfileIn
+    area_id: str
     start_time: str
     end_time: str
 

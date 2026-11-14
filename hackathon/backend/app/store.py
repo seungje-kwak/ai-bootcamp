@@ -9,11 +9,14 @@ The store returns plain dicts:
 from __future__ import annotations
 
 import copy
+import logging
 import time
 from datetime import datetime, timezone
 from typing import Any, Optional, Protocol
 
-from . import config
+from . import areas, config
+
+log = logging.getLogger("mypace.store")
 
 
 def now_iso() -> str:
@@ -22,6 +25,7 @@ def now_iso() -> str:
 
 class Store(Protocol):
     def list_places(self) -> list[dict]: ...
+    def list_areas(self) -> list[dict]: ...
     def list_phrase_cards(self) -> list[dict]: ...
     def get_course(self, course_id: str) -> Optional[dict]: ...
     def get_items(self, course_id: str) -> list[dict]: ...
@@ -46,6 +50,7 @@ class SupabaseStore:
         self._sb = create_client(config.SUPABASE_URL, config.SUPABASE_SERVICE_KEY)
         self._places_cache: tuple[float, list[dict]] | None = None
         self._cards_cache: tuple[float, list[dict]] | None = None
+        self._areas_cache: tuple[float, list[dict]] | None = None
 
     @staticmethod
     def _one(v: Any) -> Optional[dict]:
@@ -75,11 +80,25 @@ class SupabaseStore:
             if food:
                 food.pop("place_id", None)
             r["closed_days"] = r.get("closed_days") or []
+            # A database without the places.area_id column yet: work the area out from the address.
+            r["area_id"] = r.get("area_id") or areas.area_of_address(r["address_ko"]) or config.DEFAULT_AREA_ID
             r["accessibility"] = acc
             r["food_options"] = food
             places.append(r)
         self._places_cache = (time.time(), places)
         return copy.deepcopy(places)
+
+    def list_areas(self) -> list[dict]:
+        if self._areas_cache and time.time() - self._areas_cache[0] < self.PLACE_TTL_SEC:
+            return copy.deepcopy(self._areas_cache[1])
+        try:
+            rows = self._sb.table("areas").select("*").order("sort_order").execute().data
+        except Exception as e:  # the table is made by sql/schema.sql; an older database does not have it
+            log.warning("areas table not readable (%s); using app/data/areas.json", e)
+            rows = []
+        rows = rows or areas.load_seed_areas()
+        self._areas_cache = (time.time(), rows)
+        return copy.deepcopy(rows)
 
     def list_phrase_cards(self) -> list[dict]:
         if self._cards_cache and time.time() - self._cards_cache[0] < self.PLACE_TTL_SEC:

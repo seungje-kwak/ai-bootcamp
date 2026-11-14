@@ -7,7 +7,7 @@ import { JejuMap } from "@/components/JejuMap";
 import { CourseSkeleton, MessageScreen, NewPlanLink, PrimaryButton } from "@/components/States";
 import { MoveInfo, StopCard } from "@/components/StopCard";
 import { api } from "@/lib/api";
-import type { Place } from "@/lib/types";
+import { type Area, DEFAULT_AREA_ID, type Place } from "@/lib/types";
 import { useCourse } from "@/lib/useCourse";
 
 // 6.3 Result page
@@ -15,10 +15,19 @@ export default function CoursePage() {
   const { id } = useParams<{ id: string }>();
   const { course, state, reload } = useCourse(id);
   const [places, setPlaces] = useState<Place[]>([]);
+  const [areas, setAreas] = useState<Area[]>([]);
+
+  const areaId = course ? (course.user_profile.area_id ?? DEFAULT_AREA_ID) : null;
 
   useEffect(() => {
-    api.places().then((r) => setPlaces(r.places)).catch(() => setPlaces([])); // markers only; failure is fine
+    api.areas().then((r) => setAreas(r.areas)).catch(() => setAreas([])); // area name only; failure is fine
   }, []);
+
+  useEffect(() => {
+    if (!areaId) return;
+    // Only the places of the traveler's area. Markers only; failure is fine.
+    api.places(areaId).then((r) => setPlaces(r.places)).catch(() => setPlaces([]));
+  }, [areaId]);
 
   if (state.kind === "loading") return <CourseSkeleton />;
   if (state.kind === "notfound")
@@ -27,6 +36,8 @@ export default function CoursePage() {
     return (
       <MessageScreen title="Something went wrong." action={<PrimaryButton onClick={reload}>Retry</PrimaryButton>} />
     );
+
+  const area = areas.find((a) => a.id === areaId);
 
   return (
     <main className="pb-28">
@@ -41,12 +52,16 @@ export default function CoursePage() {
             <span className="rounded-full bg-sea-soft text-sea px-2.5 py-0.5 text-xs font-bold">Premium</span>
           )}
         </div>
-        <h1 className="mt-3 text-2xl font-bold">Your day in Jeju City</h1>
+        <h1 className="mt-3 text-2xl font-bold">Your day in {area ? area.name_en : "Jeju"}</h1>
         <p className="text-muted">{course.total_items} stops</p>
       </header>
 
       <section className="px-4">
-        <JejuMap items={course.items} places={places} />
+        <JejuMap
+          items={course.items}
+          places={places}
+          center={area && { lat: area.center_lat, lng: area.center_lng }}
+        />
       </section>
 
       <section className="px-4 mt-5">
