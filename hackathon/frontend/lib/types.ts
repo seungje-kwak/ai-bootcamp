@@ -39,6 +39,7 @@ export type Place = {
   lat: number;
   lng: number;
   address_ko: string;
+  area_id: string;
   image_url: string | null;
   image_source: string | null;
   avg_stay_min: number;
@@ -53,6 +54,22 @@ export type Place = {
   food_options: FoodOptions | null;
 };
 
+// One of the 14 areas a traveler can pick (GET /areas).
+export type Area = {
+  id: string;
+  group: "jeju" | "seogwipo";
+  name_en: string;
+  name_ko: string;
+  description_en: string;
+  center_lat: number;
+  center_lng: number;
+  place_count: number;
+  selectable: boolean; // false while the area does not have enough places yet
+};
+
+// Courses saved before areas existed have no area_id; they are Jeju City courses.
+export const DEFAULT_AREA_ID = "jeju-city";
+
 export type UserProfileInput = {
   interests: Category[];
   fitness_level: 1 | 2 | 3;
@@ -62,10 +79,11 @@ export type UserProfileInput = {
   diet: "none" | "vegan" | "vegetarian" | "halal";
 };
 
-// The server adds conditions, start_time and end_time. Courses saved before the trip-time change
-// have `duration` instead of the two times.
+// The server adds conditions, start_time, end_time and area_id. Courses saved before the trip-time
+// change have `duration` instead of the two times.
 export type UserProfile = UserProfileInput & {
   conditions: { indoor_only: boolean; low_walking: boolean };
+  area_id?: string;
   start_time?: string;
   end_time?: string;
   duration?: "half_day" | "full_day";

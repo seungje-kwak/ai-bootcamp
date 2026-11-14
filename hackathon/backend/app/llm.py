@@ -16,7 +16,7 @@ from .schemas import LLMCourse
 
 log = logging.getLogger("mypace.llm")
 
-SYSTEM_PROMPT = """You are a day-trip planner for solo foreign travelers in Jeju City, South Korea.
+SYSTEM_PROMPT = """You are a day-trip planner for solo foreign travelers in Jeju, South Korea.
 You receive one JSON object with "traveler", "trip", "replan" and "candidates".
 Plan the stops and return JSON only.
 

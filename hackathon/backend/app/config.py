@@ -54,6 +54,18 @@ TIME_STEP_MIN = 30
 HALF_DAY_MIN = 240
 FULL_DAY_MIN = 480
 LUNCH_WINDOW = ("12:00", "13:00")
+# A stop that takes longer than this to reach is left out of the course (start-area FR-9).
+MAX_MOVE_MIN = 30
+
+# --- areas (tasks/prd-start-area.md FR-4): an area can be picked only when it has all of these ---
+AREA_MIN_PLACES = 10
+AREA_MIN_FOOD = 3
+AREA_MIN_SOLO_FOOD = 2      # food places where one person can order
+AREA_MIN_CAFE = 1
+AREA_MIN_EASY = 4           # walking_level 1 on flat ground
+AREA_MIN_INDOOR = 3         # needed for the rain replan
+# Courses saved before areas existed have no area_id (FR-7).
+DEFAULT_AREA_ID = "jeju-city"
 
 LLM_TIMEOUT_SEC = 20
 MAX_CANDIDATES = 20

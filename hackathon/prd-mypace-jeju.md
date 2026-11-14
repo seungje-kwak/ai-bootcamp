@@ -2,7 +2,7 @@
 
 | 항목 | 내용 |
 |---|---|
-| 문서 버전 | v0.10 (2026-11-13: 여행 시간 설정. 온보딩 5단계에서 시작·끝 시각을 고르고 `duration`을 없앰. `places`에 `open_time`·`close_time`, 영업시간 필터 F-10, 오류 `INVALID_TIME_WINDOW`. 상세는 `tasks/prd-trip-time.md`) · v0.9 (2026-11-13: 일정·데모·발표 관련 남은 문구 정리. 미정 사항을 15장에서 13장으로 옮김) · v0.8 (2026-11-13: 이틀 일정, 데모 시나리오 장, 리스크 장을 삭제) · v0.7 (2026-11-13: 대체 SVG 지도를 명세에서 뺌(코드에는 테스트 화면용으로 남김), 7장 정리. 지도 범위는 유지하고 출발 위치·지역 입력 기능은 P2로) · v0.6 (2026-11-13: 6장에 실제 화면 요소를 적음. 404 버튼은 온보딩으로) · v0.5 (2026-11-13: 5장. US-20을 P0로, US-02의 502 조건, 대표 메뉴 표시 규칙, P1 상태, 테스트 위치) · v0.4 (2026-11-13: 4장을 구현 상태에 맞춤. P1 상태 열, 카카오맵을 P0로, 장소 수) · v0.3 (2026-11-13: 1장을 구현에 맞춤. 문서 위치, 저장소 구조, LLM 제공자, Supabase 필수) · v0.2 (2026-11-12: 지도를 일러스트에서 카카오맵으로 변경, 7장) |
+| 문서 버전 | v0.11 (2026-11-14: 출발 지역 선택. 제주도 전체를 14개 지역으로 나누고 온보딩 5단계에서 지역을 고름(전체 6단계). `areas` 테이블, `places.area_id`, `GET /areas`, 요청의 `area_id`, 오류 `INVALID_AREA`, 이동 30분 상한 `MAX_MOVE_MIN`, 지도 범위를 제주도 전체로, 지도 마커는 고른 지역의 장소만. 상세는 `tasks/prd-start-area.md`) · v0.10 (2026-11-13: 여행 시간 설정. 온보딩 5단계에서 시작·끝 시각을 고르고 `duration`을 없앰. `places`에 `open_time`·`close_time`, 영업시간 필터 F-10, 오류 `INVALID_TIME_WINDOW`. 상세는 `tasks/prd-trip-time.md`) · v0.9 (2026-11-13: 일정·데모·발표 관련 남은 문구 정리. 미정 사항을 15장에서 13장으로 옮김) · v0.8 (2026-11-13: 이틀 일정, 데모 시나리오 장, 리스크 장을 삭제) · v0.7 (2026-11-13: 대체 SVG 지도를 명세에서 뺌(코드에는 테스트 화면용으로 남김), 7장 정리. 지도 범위는 유지하고 출발 위치·지역 입력 기능은 P2로) · v0.6 (2026-11-13: 6장에 실제 화면 요소를 적음. 404 버튼은 온보딩으로) · v0.5 (2026-11-13: 5장. US-20을 P0로, US-02의 502 조건, 대표 메뉴 표시 규칙, P1 상태, 테스트 위치) · v0.4 (2026-11-13: 4장을 구현 상태에 맞춤. P1 상태 열, 카카오맵을 P0로, 장소 수) · v0.3 (2026-11-13: 1장을 구현에 맞춤. 문서 위치, 저장소 구조, LLM 제공자, Supabase 필수) · v0.2 (2026-11-12: 지도를 일러스트에서 카카오맵으로 변경, 7장) |
 | 작성일 | 2026-11-12 |
 | 용도 | 팀원 3명(A 프론트, B 백엔드, C 데이터·기획)이 각자 AI 코딩 도구에 넣고 개발하는 공통 기준 문서 |
 | 둘 곳 | 저장소의 `hackathon/prd-mypace-jeju.md`. 세 사람이 같은 파일을 본다 |
@@ -134,7 +134,7 @@
 
 | 영역 | 포함하는 것 |
 |---|---|
-| 화면 | 랜딩, 온보딩 5단계, 결과 페이지, 여행 모드, 구매 |
+| 화면 | 랜딩, 온보딩 6단계, 결과 페이지, 여행 모드, 구매 |
 | 코스 생성 | 필터링 → LLM → 검증 → 이동 시간 계산 → 저장 (10장) |
 | 지도 | 카카오맵 위 마커, 방문 순서 번호, 점선 동선, 설정 파일 하나 |
 | 신뢰 표시 | 장소마다 실제 사진, 사진 출처, 마지막 확인일 |
@@ -171,7 +171,7 @@ P0가 배포 환경에서 끝난 뒤, 아래 순서대로 한다. 2026-11-13 기
 | `opening_hours`, `price_level`, `allergens` 표시 | 데이터가 채워지고 형식이 정해진 뒤 (Q-14) |
 | 코스 시작 시각 고르기 | MVP는 기본값 사용 (Q-06) |
 | 새로고침해도 여행 모드의 진행 위치 유지 | MVP는 재구성할 때만 서버에 반영한다 (Q-11) |
-| 출발 위치나 여행할 지역을 입력받아 그 주변으로 코스 짜기 | 지금은 지도 범위(7.2) 안의 제주시 원도심만 다룬다. 이 기능을 만들 때 범위와 시드 데이터를 다시 정한다 (Q-27) |
+| 지역 안의 정확한 출발 지점(호텔, 정류장) 입력, 여러 지역을 잇는 코스 | 여행할 지역 고르기는 v0.11에서 만들었다 (6.2의 5단계, `tasks/prd-start-area.md`). 여행자는 14개 지역 중 하나를 고르고 코스는 그 지역 안에서만 짠다. 지역의 장소 데이터가 모자라면 그 지역은 "Coming soon"으로 보인다 (9.4.1) |
 
 ### 4.4 제외 (이번 해커톤에서 만들지 않는다)
 
@@ -187,7 +187,8 @@ P0가 배포 환경에서 끝난 뒤, 아래 순서대로 한다. 2026-11-13 기
 - 회원 가입과 로그인. 테이블에 사용자 정보가 없다. 코스는 `courses.id`로만 구분한다.
 - 버스 이동 안내. `move_method`의 `bus` 값은 남겨 두지만 MVP는 `walk`와 `taxi`만 만든다. 코스 생성 로직이 도보와 택시 시간만 추정하기 때문이다.
 - 날씨 자동 감지. 비는 "비가 와요" 버튼으로만 반영한다.
-- 지도 범위(7.2) 밖의 장소, 이틀 이상의 일정.
+- 지도 범위(7.2, 제주도 전체) 밖의 장소, 이틀 이상의 일정.
+- 여러 지역을 잇는 코스, 지역 사이의 이동, 우도·추자도로 가는 배 시간. 코스는 고른 지역 하나 안에서만 짠다.
 - 영어 외의 화면 언어.
 - 신고를 관리하는 관리자 화면.
 
@@ -199,7 +200,7 @@ P0가 배포 환경에서 끝난 뒤, 아래 순서대로 한다. 2026-11-13 기
 
 | ID | 역할 | 스토리 | 우선순위 | 담당 |
 |---|---|---|---|---|
-| US-01 | 여행자 | 온보딩 5단계로 취향과 몸 상태를 입력한다 | P0 | A |
+| US-01 | 여행자 | 온보딩 6단계로 취향과 몸 상태를 입력한다 | P0 | A |
 | US-02 | 여행자 | 실제 장소만으로 짠 코스를 받는다 | P0 | B |
 | US-03 | 여행자 | 코스를 시간순 타임라인으로 본다 | P0 | A |
 | US-04 | 여행자 | 지도에서 동선을 본다 | P0 | A |
@@ -243,11 +244,11 @@ P0가 배포 환경에서 끝난 뒤, 아래 순서대로 한다. 2026-11-13 기
 
 ### 5.3 P0 스토리와 완료 기준
 
-#### US-01 온보딩 5단계로 취향과 몸 상태를 입력한다 (A)
+#### US-01 온보딩 6단계로 취향과 몸 상태를 입력한다 (A)
 
 혼자 여행하는 외국인으로서, 카드를 고르는 것만으로 취향과 몸 상태를 알려주고 싶다. 그래야 글을 쓰지 않고도 나에게 맞는 코스를 받을 수 있다.
 
-- [ ] `/onboarding`에 5단계가 6.2의 순서, 선택지, 값으로 나온다
+- [ ] `/onboarding`에 6단계가 6.2의 순서, 선택지, 값으로 나온다
 - [ ] 선택하지 않은 단계에서는 Next가 눌리지 않고, Back으로 돌아가면 이전 선택이 남아 있다
 - [ ] 마지막 단계에서 "Create my day"를 누르면 9.5 형식의 `POST /courses` 요청이 한 번만 나간다 (연속으로 눌러도 한 번)
 - [ ] 응답을 기다리는 동안 로딩 화면이 보인다
@@ -440,7 +441,7 @@ P0가 배포 환경에서 끝난 뒤, 아래 순서대로 한다. 2026-11-13 기
 
 ### 6.2 온보딩 (`/onboarding`)
 
-카드 선택형 5단계다. 단계 이름은 팀이 정한 것이고, 선택지와 값은 [제안]이다 (Q-02).
+카드 선택형 6단계다. 단계 이름은 팀이 정한 것이고, 선택지와 값은 [제안]이다 (Q-02). 5단계(지역)는 v0.11에서 넣었다 (`tasks/prd-start-area.md`).
 
 | 단계 | 화면 제목 | 고르는 방식 | 선택지 → 값 | `user_profile` 키 |
 |---|---|---|---|---|
@@ -450,18 +451,23 @@ P0가 배포 환경에서 끝난 뒤, 아래 순서대로 한다. 2026-11-13 기
 | | | | 오르막 피하기: Avoid uphill 켬 → `true`, 끔 → `false` | `avoid_slopes` |
 | 3. 오늘 컨디션 | How do you feel today? | 하나 | Great → `great`, Okay → `normal`, A bit tired → `tired` | `condition_today` |
 | 4. 식단 | Any food needs? | 하나 | No restrictions → `none`, Vegan → `vegan`, Vegetarian → `vegetarian`, Halal → `halal` | `diet` |
-| 5. 일정 | When is your day? | 선택 상자 2개 | Start: `08:00`~`16:00`, 30분 단위. End: Start + 2시간부터 Start + 10시간과 `22:00` 중 이른 시각까지, 30분 단위 | 없음. 요청의 `start_time`, `end_time`으로 보낸다 (9.5) |
+| 5. 지역 | Where will you spend your day? | 하나 | `GET /areas`(9.4.1)로 받은 14개 지역. 버튼마다 `name_en`과 그 아래 작은 글씨의 `description_en` → 그 지역의 `id` | 없음. 요청의 `area_id`로 보낸다 (9.5) |
+| 6. 일정 | When is your day? | 선택 상자 2개 | Start: `08:00`~`16:00`, 30분 단위. End: Start + 2시간부터 Start + 10시간과 `22:00` 중 이른 시각까지, 30분 단위 | 없음. 요청의 `start_time`, `end_time`으로 보낸다 (9.5) |
 
 동작
 
-- 한 화면에 한 단계를 보여준다. 위에 진행 표시("2 / 5"), 아래에 Back과 Next가 있다. 1단계의 Back은 랜딩(`/`)으로 간다.
+- 한 화면에 한 단계를 보여준다. 위에 진행 표시("2 / 6"), 아래에 Back과 Next가 있다. 1단계의 Back은 랜딩(`/`)으로 간다.
 - 2단계는 항목마다 소제목을 둔다: "Energy level", "How long can you walk at a time?".
 - 선택값은 단계를 오가도 남아 있다 (프론트 상태로 보관).
-- 5단계는 기본 `<select>` 두 개("Start", "End")와 그 아래의 길이 표시(예: "4 h 30 min")다. 시각은 24시간 형식이다.
+- 5단계는 지역을 두 묶음으로 나눠 보여준다. 묶음 제목은 "Jeju City side (north)"와 "Seogwipo side (south)"이고, 묶음 안의 순서는 `GET /areas`의 순서(도심, 읍, 면)다.
+- 5단계에서 `selectable`이 `false`인 지역은 흐리게 보이고 눌리지 않으며 "Coming soon"이 붙는다. 숨기지 않는다. 처음에는 아무 지역도 골라져 있지 않다.
+- 지역 목록은 온보딩에 들어올 때 불러온다. 불러오는 동안 5단계에 "Loading areas…"가 보이고, 실패하면 "We couldn't load the areas."와 "Try again"이 보인다.
+- 6단계는 기본 `<select>` 두 개("Start", "End")와 그 아래의 길이 표시(예: "4 h 30 min")다. 시각은 24시간 형식이다.
 - Start의 처음 값은 기기의 현재 시각을 30분 단위로 올린 값이다 (14:10 → 14:30). 08:00 전이면 `08:00`, 16:00 뒤면 `10:00`이다. End의 처음 값은 Start + 4시간이다 (상한을 넘으면 상한).
 - Start를 바꿔서 End가 허용 범위를 벗어나면 End를 Start + 4시간(상한 적용)으로 다시 맞춘다.
-- 5단계의 버튼은 "Create my day"다. 누르면 위 표의 값으로 `user_profile`을 만들고 `start_time`, `end_time`과 함께 `POST /courses`를 보낸다 (9.5).
-- 서버가 `INVALID_TIME_WINDOW`를 돌려주면 5단계에 머물며 "Please check your start and end time."를 보여준다.
+- 6단계의 버튼은 "Create my day"다. 누르면 위 표의 값으로 `user_profile`을 만들고 `area_id`, `start_time`, `end_time`과 함께 `POST /courses`를 보낸다 (9.5).
+- 서버가 `INVALID_TIME_WINDOW`를 돌려주면 6단계에 머물며 "Please check your start and end time."를 보여준다.
+- 서버가 `INVALID_AREA`를 돌려주면 5단계로 돌아가 지역 목록을 다시 불러오고 "That area isn't available right now. Please pick another."를 보여준다. 고른 지역은 지운다.
 - 성공하면 응답의 `id`로 `/course/{id}`로 이동한다.
 
 상태
@@ -477,7 +483,7 @@ P0가 배포 환경에서 끝난 뒤, 아래 순서대로 한다. 2026-11-13 기
 
 핵심 화면이다. 위에서 아래로 다음 순서다.
 
-1. 헤더: "Your day in Jeju City"와 정차 수("{total_items} stops"). 무료면 "Preview", 프리미엄이면 "Premium" 표시.
+1. 헤더: "Your day in {고른 지역의 `name_en`}"(예: "Your day in Aewol". 지역 목록을 불러오기 전에는 "Your day in Jeju")와 정차 수("{total_items} stops"). 무료면 "Preview", 프리미엄이면 "Premium" 표시.
 2. 지도 (7장. 카카오맵).
 3. 타임라인 카드 목록. `items`를 `order` 순서대로.
 4. 무료일 때만 잠금 카드.
@@ -628,13 +634,15 @@ Show to driver 카드 (전체 화면)
 export const MAP_CONFIG = {
   // 카카오 JavaScript 키. 비어 있으면 카카오맵을 그리지 않는다 (7.1)
   kakaoKey: process.env.NEXT_PUBLIC_KAKAO_MAP_KEY ?? "",
-  // 코스가 없을 때의 처음 화면 (제주시 원도심)
+  // 코스가 없고 지역 중심도 모를 때의 처음 화면 (제주시 원도심)
   center: { lat: 33.5, lng: 126.52 },
   level: 7, // 카카오맵 확대 수준. 1이 가장 가깝다
   singleStopLevel: 5, // 코스 장소가 한 곳일 때의 확대 수준
   fitPaddingPx: 40, // 코스 전체를 화면에 맞출 때 둘레에 두는 여백(px)
-  // 장소 데이터의 범위. 이 밖의 장소는 DB에 넣지 않고 지도에도 그리지 않는다 (7.10)
-  bounds: { lngMin: 126.44, lngMax: 126.56, latMin: 33.46, latMax: 33.53 },
+  // 장소 데이터의 범위: 제주도 전체(본섬, 우도, 추자도). 이 밖의 장소는 DB에 넣지 않고 지도에도 그리지 않는다 (7.10)
+  bounds: { lngMin: 126.1, lngMax: 127.0, latMin: 33.1, latMax: 34.0 },
+  // 대체 SVG(테스트 화면용)가 그릴 수 있는 옛 원도심 범위
+  fallbackBounds: { lngMin: 126.44, lngMax: 126.56, latMin: 33.46, latMax: 33.53 },
   // 지도 상자의 가로 ÷ 세로
   aspectRatio: 10 / 7,
   routeColor: "#1f7a8c", // 동선 점선의 색 (7.6)
@@ -642,7 +650,10 @@ export const MAP_CONFIG = {
 ```
 
 - 이 값들은 이 파일에만 둔다. 지도 컴포넌트는 `MAP_CONFIG`를 가져다 쓰고, 숫자를 직접 적지 않는다.
-- 범위를 바꾸면 `bounds`와 백엔드의 `scripts/build_places.py`의 `BOUNDS`를 함께 바꾼다 (Q-27).
+- `bounds`와 백엔드의 `scripts/build_places.py`의 `BOUNDS`는 같은 값이어야 한다 (위도 33.10~34.00, 경도 126.10~127.00). 한쪽을 바꾸면 다른 쪽도 바꾼다.
+- 코스에 정차가 없을 때 지도의 처음 중심은 고른 지역의 `center_lat`, `center_lng`다 (9.4.1). 지역을 모르면 `center`를 쓴다.
+- 지도는 `GET /places?area_id=`를 코스의 `user_profile.area_id`로 불러(없는 옛 코스는 `jeju-city`) 고른 지역의 장소만 그린다. 코스에 든 장소는 번호가 있는 큰 마커, 그 지역의 코스 밖 장소는 작은 마커다. 처음 화면은 코스 전체에 맞춘다. 다른 지역의 장소는 그리지 않는다.
+- 대체 SVG는 `fallbackBounds`만 그릴 수 있다. 코스의 정차가 하나라도 이 범위 밖이면 대체 지도를 그리지 않고 정차 목록만 보여준다.
 
 ### 7.3 좌표
 
@@ -737,7 +748,7 @@ export function toPercent(lat, lng, b = MAP_CONFIG.bounds) {
 
 ### 7.10 범위 밖 장소와 마커 겹침
 
-- DB에는 지도 범위(7.2) 안의 장소만 넣는다 (C, Q-13). 지금은 이 범위를 그대로 둔다. 나중에 사용자가 출발 위치나 여행할 지역을 입력하면 그 주변으로 코스를 짜는 기능을 만들 때 범위를 다시 정한다 (4.3, Q-27).
+- DB에는 지도 범위(7.2) 안의 장소만 넣는다 (C, Q-13). 범위는 v0.11에서 제주도 전체로 넓혔다 (Q-27).
 - 카카오맵에서는 확대하면 겹친 마커가 풀린다. 처음 화면은 코스 전체가 보이게 맞추므로 원도심의 가까운 장소끼리는 겹칠 수 있다. 코스 마커를 항상 위에 쌓고, 코스 밖 마커는 작게 그린다.
 
 ---
@@ -748,6 +759,7 @@ export function toPercent(lat, lng, b = MAP_CONFIG.bounds) {
 
 ### 8.1 테이블 관계
 
+- `areas` 1 : N `places` (모든 장소는 지역 하나에 속한다)
 - `places` 1 : 1 `place_accessibility` (모든 장소에 반드시 있어야 한다)
 - `places` 1 : 0~1 `food_options` (식당·카페만)
 - `places` 1 : N `phrase_cards`
@@ -767,7 +779,8 @@ export function toPercent(lat, lng, b = MAP_CONFIG.bounds) {
 | `description_en` | text | 영어 설명. 지도 하단 카드와 LLM 입력에 쓴다 | 있음 |
 | `lat` | double precision | 위도 | 있음 |
 | `lng` | double precision | 경도 | 있음 |
-| `address_ko` | text | 한글 주소. Show to driver에 쓴다 | 있음 |
+| `address_ko` | text | 한글 주소. Show to driver에 쓴다. `area_id`를 정하는 데도 쓴다 | 있음 |
+| `area_id` | text, `areas.id`를 가리킴 | 장소가 속한 지역 (8.2.1). 사람이 적지 않고 `build_places.py`가 `address_ko`에서 정한다 | 있음 |
 | `image_url` | text, null 허용 | `place-images` 버킷에 올린 사진의 공개 URL | 비어 있음 |
 | `image_source` | text, null 허용 | 사진 출처 표기 (Q-16) | 비어 있음 |
 | `avg_stay_min` | integer | 평균 체류 시간(분) | 있음 |
@@ -778,6 +791,25 @@ export function toPercent(lat, lng, b = MAP_CONFIG.bounds) {
 | `price_level` | integer, null 허용 | 가격대. 기준 미정 (Q-14) | 비어 있음 |
 | `last_verified_at` | date, null 허용 | 마지막 확인일 (Q-15) | 비어 있음 |
 | `source_date` | date, null 허용 | 원본 데이터 기준일. POI 데이터는 `2015-12-31` | 있음 |
+
+### 8.2.1 `areas`
+
+여행자가 고를 수 있는 지역 14곳이다. 읍과 면은 하나가 한 지역이고, 동은 시별로 하나로 묶는다. 값은 `backend/app/data/areas.json`과 `backend/sql/schema.sql`에 있고, 표는 `tasks/prd-start-area.md` 3장이다.
+
+| 컬럼 | 타입 | 설명 |
+|---|---|---|
+| `id` | text, PK | `jeju-city`, `hallim`, `aewol`, `gujwa`, `jocheon`, `hangyeong`, `chuja`, `udo`, `seogwipo-city`, `daejeong`, `namwon`, `seongsan`, `andeok`, `pyoseon` |
+| `group` | text | `jeju`(제주시 쪽) 또는 `seogwipo`(서귀포시 쪽) |
+| `name_en`, `name_ko` | text | 지역 이름. 예: "Aewol", "애월읍" |
+| `description_en` | text, 80자 이하 | 그 지역의 대표 장소. 온보딩 버튼의 작은 글씨 |
+| `center_lat`, `center_lng` | double precision | 코스에 정차가 없을 때 지도의 처음 중심 |
+| `sort_order` | integer | 목록 순서. 1~14 |
+
+장소의 지역을 정하는 규칙 (`backend/app/areas.py`)
+
+- `address_ko`에 읍·면 이름(한림읍, 애월읍, 구좌읍, 조천읍, 한경면, 추자면, 우도면, 대정읍, 남원읍, 성산읍, 안덕면, 표선면)이 있으면 그 지역이다.
+- 없고 "제주시"가 있으면 `jeju-city`, "서귀포시"가 있으면 `seogwipo-city`다. "제주시"는 읍·면 주소에도 들어 있으므로 읍·면 이름을 먼저 찾는다.
+- 어느 것도 없으면 `build_places.py`가 오류로 멈춘다.
 
 ### 8.3 `place_accessibility`
 
@@ -868,6 +900,7 @@ export function toPercent(lat, lng, b = MAP_CONFIG.bounds) {
 | `avoid_slopes` | `true`, `false` | 2. 체력·몸 상태 | 후보 필터 F-5 |
 | `condition_today` | `great`, `normal`, `tired` | 3. 오늘 컨디션 | 후보 필터 F-4, LLM 입력 |
 | `diet` | `none`, `vegan`, `vegetarian`, `halal` | 4. 식단 | 후보 필터 F-3 |
+| `area_id` | `areas.id` | 5. 지역. 서버가 요청의 값을 넣는다 (9.5) | 후보 필터 F-0, 재구성의 지역 (10.7). 이 키가 없는 옛 코스는 `jeju-city`로 본다 |
 | `start_time`, `end_time` | `"HH:MM"` | 없음. 서버가 요청의 값을 넣는다 (9.5) | 코스 시작·종료 시각 (10.3, 10.6), 재구성의 종료 시각 (10.7) |
 | `duration` | `half_day`, `full_day` | 없음. 요청으로 받지 않는다 | v0.9까지 저장된 옛 코스에만 있다. `end_time`이 없으면 재구성이 이 값으로 종료 시각을 계산한다 (10.3) |
 | `conditions` | `{ "indoor_only": boolean, "low_walking": boolean }` | 없음. 서버가 붙인다 | 재구성으로 켜진 조건. 처음에는 둘 다 `false` (10.7) |
@@ -877,6 +910,7 @@ export function toPercent(lat, lng, b = MAP_CONFIG.bounds) {
 - 모든 `places` 행에 `place_accessibility` 행이 있어야 한다. 새로 추가하는 식당·카페도 같다. 없으면 `indoor` 값을 알 수 없어 "비가 와요" 코스에서 빠진다.
 - `food_options` 행이 있는 장소는 `category`가 `food` 또는 `cafe`다.
 - 모든 좌표는 지도 범위(7.2) 안에 있다.
+- `address_ko`에는 "제주시" 또는 "서귀포시"가 있어야 하고, 읍·면에 있는 장소는 읍·면 이름까지 적는다. 읍·면 이름이 빠지면 그 장소가 도심 지역(`jeju-city`, `seogwipo-city`)으로 들어간다.
 - `image_url`은 `place-images` 버킷의 공개 URL이다. 한국관광공사 TourAPI 등 공공 데이터의 사진을 쓰고 `image_source`에 출처를 남긴다. AI 생성 이미지는 쓰지 않는다.
 - 2015년 기준 데이터라 폐업이나 변경이 있을 수 있다. 확인한 장소에만 `last_verified_at`를 채운다 (Q-15).
 
@@ -895,7 +929,8 @@ export function toPercent(lat, lng, b = MAP_CONFIG.bounds) {
 
 | 엔드포인트 | 하는 일 | 성공 응답 |
 |---|---|---|
-| `GET /places` | 장소 전체 목록 | 200, `{ "places": Place[] }` |
+| `GET /areas` | 지역 14곳과 고를 수 있는지 | 200, `{ "areas": Area[] }` |
+| `GET /places` | 장소 전체 목록. `area_id`를 주면 그 지역만 | 200, `{ "places": Place[] }` |
 | `POST /courses` | 온보딩 입력으로 코스 생성 | 201, `Course` |
 | `GET /courses/{id}` | 코스 조회. 무료는 3곳까지만 | 200, `Course` |
 | `POST /courses/{id}/replan` | 남은 일정 재구성 | 200, `Course` |
@@ -917,7 +952,8 @@ export function toPercent(lat, lng, b = MAP_CONFIG.bounds) {
 | 404 | `PLACE_NOT_FOUND` | 없는 장소 ID | 일반 오류 문구 |
 | 409 | `NO_CANDIDATES` | 조건에 맞는 후보가 모자라 일정을 만들 수 없음 | 6.2, 6.4의 문구 |
 | 502 | `LLM_FAILED` | LLM 호출이나 검증이 재시도 뒤에도 실패 | 6.2, 6.4의 문구 + 다시 시도 |
-| 422 | `INVALID_TIME_WINDOW` | `start_time`, `end_time`이 9.5의 범위를 벗어남 | 6.2의 문구. 온보딩 5단계에 머문다 |
+| 422 | `INVALID_TIME_WINDOW` | `start_time`, `end_time`이 9.5의 범위를 벗어남 | 6.2의 문구. 온보딩 6단계에 머문다 |
+| 422 | `INVALID_AREA` | `area_id`가 14개 지역에 없거나 `selectable`이 `false`인 지역 | 온보딩 5단계로 돌아가 지역 목록을 다시 불러온다 (6.2) |
 | 422 | 없음 | 요청 형식이 틀림. FastAPI 기본 응답이라 `detail`이 배열이다 | 일반 오류 문구. 개발 중에 잡아야 하는 버그다 |
 
 프론트 규칙: `detail.code`가 문자열이면 그 코드로 분기한다. 아니면 "Something went wrong."과 Retry를 보여준다.
@@ -1023,7 +1059,7 @@ type Course = {
 
 ### 9.4 `GET /places`
 
-장소 전체를 `id` 오름차순으로 돌려준다. 지도의 코스 밖 마커와 배포 연결 확인(US-13)에 쓴다. 문장 카드는 프리미엄 전용이라 여기에는 없다.
+장소 전체를 `id` 오름차순으로 돌려준다. 지도의 코스 밖 마커와 배포 연결 확인(US-13)에 쓴다. 문장 카드는 프리미엄 전용이라 여기에는 없다. 선택 인자 `area_id`(예: `GET /places?area_id=aewol`)를 주면 그 지역의 장소만 돌려준다. 지도 화면은 코스의 `area_id`를 주어 부른다. `Place`에는 `area_id` 필드가 있다 (8.2).
 
 응답 200
 
@@ -1104,17 +1140,50 @@ type Course = {
 }
 ```
 
+### 9.4.1 `GET /areas`
+
+14개 지역을 항상 모두 `sort_order` 순으로 돌려준다. 온보딩 5단계와 결과 페이지의 지역 이름에 쓴다.
+
+응답 200
+
+```json
+{
+  "areas": [
+    {
+      "id": "aewol",
+      "group": "jeju",
+      "name_en": "Aewol",
+      "name_ko": "애월읍",
+      "description_en": "Coastal cafés and sea views",
+      "center_lat": 33.463,
+      "center_lng": 126.331,
+      "place_count": 100,
+      "selectable": false
+    }
+  ]
+}
+```
+
+`selectable`은 그 지역의 장소가 아래를 모두 채울 때만 `true`다. 숫자는 `backend/app/config.py`의 `AREA_MIN_*`에 있다.
+
+- 장소 10곳 이상 (`REQUIRE_VERIFIED`가 `true`면 사진과 확인일이 있는 장소만 센다)
+- 식당(`food`) 3곳 이상, 그중 `solo_ok`인 곳 2곳 이상
+- 카페(`cafe`) 1곳 이상
+- `walking_level`이 1이고 `terrain`이 `flat`인 장소 4곳 이상
+- 실내 장소 3곳 이상
+
 ### 9.5 `POST /courses`
 
 온보딩 입력으로 코스를 만든다. 처리 순서는 10장이다.
 
 | 요청 필드 | 필수 | 값 |
 |---|---|---|
-| `user_profile` | 예 | 8.9의 키 6개 (`interests`~`diet`). `conditions`, `start_time`, `end_time`은 넣지 않는다. `duration`을 넣으면 422다 |
+| `user_profile` | 예 | 8.9의 키 6개 (`interests`~`diet`). `conditions`, `area_id`, `start_time`, `end_time`은 넣지 않는다. `duration`을 넣으면 422다 |
+| `area_id` | 예 | `GET /areas`의 `id` 중 `selectable`이 `true`인 지역 |
 | `start_time` | 예 | `"HH:MM"`. `08:00` 이상 `16:00` 이하, 분은 `00` 또는 `30` |
 | `end_time` | 예 | `"HH:MM"`. 분은 `00` 또는 `30`, `22:00` 이하, `start_time`보다 120분 이상 600분 이하 뒤 |
 
-두 시각이 위 범위를 벗어나면 422 `INVALID_TIME_WINDOW`다. 서버는 두 값을 저장하는 `user_profile`에 넣는다.
+두 시각이 위 범위를 벗어나면 422 `INVALID_TIME_WINDOW`다. `area_id`가 없는 지역이거나 고를 수 없는 지역이면 422 `INVALID_AREA`다. 서버는 세 값(`area_id`, `start_time`, `end_time`)을 저장하는 `user_profile`에 넣는다. 코스의 모든 정차는 `area_id`의 지역에 속한다. 후보가 모자라도 다른 지역의 장소를 넣지 않고 409 `NO_CANDIDATES`를 돌려준다.
 
 요청
 
@@ -1128,6 +1197,7 @@ type Course = {
     "condition_today": "normal",
     "diet": "vegan"
   },
+  "area_id": "jeju-city",
   "start_time": "10:00",
   "end_time": "18:00"
 }
@@ -1376,6 +1446,7 @@ type Course = {
 
 | 규칙 | 조건 | 메모 |
 |---|---|---|
+| F-0 지역 | `area_id`가 코스의 지역과 다른 장소를 뺀다. 재구성은 `user_profile.area_id`를 쓰고, 없으면 `jeju-city`다 | 맨 먼저 적용한다. 뒤의 규칙은 한 지역의 장소만 본다 |
 | F-1 검증된 장소 | 환경 변수 `REQUIRE_VERIFIED`가 `true`면 `image_url`이나 `last_verified_at`가 비어 있는 장소를 뺀다 [제안] | 차별점 1을 코드로 지킨다. 데이터를 채우는 동안에는 `false`로 둔다. 모든 장소에 사진과 확인일을 채운 뒤에만 `true`로 바꾼다. 비어 있는 상태에서 켜면 후보가 0곳이 되어 코스 생성과 재구성이 모두 409 `NO_CANDIDATES`로 실패한다 (2026-11-13 기준 `last_verified_at`가 19곳 모두 비어 있다) |
 | F-2 휴무일 | `closed_days`에 오늘 요일이 있으면 뺀다. 빈 배열이면 영업으로 본다 | 오늘은 한국 시간 기준이다. 서버 시간이 UTC일 수 있으니 변환한다 |
 | F-3 식단 | `food_options`가 있는 장소에만 적용한다. `solo_ok = true`여야 한다 [제안]. `diet`가 `vegan`이면 `vegan = true`, `vegetarian`이면 `vegetarian = true` 또는 `vegan = true`, `halal`이면 `halal = true` | `food_options`가 없는 장소는 식단과 상관없이 통과한다 |
@@ -1384,7 +1455,7 @@ type Course = {
 | F-6 날씨 | `conditions.indoor_only`가 `true`면 `indoor = true`만 남긴다 | "비가 와요"를 누르면 켜진다 |
 | F-7 점심 | `needs_lunch`가 `false`면 `category`가 `food`인 후보를 뺀다. 고정된 첫 정차는 예외다 [제안] | 식사가 두 번 들어가지 않게 한다 |
 | F-8 재구성 때 제외 | `done`이나 `current`인 장소, 이번에 닫혔다고 신고한 장소를 뺀다 | |
-| F-10 영업시간 | 장소의 영업시간(`open_time`~`close_time`)과 여행 시간(재구성은 남은 시간)이 겹치는 길이가 `avg_stay_min`보다 짧으면 뺀다. 둘 다 `null`인 장소는 항상 통과한다 | F-1~F-6, F-8 다음에 적용한다. 고정된 첫 정차는 도착 시각부터 체류가 끝날 때까지 열려 있는 후보에서만 고른다 |
+| F-10 영업시간 | 장소의 영업시간(`open_time`~`close_time`)과 여행 시간(재구성은 남은 시간)이 겹치는 길이가 `avg_stay_min`보다 짧으면 뺀다. 둘 다 `null`인 장소는 항상 통과한다 | F-1~F-6, F-8 다음에 적용한다. 고정된 첫 정차는 출발 위치에서 `MAX_MOVE_MIN`(30분) 안에 갈 수 있고, 도착 시각부터 체류가 끝날 때까지 열려 있는 후보에서만 고른다 |
 | F-9 개수 | 20곳이 넘으면 `interests`에 있는 `category`를 먼저 남기고 20곳에서 자른다. `needs_lunch`가 `true`면 `food` 후보를 3곳 이상 남긴다 [제안] | |
 
 후보가 모자랄 때 [제안]
@@ -1510,7 +1581,7 @@ type Course = {
 ### 10.4 시스템 프롬프트
 
 ```text
-You are a day-trip planner for solo foreign travelers in Jeju City, South Korea.
+You are a day-trip planner for solo foreign travelers in Jeju, South Korea.
 You receive one JSON object with "traveler", "trip", "replan" and "candidates".
 Plan the stops and return JSON only.
 
@@ -1624,6 +1695,7 @@ class LLMCourse(BaseModel):
 | `MIN_TRIP_MIN`, `MAX_TRIP_MIN` | 120, 600 | 여행 길이(분)의 범위 |
 | `TIME_STEP_MIN` | 30 | 시작·종료 시각의 단위(분) |
 | `HALF_DAY_MIN`, `FULL_DAY_MIN` | 240, 480 | 옛 코스(`duration`만 있음)를 재구성할 때만 쓰는 길이(분) |
+| `MAX_MOVE_MIN` | 30 | 한 번의 이동에 쓸 수 있는 가장 긴 시간(분). 넘는 정차는 코스에 넣지 않는다 |
 
 계산 규칙
 
@@ -1635,6 +1707,10 @@ class LLMCourse(BaseModel):
 6. 재구성으로 새로 만든 첫 항목은 출발 위치(10.7)에서 오는 이동으로 계산한다.
 7. 끝나는 시각이 코스 종료 시각을 넘는 항목은 뒤에서부터 뺀다. 1개는 남긴다.
 8. 영업시간 밖인 항목(`start_time`이 `open_time`보다 이르거나, `start_time` + `stay_min`이 `close_time`보다 늦음)은 코스에서 빼고 남은 항목의 시각을 1번부터 다시 계산한다. 그런 항목이 없을 때까지 반복한다. `open_time`이 `null`인 장소는 항상 통과한다. 다 빼서 항목이 없으면 409 `NO_CANDIDATES`다. 규칙 플래너는 처음부터 이런 장소를 고르지 않는다.
+
+9. 한 번의 이동(`move_min`)이 `MAX_MOVE_MIN`을 넘는 항목은 코스에서 빼고 남은 항목의 시각을 1번부터 다시 계산한다. 규칙 7, 8보다 먼저 확인하고, 그런 항목이 없을 때까지 반복한다. 다 빼서 항목이 없으면 409 `NO_CANDIDATES`다. 규칙 플래너는 처음부터 이런 장소를 고르지 않는다. 지역이 넓어(읍은 10km, 두 도심 지역은 20km를 넘는다) 긴 택시 이동이 생기는 것을 막는다.
+
+이동 시간 가정(`DETOUR_FACTOR`, `TAXI_M_PER_MIN`, `TAXI_EXTRA_MIN`)은 원도심 기준으로 정한 값이다. 읍·면 지역의 실제 택시 시간과는 아직 비교하지 않았다 (`tasks/prd-start-area.md` 8장).
 
 검산. 9.6 예시 코스의 값이다 (`max_walk_min`은 20).
 
@@ -1798,7 +1874,7 @@ LLM 설정 [제안]: temperature를 낮게(예: 0.3) 두어 결과가 덜 흔들
 | Q-22 | ~~지도 일러스트는 누가 어떤 방법으로 그리나?~~ | 결정(2026-11-12): 일러스트 대신 카카오맵을 쓴다. 2026-11-13: 대체 SVG는 명세에서 뺐다 (7.1) | 7장 | A |
 | Q-23 | 결과 지도에 코스에 없는 장소의 마커도 보여주나? | 작고 흐리게 보여준다 | 7.5 | A |
 | Q-24 | 기준 화면 크기는? | 모바일 폭 기준. 넓은 화면에서는 가운데에 같은 폭으로 | 6.0 | A |
-| Q-27 | 카카오맵은 범위 제한이 없다. 지도 범위(7.2) 밖이라 뺀 장소(함덕해수욕장, 4·3평화공원 등 8곳)를 다시 넣나? | 결정(2026-11-13): 지금은 넣지 않고 범위를 그대로 둔다. 나중에 사용자가 출발 위치나 여행할 지역을 입력하면 그 주변으로 코스를 짜는 기능을 만들 때 범위, 시드 데이터, 이동 시간 가정(10.6)을 함께 다시 정한다 (4.3) | 7.2, 7.10 | C, A |
+| Q-27 | 카카오맵은 범위 제한이 없다. 지도 범위(7.2) 밖이라 뺀 장소(함덕해수욕장, 4·3평화공원 등 8곳)를 다시 넣나? | 결정됨(2026-11-14): 넣는다. 범위를 제주도 전체로 넓히고 여행자가 14개 지역 중 하나를 고르게 했다. 지역, 범위, 시드 데이터, 이동 시간 상한은 `tasks/prd-start-area.md`가 정한다 | 4.3, 6.2, 7.2, 7.10, 8.2.1, 9.4.1, 10.6 | C, A, B |
 
 ### 13.4 담당자가 바꿔도 되는 것
 

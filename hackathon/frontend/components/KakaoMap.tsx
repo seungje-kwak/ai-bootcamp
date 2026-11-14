@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
-import { MAP_CONFIG, toPercent } from "@/config/map";
+import { type LatLng, MAP_CONFIG, toPercent } from "@/config/map";
 import { type KakaoMaps, type KLayer, type KMap, loadKakaoMaps } from "@/lib/kakao";
 import type { CourseItem, Place } from "@/lib/types";
 import { CATEGORY_META } from "./CategoryIcon";
@@ -66,12 +66,14 @@ export function KakaoMap({
   items,
   places,
   tripMode,
+  center,
   onSelect,
   onError,
 }: {
   items: CourseItem[];
   places: Place[];
   tripMode: boolean;
+  center?: LatLng;
   onSelect: MapSelect;
   onError: (e: unknown) => void;
 }) {
@@ -85,6 +87,8 @@ export function KakaoMap({
   const errorRef = useRef(onError);
   errorRef.current = onError;
   const [ready, setReady] = useState(false);
+  const centerLat = center?.lat ?? MAP_CONFIG.center.lat;
+  const centerLng = center?.lng ?? MAP_CONFIG.center.lng;
 
   // Create the map once.
   useEffect(() => {
@@ -170,7 +174,7 @@ export function KakaoMap({
     fitRef.current = () => {
       if (stops.length === 0) {
         map.setLevel(MAP_CONFIG.level);
-        map.setCenter(new maps.LatLng(MAP_CONFIG.center.lat, MAP_CONFIG.center.lng));
+        map.setCenter(new maps.LatLng(centerLat, centerLng));
       } else if (stops.length === 1) {
         map.setLevel(MAP_CONFIG.singleStopLevel);
         map.setCenter(ll(stops[0].place));
@@ -182,7 +186,7 @@ export function KakaoMap({
       }
     };
     fitRef.current();
-  }, [ready, items, places, tripMode]);
+  }, [ready, items, places, tripMode, centerLat, centerLng]);
 
   // Keep the map sized to its box (7.4).
   useEffect(() => {

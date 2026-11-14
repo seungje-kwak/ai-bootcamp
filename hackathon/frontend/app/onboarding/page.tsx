@@ -1,9 +1,9 @@
 "use client";
 
 import { useRouter } from "next/navigation";
-import { useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { api, ApiError } from "@/lib/api";
-import type { Category, UserProfileInput } from "@/lib/types";
+import type { Area, Category, UserProfileInput } from "@/lib/types";
 import { PrimaryButton } from "@/components/States";
 import { defaultEnd, defaultStart, endForStart, endOptions, lengthLabel, startOptions, toHHMM } from "@/lib/tripTime";
 
@@ -24,6 +24,7 @@ type Draft = {
   avoid_slopes: boolean;
   condition_today?: "great" | "normal" | "tired";
   diet?: "none" | "vegan" | "vegetarian" | "halal";
+  area_id?: string;
   start: number; // minutes from midnight
   end: number;
 };
@@ -33,15 +34,26 @@ const TITLES = [
   "How do you like to move?",
   "How do you feel today?",
   "Any food needs?",
+  "Where will you spend your day?",
   "When is your day?",
 ];
+const AREA_STEP = 4;
+const TIME_STEP = 5;
+
+const AREA_GROUPS: { group: Area["group"]; title: string }[] = [
+  { group: "jeju", title: "Jeju City side (north)" },
+  { group: "seogwipo", title: "Seogwipo side (south)" },
+];
+
+type AreaList = { kind: "loading" } | { kind: "error" } | { kind: "ok"; areas: Area[] };
 
 type Status =
   | { kind: "idle" }
   | { kind: "loading" }
   | { kind: "error" }
   | { kind: "nocandidates" }
-  | { kind: "badtime" };
+  | { kind: "badtime" }
+  | { kind: "badarea" };
 
 // Same border, corners and text size as Choice.
 const SELECT_CLASS =
@@ -79,19 +91,26 @@ function TimeSelect({
 function Choice({
   selected,
   onClick,
+  disabled = false,
   children,
 }: {
   selected: boolean;
   onClick: () => void;
+  disabled?: boolean;
   children: React.ReactNode;
 }) {
   return (
     <button
       type="button"
       aria-pressed={selected}
+      disabled={disabled}
       onClick={onClick}
       className={`w-full rounded-2xl border-2 px-4 py-3.5 text-left text-[16px] font-medium transition-colors ${
-        selected ? "border-sea bg-sea-soft text-ink" : "border-line bg-white text-ink hover:border-sea/40"
+        disabled
+          ? "border-line bg-white text-ink opacity-50 cursor-not-allowed"
+          : selected
+            ? "border-sea bg-sea-soft text-ink"
+            : "border-line bg-white text-ink hover:border-sea/40"
       }`}
     >
       {children}
@@ -108,13 +127,28 @@ export default function Onboarding() {
     return { interests: [], avoid_slopes: false, start, end: defaultEnd(start) };
   });
   const [status, setStatus] = useState<Status>({ kind: "idle" });
+  const [areaList, setAreaList] = useState<AreaList>({ kind: "loading" });
   const inFlight = useRef(false);
+
+  const loadAreas = useCallback(async () => {
+    setAreaList({ kind: "loading" });
+    try {
+      setAreaList({ kind: "ok", areas: (await api.areas()).areas });
+    } catch {
+      setAreaList({ kind: "error" });
+    }
+  }, []);
+
+  useEffect(() => {
+    loadAreas();
+  }, [loadAreas]);
 
   const valid = [
     d.interests.length > 0,
     d.fitness_level != null && d.max_walk_min != null,
     d.condition_today != null,
     d.diet != null,
+    areaList.kind === "ok" && areaList.areas.some((a) => a.id === d.area_id && a.selectable),
     endOptions(d.start).includes(d.end),
   ];
 
@@ -131,11 +165,19 @@ export default function Onboarding() {
       diet: d.diet!,
     };
     try {
-      const course = await api.createCourse(profile, toHHMM(d.start), toHHMM(d.end));
+      const course = await api.createCourse(profile, d.area_id!, toHHMM(d.start), toHHMM(d.end));
       router.push(`/course/${course.id}`);
     } catch (e) {
       inFlight.current = false;
       const code = e instanceof ApiError ? e.code : null;
+      if (code === "INVALID_AREA") {
+        // The area stopped being available: back to the area step with a fresh list.
+        setD((prev) => ({ ...prev, area_id: undefined }));
+        setStep(AREA_STEP);
+        setStatus({ kind: "badarea" });
+        loadAreas();
+        return;
+      }
       setStatus({
         kind: code === "NO_CANDIDATES" ? "nocandidates" : code === "INVALID_TIME_WINDOW" ? "badtime" : "error",
       });
@@ -263,7 +305,55 @@ export default function Onboarding() {
             </Choice>
           ))}
 
-        {step === 4 && (
+        {step === AREA_STEP && areaList.kind === "loading" && (
+          <div className="flex items-center gap-3 rounded-2xl border border-line p-4" role="status">
+            <div className="spinner" />
+            <p className="font-medium">Loading areas…</p>
+          </div>
+        )}
+        {step === AREA_STEP && areaList.kind === "error" && (
+          <div role="alert" className="rounded-2xl bg-tangerine-soft border border-[#f6c99a] p-4">
+            <p className="font-semibold">We couldn&apos;t load the areas.</p>
+            <PrimaryButton className="mt-3 w-full" onClick={loadAreas}>
+              Try again
+            </PrimaryButton>
+          </div>
+        )}
+        {step === AREA_STEP && areaList.kind === "ok" && (
+          <div className="space-y-6">
+            {status.kind === "badarea" && (
+              <p role="alert" className="rounded-2xl bg-tangerine-soft border border-[#f6c99a] p-4 font-semibold">
+                That area isn&apos;t available right now. Please pick another.
+              </p>
+            )}
+            {AREA_GROUPS.map(({ group, title }) => (
+              <div key={group} className="space-y-2">
+                <h2 className="font-semibold">{title}</h2>
+                {areaList.areas
+                  .filter((a) => a.group === group)
+                  .map((a) => (
+                    <Choice
+                      key={a.id}
+                      selected={d.area_id === a.id}
+                      disabled={!a.selectable}
+                      onClick={() => {
+                        setD({ ...d, area_id: a.id });
+                        if (status.kind === "badarea") setStatus({ kind: "idle" });
+                      }}
+                    >
+                      <span className="flex items-baseline justify-between gap-2">
+                        <span>{a.name_en}</span>
+                        {!a.selectable && <span className="shrink-0 text-xs font-semibold">Coming soon</span>}
+                      </span>
+                      <span className="mt-0.5 block text-sm font-normal text-muted">{a.description_en}</span>
+                    </Choice>
+                  ))}
+              </div>
+            ))}
+          </div>
+        )}
+
+        {step === TIME_STEP && (
           <div className="space-y-5">
             <TimeSelect
               id="trip-start"

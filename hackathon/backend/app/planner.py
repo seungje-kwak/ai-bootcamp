@@ -294,6 +294,8 @@ def rule_plan(cands: list[dict], ctx: TripCtx, fixed_first: Optional[dict]) -> L
                 # a non-food stop must not push lunch past 13:30
                 if not is_food and a + p["avg_stay_min"] > lunch_hi - 10 and a < lunch_hi:
                     continue
+            if prev is not None and move_between(prev, p, max_walk)[1] > config.MAX_MOVE_MIN:
+                continue                                                     # start-area FR-9
             dist_km = route_m(prev, p) / 1000 if prev else 0.0
             v = score(p) - dist_km * 1.2 + (10.0 if (is_food and not lunch_done) else 0.0)
             options.append((v, p))
@@ -392,6 +394,13 @@ def schedule(entries: list[LLMItem], places_by_id: dict[int, dict], ctx: TripCtx
     entries = list(entries)
     while True:
         rows = _timed_rows(entries, places_by_id, ctx)
+        # start-area FR-9: drop the first stop that takes too long to reach, then time the rest again
+        far = next((n for n, r in enumerate(rows) if (r["move_min"] or 0) > config.MAX_MOVE_MIN), None)
+        if far is not None:
+            del entries[far]
+            if not entries:
+                raise ApiError(409, "NO_CANDIDATES", "No places are close enough.")
+            continue
         while len(rows) > 1 and rows[-1]["_end"] > ctx.end_min:                     # rule 7
             rows.pop()
         # FR-8: drop the first stop that is outside its opening hours, then time the rest again
@@ -428,9 +437,11 @@ def run_pipeline(places: list[dict], ctx: TripCtx, min_candidates: int) -> list[
     if ctx.fixed_first_category:
         origin = ctx.origin
         max_walk = int(ctx.profile["max_walk_min"])
-        # the fixed first stop must be open for its whole stay when the traveler gets there (FR-8)
-        open_on_arrival = [p for p in base if fits_hours(
-            p, round_up5(ctx.start_min + move_between(origin, p, max_walk)[1]), p["avg_stay_min"])]
+        # the fixed first stop must be close enough (start-area FR-9) and open for its whole stay
+        # when the traveler gets there (FR-8)
+        moves = {p["id"]: move_between(origin, p, max_walk)[1] for p in base}
+        open_on_arrival = [p for p in base if moves[p["id"]] <= config.MAX_MOVE_MIN and fits_hours(
+            p, round_up5(ctx.start_min + moves[p["id"]]), p["avg_stay_min"])]
         same = [p for p in open_on_arrival if p["category"] == ctx.fixed_first_category]
         fixed_first = _nearest(origin, same) or (_nearest(origin, open_on_arrival) if ctx.fixed_first_any else None)
         if fixed_first is None:
@@ -466,11 +477,20 @@ def run_pipeline(places: list[dict], ctx: TripCtx, min_candidates: int) -> list[
     return schedule(entries, places_by_id, ctx)
 
 
-def new_course(places: list[dict], profile_in: dict, start_time: str, end_time: str) -> tuple[dict, list[dict]]:
+def in_area(places: list[dict], area_id: str) -> list[dict]:
+    """Start-area FR-5: the first filter. Everything after it only sees the places of one area."""
+    return [p for p in places if p.get("area_id") == area_id]
+
+
+def new_course(places: list[dict], profile_in: dict, start_time: str, end_time: str,
+               area_id: str = config.DEFAULT_AREA_ID) -> tuple[dict, list[dict]]:
+    """`area_id` must already be checked (areas.check_area). The API always passes it."""
     start, end = check_time_window(start_time, end_time)
+    places = in_area(places, area_id)
     profile = dict(profile_in)
     profile["conditions"] = {"indoor_only": False, "low_walking": False}
     profile["start_time"], profile["end_time"] = start_time, end_time      # server-owned, like conditions
+    profile["area_id"] = area_id
     min_items, max_items = item_bounds(end - start)
     ctx = TripCtx(profile=profile, start_min=start, end_min=end, min_items=min_items, max_items=max_items,
                   needs_lunch=window_has_lunch(start, end))
@@ -553,7 +573,9 @@ def replan(places: list[dict], course: dict, items: list[dict], reason: str, cur
         )
         if reason == "hungry":
             ctx.needs_lunch = False
-        new_rows = run_pipeline(places, ctx, min_candidates=1)
+        # start-area FR-7: only the course's area. A course saved before areas existed is in jeju-city.
+        area_places = in_area(places, profile.get("area_id") or config.DEFAULT_AREA_ID)
+        new_rows = run_pipeline(area_places, ctx, min_candidates=1)
 
     new_items = []
     for n, r in enumerate(new_rows):

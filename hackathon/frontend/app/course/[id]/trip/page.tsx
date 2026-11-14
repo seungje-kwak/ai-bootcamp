@@ -118,7 +118,7 @@ export default function TripPage() {
         body={
           course.locked_count > 0
             ? `${course.locked_count} more stops are waiting in your full day.`
-            : "Thanks for exploring Jeju City at your own pace."
+            : "Thanks for exploring Jeju at your own pace."
         }
         action={
           <div className="flex flex-col gap-3 w-full">

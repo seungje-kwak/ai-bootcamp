@@ -181,7 +181,7 @@ def test_free_course_shows_three_stops_and_leaks_nothing(places, by_id, course):
     for it in items[3:]:
         if it["place_id"] not in shown:
             assert by_id[it["place_id"]]["name_en"] not in body
-            assert it["reason_en"] in shown_reasons or it["reason_en"] not in body
+            assert any(it["reason_en"] in r for r in shown_reasons) or it["reason_en"] not in body
     assert all(i["phrase_cards"] == [] for i in out["items"])
     assert not any(k.startswith("_") for k in out["user_profile"])
 

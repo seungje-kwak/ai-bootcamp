@@ -6,6 +6,7 @@
 - price_level: free/low/mid/high -> 0/1/2/3
 - open_time / close_time: "HH:MM" or both empty (always open). A badly formed value stops the build
 - places outside the map bounds (7.2) are skipped (Q-13 default)
+- area_id: worked out from address_ko (app/areas.py). A place whose address does not say stops the build
 
 Run:  backend/.venv/Scripts/python.exe backend/scripts/build_places.py
 """
@@ -18,12 +19,16 @@ import sys
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[2]
+sys.path.insert(0, str(ROOT / "backend"))
+
+from app.areas import area_of_address  # noqa: E402
+
 SEED = ROOT / "data" / "seed"
 OUT = ROOT / "backend" / "app" / "data"
 
-# Jeju main island. This is the range app/data/places.json was built with on 2026-11-13
-# (data/seed_jeju_all/README.md). frontend/config/map.ts still shows Jeju City only.
-BOUNDS = {"lngMin": 126.13, "lngMax": 126.99, "latMin": 33.10, "latMax": 33.58}
+# All of Jeju: the main island, Udo and the Chuja Islands (start-area FR-10).
+# Must be the same as `bounds` in frontend/config/map.ts.
+BOUNDS = {"lngMin": 126.10, "lngMax": 127.00, "latMin": 33.10, "latMax": 34.00}
 
 CATEGORY_MAP = {
     "nature": "nature",
@@ -144,6 +149,10 @@ def main() -> int:
             skipped.append((pid, r["name_en"], "no accessibility row"))
             continue
 
+        area_id = area_of_address(r["address_ko"])
+        if area_id is None:
+            raise ValueError(f"place {pid} ({r['name_en']}): cannot tell the area from address_ko "
+                             f"{r['address_ko']!r}")
         open_time, close_time = parse_open_close(pid, r.get("open_time", ""), r.get("close_time", ""))
         category = CATEGORY_OVERRIDE.get(pid) or CATEGORY_MAP.get(r["category"].strip(), "culture")
         f = food.get(pid)
@@ -169,6 +178,7 @@ def main() -> int:
             "lat": lat,
             "lng": lng,
             "address_ko": r["address_ko"].strip(),
+            "area_id": area_id,
             "image_url": r["image_url"].strip() or None,
             "image_source": image_source_of(r["image_source"]) if r["image_url"].strip() else None,
             "avg_stay_min": to_int(r["avg_stay_min"]) or 45,
