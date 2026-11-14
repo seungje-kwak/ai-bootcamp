@@ -124,7 +124,8 @@ def test_summaries_list_all_areas_and_mark_the_ready_ones():
 
 
 @pytest.mark.parametrize("change", ["one_solo_food", "no_cafe", "two_indoor", "three_easy"])
-def test_area_is_not_ready_when_one_fr4_count_is_short(change):
+def test_area_is_not_ready_when_one_fr4_count_is_short(change, monkeypatch):
+    monkeypatch.setattr(config, "AREA_MIN_SOLO_FOOD", 2)          # the FR-4 value, whatever config.py has now
     ps = ready_area("aewol") + [made_place(50, "aewol")]          # 11 places, so the total is never the reason
     if change == "one_solo_food":
         ps[1]["food_options"]["solo_ok"] = False
