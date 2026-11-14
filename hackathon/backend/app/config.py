@@ -60,7 +60,11 @@ MAX_MOVE_MIN = 30
 # --- areas (tasks/prd-start-area.md FR-4): an area can be picked only when it has all of these ---
 AREA_MIN_PLACES = 10
 AREA_MIN_FOOD = 3
-AREA_MIN_SOLO_FOOD = 2      # food places where one person can order
+# Food places where one person can order. The PRD (FR-4) says 2. Set to 0 on 2026-11-14 until
+# solo_ok is filled in for the Jeju-wide restaurants (all empty, so read as false); without this
+# only jeju-city can be picked. Courses in those areas get no lunch stop, because F-3 drops food
+# places where solo_ok is false. Put it back to 2 once the data is there (US-A06).
+AREA_MIN_SOLO_FOOD = 0
 AREA_MIN_CAFE = 1
 AREA_MIN_EASY = 4           # walking_level 1 on flat ground
 AREA_MIN_INDOOR = 3         # needed for the rain replan
