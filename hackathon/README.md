@@ -66,11 +66,41 @@ The planner keeps a stop only when the whole stay is inside the place's `open_ti
 
 Deploy the backend and the frontend together: the old frontend sends `duration`, which the new backend answers with 422.
 
+### Food options can be null, and areas come from coordinates (recommendation P0, 2026-11-15)
+
+`food_options.solo_ok`, `vegan`, `vegetarian`, `halal`, `english_menu` are now true / false / null (null = not known). Places get their area from the Jeju boundary file, so 56 places move to another area. Do these in order:
+
+1. In the Supabase SQL editor:
+   ```sql
+   alter table food_options alter column solo_ok drop not null;
+   alter table food_options alter column vegan drop not null;
+   alter table food_options alter column vegetarian drop not null;
+   alter table food_options alter column halal drop not null;
+   alter table food_options alter column english_menu drop not null;
+   ```
+2. Deploy the new backend.
+3. `scripts/seed_supabase.py` (writes the nulls and the new `area_id`s). Seeding before step 1 fails on the `not null` constraint.
+
 Q-05 note: PostgREST reads `order=` in a URL as the sort option, so the backend never filters `course_items` by the `"order"` column. A re-plan replaces a course's items by `course_id` and restores the old rows if the insert fails. Keep this in mind when writing new Supabase queries.
+
+## Recommendation eval (scripts/eval_planner.py)
+
+Builds the same courses every time (selectable areas × 20 profiles × 3 time windows = 720, Wednesday) with `planner.new_course` and prints the metrics of `tasks/prd-recommendation-p0.md` FR-3 per area. Reads `app/data/*.json` only; Supabase is not used.
+
+```bash
+# rule planner, all 720 scenarios -> backend/eval/rules.json
+backend/.venv/Scripts/python.exe backend/scripts/eval_planner.py
+# LLM planner, 60 scenarios at most 10 calls a minute -> backend/eval/llm-<model>.json
+backend/.venv/Scripts/python.exe backend/scripts/eval_planner.py --llm --limit 60 --rpm 10
+```
+
+`--weekday mon` changes the day, `--label` / `--out` the output file. With `--llm`, `--limit` defaults to 30 and may not be over 200; the run stops (exit code 1, `aborted: true` in the JSON) on HTTP 429, a quota error, or 3 failed calls in a row. Saved results: `backend/eval/baseline-rules.json` (before P0), `backend/eval/p0-rules.json` (after).
 
 ## Seed normalization (scripts/build_places.py)
 
 - category: `history_culture`, `museum` → `culture`; `market_shopping` → `market`; `park`, `oreum_hike` → `nature`; `beach` → `photo`; `restaurant` → `food`. Yongduam Rock and Dodubong Peak are overridden to `photo`.
 - open_time / close_time: `"HH:MM"` columns in `data/seed/places.csv`, both empty = always open, `24:00` = open past midnight. They were filled from the `opening_hours` text by `data/seed/add_open_close.py` (shortest regular hours; places whose text gives no hours are left empty). The build stops on a value like `9:00` or when open is not before close.
+- area_id: from the coordinates and `app/data/jeju_admin.geojson` (`areas.area_of_point`); from `address_ko` only when the point is in no boundary. The build lists the places where the two differ. The boundary file is made by `scripts/build_jeju_admin.py` (see `data/seed/README.md` for the source).
+- food_options: an empty cell stays `null` (not known); it is no longer turned into `false`.
 - terrain: free-text description → `flat` / `slope` / `steep`; closed_days: free text → `["mon".."sun"]`; price_level: free/low/mid/high → 0-3.
 - **`BOUNDS` in `build_places.py` covers Jeju main island** (lat 33.10-33.58, lng 126.13-126.99), the range `app/data/places.json` was built with when the Jeju-wide places were added on 2026-11-13: 1,065 places are kept and only Chammatna Gimbap (no coordinates) is skipped. The map in `frontend/config/map.ts` and the test-only map image still show Jeju City only; widening them belongs to the "start area" work (`tasks/prd-start-area.md`).

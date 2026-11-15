@@ -64,6 +64,9 @@ export const api = {
       method: "POST",
       body: JSON.stringify({ reason, current_order }),
     }),
+  // prd-recommendation-p1 US-P15: a new course with the same choices (201). The old course stays.
+  shuffleCourse: (id: string) =>
+    request<Course>(`/courses/${encodeURIComponent(id)}/shuffle`, { method: "POST" }),
   purchase: (course_id: string) =>
     request<Course>("/purchase", { method: "POST", body: JSON.stringify({ course_id }) }),
 };

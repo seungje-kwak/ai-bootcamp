@@ -40,7 +40,9 @@ def emma() -> dict:
 
 @pytest.fixture(autouse=True)
 def _deterministic(monkeypatch):
-    """Rule planner, no weekday closures, no photo requirement: results do not depend on the day or the LLM."""
+    """Rule planner, no weekday closures, no photo requirement, seed 1 when a test gives none: results do
+    not depend on the day, the LLM or chance."""
     monkeypatch.setattr(config, "USE_LLM", False)
+    monkeypatch.setattr(planner, "new_seed", lambda: 1)
     monkeypatch.setattr(config, "REQUIRE_VERIFIED", False)
     monkeypatch.setattr(planner, "today_kst_dow", lambda: "none")

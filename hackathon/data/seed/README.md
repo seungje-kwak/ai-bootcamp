@@ -48,3 +48,18 @@
 6. **식당**: 아살람(휴무일 출처 불일치, 할랄 인증 여부 미확인), 팟타이시암(주소·영업시간 출처 불일치), 마음에온(최근 리뷰가 2년 전 → 영업 중인지 확인), 참맛나김밥(좌표 없음).
 7. **좌표**: 원본 2015년 좌표라 일부는 주차장·입구 기준이에요(예: 용두암 좌표는 용연 쪽).
 8. **민속자연사박물관**: 2026-11-23~24 소독 휴관 공지 있음.
+
+## 제주 행정경계 (`backend/app/data/jeju_admin.geojson`)
+
+장소의 지역(`area_id`)을 좌표로 정할 때 쓴다 (`tasks/prd-recommendation-p0.md` US-R05).
+
+| 항목 | 내용 |
+|---|---|
+| 출처 | vuski/admdongkor `ver20261001/HangJeongDong_ver20261001.geojson` (https://github.com/vuski/admdongkor). 원자료는 통계청 통계지리정보서비스(SGIS)의 행정동 경계 |
+| 기준 날짜 | 2026-10-01 (행정동 기준. 제주의 읍·면은 행정동과 법정동이 같다) |
+| 받은 날 | 2026-11-15 |
+| 이용 조건 | SGIS 원자료는 공공누리 제1유형(출처표시), 저장소의 가공물은 CC BY 4.0. 출처를 표시하면 상업적 이용·변형·재배포가 허용된다. 출처 표시: "통계청 SGIS 행정동 경계, vuski/admdongkor 가공" |
+| 가공 | `backend/scripts/build_jeju_admin.py`로 `sidonm = 제주특별자치도`인 43개(7읍 5면 31동)만 남기고, 꼭짓점 사이가 20m보다 가까우면 뺐다. 좌표는 소수점 5자리. 약 190KB |
+| 속성 | `adm_nm`(예: "제주특별자치도 제주시 조천읍"), `adm_cd`(통계청 8자리), `adm_cd2`(행정기관코드 10자리) |
+
+다시 만들기: 위 파일을 받은 뒤 `backend/.venv/Scripts/python.exe backend/scripts/build_jeju_admin.py <받은 파일 경로>`.

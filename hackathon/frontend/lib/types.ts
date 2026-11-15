@@ -17,12 +17,13 @@ export type Accessibility = {
   fatigue_score: 1 | 2 | 3 | 4 | 5;
 };
 
+// true / false / null (not known). Badges show only for true.
 export type FoodOptions = {
-  solo_ok: boolean;
-  vegan: boolean;
-  vegetarian: boolean;
-  halal: boolean;
-  english_menu: boolean;
+  solo_ok: boolean | null;
+  vegan: boolean | null;
+  vegetarian: boolean | null;
+  halal: boolean | null;
+  english_menu: boolean | null;
   signature_menu_en: string | null;
   allergens: string | null;
 };
@@ -35,6 +36,7 @@ export type Place = {
   name_en: string;
   name_ko: string;
   category: Category;
+  place_type: string | null; // stay-time type (oreum_hike, port, cafe, ...). Not shown on screen
   description_en: string;
   lat: number;
   lng: number;
@@ -103,6 +105,16 @@ export type CourseItem = {
   phrase_cards: PhraseCard[];
 };
 
+// A meal time we kept free because no restaurant fits (prd-recommendation-p1 FR-11). Not a stop:
+// no place, no map marker, no move.
+export type MealGap = {
+  meal: "lunch" | "dinner";
+  start_time: string; // "HH:MM"
+  end_time: string;
+  reason: "no_diet_match" | "none_nearby";
+  message_en: string;
+};
+
 export type Course = {
   id: string;
   tier: Tier;
@@ -111,4 +123,5 @@ export type Course = {
   total_items: number;
   locked_count: number;
   items: CourseItem[];
+  meal_gaps: MealGap[]; // in start_time order; a free plan only gets the ones among its visible stops
 };

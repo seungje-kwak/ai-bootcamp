@@ -189,7 +189,7 @@ def test_schedule_drops_closed_stops_and_times_the_rest_again():
     closed = tiny_place(2, 33.5000, "09:00", "11:30")       # would run 11:05-12:05
     c = tiny_place(3, 33.5004, None, None)
     by_id = {1: a, 2: closed, 3: c}
-    ctx = planner.TripCtx(profile=EASY, start_min=600, end_min=900, min_items=1, max_items=3, needs_lunch=False)
+    ctx = planner.TripCtx(profile=EASY, start_min=600, end_min=900, min_items=1, max_items=3)
     entries = [LLMItem(place_id=n, order=n, stay_min=60, reason_en="x") for n in (1, 2, 3)]
     rows = planner.schedule(entries, by_id, ctx)
     assert [r["place_id"] for r in rows] == [1, 3]
@@ -201,7 +201,7 @@ def test_schedule_drops_closed_stops_and_times_the_rest_again():
 
 def test_no_open_stop_at_all_is_409():
     by_id = {1: tiny_place(1, 33.4996, "18:00", "22:00")}
-    ctx = planner.TripCtx(profile=EASY, start_min=600, end_min=900, min_items=1, max_items=1, needs_lunch=False)
+    ctx = planner.TripCtx(profile=EASY, start_min=600, end_min=900, min_items=1, max_items=1)
     with pytest.raises(ApiError) as e:
         planner.schedule([LLMItem(place_id=1, order=1, stay_min=60, reason_en="x")], by_id, ctx)
     assert (e.value.status_code, e.value.detail["code"]) == (409, "NO_CANDIDATES")

@@ -38,7 +38,9 @@ def test_validate_drops_ids_that_are_not_candidates(by_id):
 
 def test_llm_ghost_id_never_reaches_the_course(places, by_id, emma, monkeypatch):
     def fake(llm_input):
-        ids = [c["id"] for c in llm_input["candidates"]]
+        # two real candidates that are open from the start, so only the ghost can be dropped
+        ids = [c["id"] for c in llm_input["candidates"]
+               if c["open_time"] is None or (c["open_time"] <= START and c["close_time"] >= "13:00")]
         return LLMCourse(items=[
             LLMItem(place_id=ids[0], order=1, stay_min=30, reason_en="ok"),
             LLMItem(place_id=99999, order=2, stay_min=30, reason_en="ghost"),
@@ -47,14 +49,17 @@ def test_llm_ghost_id_never_reaches_the_course(places, by_id, emma, monkeypatch)
     monkeypatch.setattr(config, "USE_LLM", True)
     monkeypatch.setattr(planner, "call_llm", fake)
     _, items = planner.new_course(places, emma, START, END)
-    assert len(items) == 2 and all(i["place_id"] in by_id for i in items)
+    assert all(i["place_id"] in by_id for i in items)
+    # the two real stops stay; ensure_meals (P1 FR-9) may add the lunch stop the LLM left out
+    assert len([i for i in items if by_id[i["place_id"]]["category"] != "food"]) == 2
 
 
 def test_vegan_course_only_has_vegan_food_places(course, by_id):
     _, items = course
-    food = [by_id[i["place_id"]]["food_options"] for i in items if by_id[i["place_id"]]["food_options"]]
+    # F-3 is for food places only: a café passes it (prd-recommendation-p0 FR-5)
+    food = [by_id[i["place_id"]]["food_options"] for i in items if by_id[i["place_id"]]["category"] == "food"]
     assert food, "a full day should include a place to eat"
-    assert all(f["vegan"] and f["solo_ok"] for f in food)
+    assert all(f["vegan"] and f["solo_ok"] is not False for f in food)
 
 
 def test_times_and_moves_follow_10_6(course, by_id, emma):

@@ -87,8 +87,20 @@ def replan_course(course_id: str, req: ReplanRequest) -> dict:
     # Plan first; the DB changes only after the new items are ready (10.7 step 5).
     result = planner.replan(store.list_places(), course, items, req.reason, req.current_order)
     store.apply_replan(course_id, result.user_profile, result.statuses, result.delete_orders,
-                       result.new_items, result.report_place_id)
+                       result.new_items, result.report_place_id, result.meal_gaps)
     return _course_response(course_id)
+
+
+@app.post("/courses/{course_id}/shuffle", status_code=201)
+def shuffle_course(course_id: str) -> dict:
+    """P1 US-P15: a new course with the same choices and a different seed. The old course stays."""
+    store = get_store()
+    course = store.get_course(course_id)
+    if course is None:
+        raise ApiError(404, "COURSE_NOT_FOUND", "Course not found.")
+    new, items = planner.shuffle_course(store.list_places(), course, store.get_items(course_id))
+    store.create_course(new, items)
+    return _course_response(new["id"])
 
 
 @app.post("/places/{place_id}/report", status_code=201)

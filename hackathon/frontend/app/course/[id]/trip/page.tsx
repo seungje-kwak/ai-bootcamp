@@ -4,6 +4,7 @@ import Link from "next/link";
 import { useParams } from "next/navigation";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { JejuMap } from "@/components/JejuMap";
+import { MealGapCard, withMealGaps } from "@/components/MealGapCard";
 import { CourseSkeleton, MessageScreen, NewPlanLink, PrimaryButton } from "@/components/States";
 import { moveLabel, StopCard } from "@/components/StopCard";
 import { api, ApiError } from "@/lib/api";
@@ -75,6 +76,8 @@ export default function TripPage() {
   const current = items.find((i) => i.status === "current");
   const upcoming = items.filter((i) => i.status === "upcoming");
   const done = items.filter((i) => i.status === "done");
+  // US-P07: free meal times from the current stop on go in the "Next" list, in time order
+  const nextGaps = (course.meal_gaps ?? []).filter((g) => !current || g.start_time >= current.start_time);
   const busy = replan.kind === "loading";
 
   function next() {
@@ -103,7 +106,15 @@ export default function TripPage() {
       setCur(c ? c.order : current.order);
       setNewKeys(new Set(updated.items.map((i) => `${i.order}:${i.place_id}`).filter((k) => !before.has(k))));
       setReplan({ kind: "idle" });
-      setToast(successText(reason, closedName));
+      // prd-recommendation-p1 US-P08: no restaurant nearby -> the server kept the next 45 minutes free instead
+      const addedFood = updated.items.some(
+        (i) => !before.has(`${i.order}:${i.place_id}`) && i.place.category === "food",
+      );
+      setToast(
+        reason === "hungry" && !addedFood
+          ? "No restaurant we know is open nearby right now, so we kept the next 45 minutes free for a meal."
+          : successText(reason, closedName),
+      );
     } catch (e) {
       setReplan({ kind: "error", reason, noCandidates: e instanceof ApiError && e.code === "NO_CANDIDATES" });
     } finally {
@@ -211,7 +222,7 @@ export default function TripPage() {
               </button>
             </div>
           </div>
-        ) : upcoming.length === 0 ? (
+        ) : upcoming.length === 0 && nextGaps.length === 0 ? (
           <p className="mt-3 rounded-2xl bg-sand px-4 py-3 text-muted">
             {course.locked_count > 0
               ? `This is the last stop in your preview. ${course.locked_count} more in the full day.`
@@ -219,7 +230,15 @@ export default function TripPage() {
           </p>
         ) : (
           <ul className="mt-3 divide-y divide-line rounded-2xl border border-line">
-            {upcoming.map((i) => (
+            {withMealGaps(upcoming, nextGaps).map((e) => {
+              if (e.kind === "gap")
+                return (
+                  <li key={`gap-${e.gap.meal}-${e.gap.start_time}`} className="p-2">
+                    <MealGapCard gap={e.gap} compact />
+                  </li>
+                );
+              const i = e.item;
+              return (
               <li key={i.order} className="flex items-center gap-3 px-4 py-3">
                 <span className="w-12 shrink-0 font-semibold tabular-nums">{i.start_time}</span>
                 <div className="min-w-0 flex-1">
@@ -234,7 +253,8 @@ export default function TripPage() {
                   {moveLabel(i) && <p className="text-xs text-muted">{moveLabel(i)}</p>}
                 </div>
               </li>
-            ))}
+              );
+            })}
           </ul>
         )}
       </section>
