@@ -32,7 +32,7 @@ def main() -> int:
     profile = demo["user_profile"]
     start, end = planner.check_time_window(profile["start_time"], profile["end_time"])
     ctx = planner.TripCtx(profile=profile, start_min=start, end_min=end,
-                          min_items=1, max_items=len(demo["items"]), needs_lunch=False)
+                          min_items=1, max_items=len(demo["items"]))
     entries = [LLMItem(place_id=i["place_id"], order=n, stay_min=places[i["place_id"]]["avg_stay_min"],
                        reason_en=i["reason_en"]) for n, i in enumerate(demo["items"], start=1)]
     rows = planner.schedule(entries, places, ctx)
@@ -42,7 +42,8 @@ def main() -> int:
               f"{[e.place_id for e in entries if e.place_id not in kept]}")
         return 1
 
-    course = {"id": demo["id"], "user_profile": demo["user_profile"], "tier": demo["tier"], "created_at": now_iso()}
+    course = {"id": demo["id"], "user_profile": demo["user_profile"], "tier": demo["tier"], "created_at": now_iso(),
+              "meal_gaps": []}
     items = [{"course_id": demo["id"], "order": n, **r, "status": "current" if n == 1 else "upcoming"}
              for n, r in enumerate(rows, start=1)]
     store.replace_course(course, items)

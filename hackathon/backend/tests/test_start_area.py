@@ -81,21 +81,25 @@ def test_area_comes_from_the_address(address, area_id):
     assert areas.area_of_address(address) == area_id
 
 
-def test_every_seed_place_has_the_area_of_its_address(places, by_id):
+def test_every_seed_place_has_the_area_of_its_coordinates(places, by_id):
+    # prd-recommendation-p0 US-R06: coordinates first, the address only when the point is in no boundary
     for p in places:
-        assert p["area_id"] in AREA_IDS and p["area_id"] == areas.area_of_address(p["address_ko"]), p["id"]
+        expected = areas.area_of_point(p["lat"], p["lng"]) or areas.area_of_address(p["address_ko"])
+        assert p["area_id"] in AREA_IDS and p["area_id"] == expected, p["id"]
     # the places the app had before areas: inside the old Jeju City map range
     old_town = [p for p in places if p["id"] <= 74 and 33.46 <= p["lat"] <= 33.53 and 126.44 <= p["lng"] <= 126.56]
     assert len(old_town) >= 19 and all(p["area_id"] == "jeju-city" for p in old_town)
 
 
-def test_build_stops_at_a_place_with_no_area_in_its_address(tmp_path, monkeypatch):
+def test_build_stops_at_a_place_with_no_area_in_its_coordinates_or_address(tmp_path, monkeypatch):
     seed = BACKEND.parent / "data" / "seed"
     for name in ("place_accessibility.csv", "food_options.csv", "phrase_cards.csv"):
         (tmp_path / name).write_bytes((seed / name).read_bytes())
     lines = (seed / "places.csv").read_text(encoding="utf-8-sig").splitlines()
     assert "제주특별자치도 제주시 용두암길 15 (용담이동)" in lines[1]
     lines[1] = lines[1].replace("제주특별자치도 제주시 용두암길 15 (용담이동)", "용두암길 15")
+    lat, lng = build_places.read("places.csv")[0]["lat"], build_places.read("places.csv")[0]["lng"]
+    lines[1] = lines[1].replace(lat, "33.12").replace(lng, "126.5")      # out at sea, inside the map bounds
     (tmp_path / "places.csv").write_text("\n".join(lines[:2]) + "\n", encoding="utf-8")
     monkeypatch.setattr(build_places, "SEED", tmp_path)
     monkeypatch.setattr(build_places, "OUT", tmp_path / "out")
@@ -274,14 +278,22 @@ def test_llm_stop_that_is_too_far_is_removed_and_times_are_computed_again(monkey
     monkeypatch.setattr(planner, "call_llm", fake)
     _, items = planner.new_course(far_and_near(), EASY, "10:00", "14:00", "aewol")
     assert [i["place_id"] for i in items] == [1, 2, 3]
-    assert [i["start_time"] for i in items] == ["10:00", "10:35", "11:10"]
     assert [i["order"] for i in items] == [1, 2, 3]
+    # timed again without stop 4: each start is the stop before's end + the move (stays may be
+    # stretched to fill the day, P1 FR-18)
+    assert items[0]["start_time"] == "10:00"
+    for a, b in zip(items, items[1:]):
+        assert planner.to_min(b["start_time"]) >= planner.to_min(a["start_time"]) + a["stay_min"] + b["move_min"]
+        assert b["move_min"] <= config.MAX_MOVE_MIN
 
 
 def test_hungry_replan_does_not_send_the_traveler_to_a_far_restaurant():
     here, other = made_place(1, "aewol", lat=33.461), made_place(2, "aewol", lat=33.462)
     far_food = made_place(3, "aewol", "food", lat=33.66)
     course, items = planner.new_course([here, other], EASY, "14:00", "18:00", "aewol")
-    with pytest.raises(planner.ApiError) as e:
-        planner.replan([here, other, far_food], course, items, "hungry", 1)
-    assert e.value.detail["code"] == "NO_CANDIDATES"
+    # P1 US-P08: no 409 any more. 45 free minutes for the meal from now, and never the far restaurant
+    res = planner.replan([here, other, far_food], course, items, "hungry", 1)
+    assert 3 not in [i["place_id"] for i in res.new_items]
+    start = planner.to_min(items[0]["start_time"]) + items[0]["stay_min"]
+    assert [(g["start_time"], g["reason"]) for g in res.meal_gaps] == [(planner.to_hhmm(start), "none_nearby")]
+    assert planner.to_min(res.meal_gaps[0]["end_time"]) - start == 45

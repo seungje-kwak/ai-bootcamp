@@ -40,6 +40,7 @@ create table if not exists places (
   name_en           text not null,
   name_ko           text not null,
   category          text not null check (category in ('nature','market','cafe','food','culture','photo')),
+  place_type        text,                -- stay-time type (prd-recommendation-p1 FR-17)
   description_en    text not null,
   lat               double precision not null,
   lng               double precision not null,
@@ -72,6 +73,10 @@ end $$;
 -- seed_supabase.py then writes the real area of every place.
 alter table places add column if not exists area_id text not null default 'jeju-city' references areas(id);
 
+-- tasks/prd-recommendation-p1.md FR-17: oreum_hike, forest, waterfall, port, nature, beach, park, museum,
+-- history_culture, market_shopping, cafe, restaurant. Safe to run again; seed_supabase.py fills it.
+alter table places add column if not exists place_type text;
+
 create table if not exists place_accessibility (
   place_id                   integer primary key references places(id) on delete cascade,
   walking_level              integer not null check (walking_level between 1 and 3),
@@ -87,11 +92,12 @@ create table if not exists place_accessibility (
 
 create table if not exists food_options (
   place_id           integer primary key references places(id) on delete cascade,
-  solo_ok            boolean not null,
-  vegan              boolean not null,
-  vegetarian         boolean not null,
-  halal              boolean not null,
-  english_menu       boolean not null,
+  -- true / false / null (not known). See tasks/prd-recommendation-p0.md US-R03.
+  solo_ok            boolean,
+  vegan              boolean,
+  vegetarian         boolean,
+  halal              boolean,
+  english_menu       boolean,
   signature_menu_en  text,
   allergens          text
 );
@@ -108,8 +114,13 @@ create table if not exists courses (
   id            uuid primary key,
   user_profile  jsonb not null,
   tier          text not null default 'free' check (tier in ('free','premium')),
-  created_at    timestamptz not null default now()
+  created_at    timestamptz not null default now(),
+  -- free meal times (prd-recommendation-p1 FR-11): [{meal, start_time, end_time, reason, message_en}]
+  meal_gaps     jsonb not null default '[]'::jsonb
 );
+
+-- For a database made before meal_gaps existed (safe to run again). Run before the P1 backend goes live.
+alter table courses add column if not exists meal_gaps jsonb not null default '[]'::jsonb;
 
 create table if not exists course_items (
   course_id     uuid not null references courses(id) on delete cascade,

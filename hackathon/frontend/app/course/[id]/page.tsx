@@ -1,9 +1,10 @@
 "use client";
 
 import Link from "next/link";
-import { useParams } from "next/navigation";
+import { useParams, useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import { JejuMap } from "@/components/JejuMap";
+import { MealGapCard, withMealGaps } from "@/components/MealGapCard";
 import { CourseSkeleton, MessageScreen, NewPlanLink, PrimaryButton } from "@/components/States";
 import { MoveInfo, StopCard } from "@/components/StopCard";
 import { api } from "@/lib/api";
@@ -16,6 +17,8 @@ export default function CoursePage() {
   const { course, state, reload } = useCourse(id);
   const [places, setPlaces] = useState<Place[]>([]);
   const [areas, setAreas] = useState<Area[]>([]);
+  const router = useRouter();
+  const [shuffle, setShuffle] = useState<"idle" | "loading" | "error">("idle");
 
   const areaId = course ? (course.user_profile.area_id ?? DEFAULT_AREA_ID) : null;
 
@@ -38,6 +41,19 @@ export default function CoursePage() {
     );
 
   const area = areas.find((a) => a.id === areaId);
+  // US-P16: only before the day has started
+  const canShuffle = !course.items.some((i) => i.status === "done");
+
+  async function shuffleDay() {
+    if (!course || shuffle === "loading") return;
+    setShuffle("loading");
+    try {
+      const next = await api.shuffleCourse(course.id);
+      router.push(`/course/${next.id}`); // a new page: the browser's back button returns to this plan
+    } catch {
+      setShuffle("error");
+    }
+  }
 
   return (
     <main className="pb-28">
@@ -54,6 +70,22 @@ export default function CoursePage() {
         </div>
         <h1 className="mt-3 text-2xl font-bold">Your day in {area ? area.name_en : "Jeju"}</h1>
         <p className="text-muted">{course.total_items} stops</p>
+        {canShuffle && (
+          <div className="mt-3">
+            <button
+              onClick={shuffleDay}
+              disabled={shuffle === "loading"}
+              className="rounded-xl border border-sea px-4 py-2 text-sm font-semibold text-sea disabled:opacity-60 active:bg-sea-soft"
+            >
+              {shuffle === "loading" ? "Finding another day…" : "Shuffle my day"}
+            </button>
+            {shuffle === "error" && (
+              <p role="alert" className="mt-2 text-sm text-[#a4520a]">
+                Couldn&apos;t shuffle right now. Try again.
+              </p>
+            )}
+          </div>
+        )}
       </header>
 
       <section className="px-4">
@@ -68,12 +100,18 @@ export default function CoursePage() {
         {course.items.length === 0 ? (
           <MessageScreen title="No stops in this plan yet." action={<NewPlanLink />} />
         ) : (
-          course.items.map((it) => (
-            <div key={it.order}>
-              <MoveInfo item={it} />
-              <StopCard item={it} tier={course.tier} diet={course.user_profile.diet} />
-            </div>
-          ))
+          withMealGaps(course.items, course.meal_gaps).map((e) =>
+            e.kind === "gap" ? (
+              <div key={`gap-${e.gap.meal}-${e.gap.start_time}`} className="mt-3">
+                <MealGapCard gap={e.gap} />
+              </div>
+            ) : (
+              <div key={e.item.order}>
+                <MoveInfo item={e.item} />
+                <StopCard item={e.item} tier={course.tier} diet={course.user_profile.diet} />
+              </div>
+            ),
+          )
         )}
 
         {course.locked_count > 0 && (
