@@ -2,25 +2,51 @@
 
 import Link from "next/link";
 import { useParams, useRouter } from "next/navigation";
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
+import { BottomBar } from "@/components/BottomBar";
+import { Brand } from "@/components/Brand";
+import { Icon } from "@/components/Icon";
 import { JejuMap } from "@/components/JejuMap";
+import { LanguageSelect } from "@/components/LanguageSelect";
 import { MealGapCard, withMealGaps } from "@/components/MealGapCard";
+import { QuickNavigator } from "@/components/QuickNavigator";
 import { CourseSkeleton, MessageScreen, NewPlanLink, PrimaryButton } from "@/components/States";
-import { MoveInfo, StopCard } from "@/components/StopCard";
+import { hasMove, MoveLeg, StopCard } from "@/components/StopCard";
 import { api } from "@/lib/api";
+import { useLocale } from "@/lib/i18n";
+import { localizedPlaceName } from "@/lib/localized-place";
+import { scrollBehavior, scrollToId } from "@/lib/motion";
+import { courseSpan, courseWindow, toMinutes } from "@/lib/time";
 import { type Area, DEFAULT_AREA_ID, type Place } from "@/lib/types";
 import { useCourse } from "@/lib/useCourse";
 
-// 6.3 Result page
+// 6.3 Result page: summary, route map, timeline, the lock card for previews, and "Start my day".
 export default function CoursePage() {
   const { id } = useParams<{ id: string }>();
   const { course, state, reload } = useCourse(id);
+  const { locale, t } = useLocale();
   const [places, setPlaces] = useState<Place[]>([]);
+  const [selected, setSelected] = useState<number | null>(null);
   const [areas, setAreas] = useState<Area[]>([]);
   const router = useRouter();
   const [shuffle, setShuffle] = useState<"idle" | "loading" | "error">("idle");
 
   const areaId = course ? (course.user_profile.area_id ?? DEFAULT_AREA_ID) : null;
+
+  // Map -> timeline: on a wide screen both are visible, so bring the card into view as well.
+  const selectFromMap = useCallback((order: number | null) => {
+    setSelected(order);
+    if (order != null && window.matchMedia("(min-width: 1024px)").matches) scrollToId(`stop-${order}`);
+  }, []);
+  const viewStop = useCallback((order: number) => {
+    setSelected(order);
+    scrollToId(`stop-${order}`);
+  }, []);
+  // Timeline -> map: select the pin and bring the map into view (it sits above the list on a phone).
+  const showOnMap = useCallback((order: number) => {
+    setSelected(order);
+    document.getElementById("route-map")?.scrollIntoView({ behavior: scrollBehavior(), block: "nearest" });
+  }, []);
 
   useEffect(() => {
     api.areas().then((r) => setAreas(r.areas)).catch(() => setAreas([])); // area name only; failure is fine
@@ -33,14 +59,33 @@ export default function CoursePage() {
   }, [areaId]);
 
   if (state.kind === "loading") return <CourseSkeleton />;
-  if (state.kind === "notfound")
-    return <MessageScreen title="We couldn't find this plan." action={<NewPlanLink />} />;
-  if (state.kind === "error" || !course)
+  if (state.kind === "notfound") {
+    return <MessageScreen icon="alert" title={t.states.notFound} body={t.states.notFoundBody} action={<NewPlanLink />} />;
+  }
+  if (state.kind === "error" || !course) {
     return (
-      <MessageScreen title="Something went wrong." action={<PrimaryButton onClick={reload}>Retry</PrimaryButton>} />
+      <MessageScreen
+        icon="alert"
+        title={t.states.error}
+        body={t.states.errorBody}
+        action={<PrimaryButton onClick={reload}>{t.common.retry}</PrimaryButton>}
+      />
     );
+  }
+
+  const C = t.course;
+  const items = course.items;
+  const free = course.tier === "free";
+  const span = courseSpan(items);
+
+  // The day the traveler asked for is stored with the course. The free time after the last stop is
+  // only known when the whole course is visible.
+  const win = courseWindow(course.user_profile, items[0]?.start_time);
+  const planMin = win ? toMinutes(win.end) - toMinutes(win.start) : null;
+  const spareMin = win && span && !free && course.locked_count === 0 ? toMinutes(win.end) - toMinutes(span.end) : 0;
 
   const area = areas.find((a) => a.id === areaId);
+  const areaName = area ? (locale === "ko" ? area.name_ko : area.name_en) : C.jeju;
   // US-P16: only before the day has started
   const canShuffle = !course.items.some((i) => i.status === "done");
 
@@ -56,92 +101,186 @@ export default function CoursePage() {
   }
 
   return (
-    <main className="pb-28">
-      <header className="px-5 pt-6 pb-4">
-        <div className="flex items-center justify-between">
-          <Link href="/" className="text-sm font-semibold text-sea">
-            MyPace Jeju
-          </Link>
-          {course.tier === "free" ? (
-            <span className="rounded-full bg-tangerine-soft text-[#a4520a] px-2.5 py-0.5 text-xs font-bold">Preview</span>
-          ) : (
-            <span className="rounded-full bg-sea-soft text-sea px-2.5 py-0.5 text-xs font-bold">Premium</span>
+    <main className="course with-bottom-bar" id="course-top">
+      <header className="topbar page">
+        <Brand label={t.common.home} />
+        <LanguageSelect />
+      </header>
+
+      <section className="course__head page">
+        <span className={`chip ${free ? "chip-coral" : "chip-sea"}`}>{free ? C.tierFree : C.tierPremium}</span>
+        <h1 className="display course__title">{C.title(areaName)}</h1>
+
+        {span && (
+          <dl className="facts">
+            <div className="fact">
+              <dt>
+                <Icon name="pin" size={15} />
+                {C.factStops}
+              </dt>
+              <dd>
+                {course.total_items}
+                {course.locked_count > 0 && <small>{C.previewShown(items.length, course.total_items)}</small>}
+              </dd>
+            </div>
+            <div className="fact">
+              <dt>
+                <Icon name="clock" size={15} />
+                {C.factStart}
+              </dt>
+              <dd>{span.start}</dd>
+            </div>
+            <div className="fact">
+              <dt>
+                <Icon name="flag" size={15} />
+                {course.locked_count > 0 ? C.factFinishPreview : C.factFinish}
+              </dt>
+              <dd>{span.end}</dd>
+            </div>
+            {planMin != null && (
+              <div className="fact">
+                <dt>
+                  <Icon name="route" size={15} />
+                  {C.factLength}
+                </dt>
+                <dd>{C.planLength(t.common.duration(planMin))}</dd>
+              </div>
+            )}
+          </dl>
+        )}
+
+        <div className="course__notes">
+          {win && (
+            <p>
+              {C.yourWindow(win.start, win.end)} {spareMin >= 10 && C.freeAfter(t.common.duration(spareMin))}
+            </p>
           )}
+          <p className="fine">{C.timesNote}</p>
         </div>
-        <h1 className="mt-3 text-2xl font-bold">Your day in {area ? area.name_en : "Jeju"}</h1>
-        <p className="text-muted">{course.total_items} stops</p>
+
         {canShuffle && (
-          <div className="mt-3">
-            <button
-              onClick={shuffleDay}
-              disabled={shuffle === "loading"}
-              className="rounded-xl border border-sea px-4 py-2 text-sm font-semibold text-sea disabled:opacity-60 active:bg-sea-soft"
-            >
-              {shuffle === "loading" ? "Finding another day…" : "Shuffle my day"}
+          <div className="mt-4">
+            <button type="button" className="btn btn-secondary btn-sm" onClick={shuffleDay} disabled={shuffle === "loading"}>
+              <Icon name="sparkle" size={16} />
+              {shuffle === "loading" ? C.shuffling : C.shuffle}
             </button>
             {shuffle === "error" && (
-              <p role="alert" className="mt-2 text-sm text-[#a4520a]">
-                Couldn&apos;t shuffle right now. Try again.
+              <p role="alert" className="notice notice-error mt-3">
+                <Icon name="alert" size={20} />
+                <span>{C.shuffleError}</span>
               </p>
             )}
           </div>
         )}
-      </header>
-
-      <section className="px-4">
-        <JejuMap
-          items={course.items}
-          places={places}
-          center={area && { lat: area.center_lat, lng: area.center_lng }}
-        />
       </section>
 
-      <section className="px-4 mt-5">
-        {course.items.length === 0 ? (
-          <MessageScreen title="No stops in this plan yet." action={<NewPlanLink />} />
-        ) : (
-          withMealGaps(course.items, course.meal_gaps).map((e) =>
-            e.kind === "gap" ? (
-              <div key={`gap-${e.gap.meal}-${e.gap.start_time}`} className="mt-3">
-                <MealGapCard gap={e.gap} />
+      <div className="course__grid page">
+        <section aria-labelledby="itinerary-title" className="min-w-0">
+          <h2 id="itinerary-title" className="section-title mb-3">
+            {C.itinerary}
+          </h2>
+          {items.length === 0 ? (
+            <div className="card p-8 text-center">
+              <p className="font-semibold">{C.empty}</p>
+              <div className="mt-4">
+                <NewPlanLink />
               </div>
-            ) : (
-              <div key={e.item.order}>
-                <MoveInfo item={e.item} />
-                <StopCard item={e.item} tier={course.tier} diet={course.user_profile.diet} />
+            </div>
+          ) : (
+            <ol className="timeline">
+              {withMealGaps(items, course.meal_gaps).map((e) => {
+                if (e.kind === "gap")
+                  return (
+                    <li key={`gap-${e.gap.meal}-${e.gap.start_time}`}>
+                      <MealGapCard gap={e.gap} />
+                    </li>
+                  );
+                const it = e.item;
+                const i = items.indexOf(it);
+                return (
+                  <li key={`${it.order}:${it.place_id}`}>
+                    {hasMove(it) && <MoveLeg from={i > 0 ? items[i - 1] : undefined} to={it} />}
+                    <StopCard
+                      item={it}
+                      tier={course.tier}
+                      diet={course.user_profile.diet}
+                      selected={selected === it.order}
+                      onShowOnMap={() => showOnMap(it.order)}
+                    />
+                  </li>
+                );
+              })}
+            </ol>
+          )}
+
+          {course.locked_count > 0 && (
+            <div className="locked">
+              <span className="locked__icon">
+                <Icon name="lock" size={22} />
+              </span>
+              <h3>{C.locked(course.locked_count)}</h3>
+              <p>{C.lockedBody}</p>
+              <Link href={`/course/${course.id}/purchase`} className="btn btn-accent">
+                {C.unlock}
+              </Link>
+            </div>
+          )}
+        </section>
+
+        <aside className="course__side">
+          <section className="card panel" id="route-map" aria-labelledby="map-title" style={{ scrollMarginTop: 16 }}>
+            <div className="panel__head">
+              <h2 id="map-title" className="section-title">
+                {C.mapTitle}
+              </h2>
+            </div>
+            <JejuMap
+              items={items}
+              places={places}
+              selectedOrder={selected}
+              onSelectOrder={selectFromMap}
+              onViewStop={viewStop}
+              center={area && { lat: area.center_lat, lng: area.center_lng }}
+            />
+            <p className="fine mt-3">
+              {C.mapHint} {C.lineNote}
+            </p>
+          </section>
+
+          {items.length > 0 && (
+            <section className="card panel" aria-labelledby="overview-title">
+              <div className="panel__head">
+                <h2 id="overview-title" className="section-title">
+                  {C.overview}
+                </h2>
               </div>
-            ),
-          )
-        )}
+              <ol className="overview">
+                {items.map((it) => (
+                  <li key={it.order}>
+                    <button type="button" aria-current={selected === it.order ? "true" : undefined} onClick={() => viewStop(it.order)}>
+                      <span className="stop-no" aria-hidden="true">
+                        {it.order}
+                      </span>
+                      <time>{it.start_time}</time>
+                      <span>{localizedPlaceName(it.place, locale)}</span>
+                    </button>
+                  </li>
+                ))}
+              </ol>
+            </section>
+          )}
+        </aside>
+      </div>
 
-        {course.locked_count > 0 && (
-          <Link
-            href={`/course/${course.id}/purchase`}
-            className="mt-4 block rounded-2xl border-2 border-dashed border-tangerine bg-tangerine-soft p-5 text-center"
-          >
-            <p className="text-2xl" aria-hidden>
-              🔒
-            </p>
-            <p className="mt-1 font-bold">
-              {course.locked_count} more {course.locked_count === 1 ? "stop" : "stops"} in your full day
-            </p>
-            <span className="mt-3 inline-block rounded-xl bg-tangerine px-5 py-2.5 font-semibold text-white">
-              Unlock full day
-            </span>
-          </Link>
-        )}
-      </section>
+      <QuickNavigator targetId={items.length ? `stop-${items[0].order}` : undefined} mode="first" />
 
-      <div className="fixed bottom-0 left-0 right-0 z-20">
-        <div className="mx-auto max-w-[430px] bg-white/95 backdrop-blur border-t border-line px-4 py-3">
-          <Link
-            href={`/course/${course.id}/trip`}
-            className="block w-full rounded-2xl bg-sea py-3.5 text-center font-semibold text-white"
-          >
-            Start my day
+      <BottomBar>
+        <div className="flex justify-center lg:justify-end">
+          <Link href={`/course/${course.id}/trip`} className="btn btn-primary btn-block" style={{ maxWidth: 440 }}>
+            {C.start}
           </Link>
         </div>
-      </div>
+      </BottomBar>
     </main>
   );
 }

@@ -2,21 +2,22 @@
 
 import { useEffect, useMemo, useRef, useState } from "react";
 import { MAP_CONFIG, toPercent } from "@/config/map";
+import { useLocale } from "@/lib/i18n";
+import { localizedPlaceName } from "@/lib/localized-place";
 import type { CourseItem, Place } from "@/lib/types";
-import { CATEGORY_META } from "./CategoryIcon";
-import type { MapSelect } from "./JejuMap";
+import type { MapPick } from "./JejuMap";
 
-const MARKER_PX = 28;
+const MARKER_PX = 30;
 // The SVG shows the old town only, so positions are taken inside that range.
 const inSvg = (lat: number, lng: number) => toPercent(lat, lng, MAP_CONFIG.fallbackBounds);
 
-// 7.10: the fallback SVG cannot zoom, so push course markers apart (in px, for the current box width)
+// 7.10: this map cannot zoom, so push course markers apart (in px, for the current box width)
 // until they stop overlapping.
 function spread(points: { x: number; y: number }[], widthPx: number) {
   if (!widthPx || points.length < 2) return points;
   const heightPx = widthPx / MAP_CONFIG.aspectRatio;
   const px = points.map((p) => ({ x: (p.x / 100) * widthPx, y: (p.y / 100) * heightPx }));
-  const min = MARKER_PX + 4;
+  const min = MARKER_PX + 6;
   for (let iter = 0; iter < 60; iter++) {
     let moved = false;
     for (let i = 0; i < px.length; i++) {
@@ -43,19 +44,24 @@ function spread(points: { x: number; y: number }[], widthPx: number) {
   return px.map((p) => ({ x: (p.x / widthPx) * 100, y: (p.y / heightPx) * 100 }));
 }
 
-// 7.8: simple SVG map, used when the Kakao map is not available. Box ratio == image ratio,
+// Simple stand-in map, used when the Kakao map is not available (7.1). Box ratio == image ratio,
 // so % positions line up at any width.
 export function FallbackMap({
   items,
   places,
   tripMode,
-  onSelect,
+  selectedOrder,
+  selectedPlaceId,
+  onPick,
 }: {
   items: CourseItem[];
   places: Place[];
   tripMode: boolean;
-  onSelect: MapSelect;
+  selectedOrder: number | null;
+  selectedPlaceId: number | null;
+  onPick: (pick: MapPick) => void;
 }) {
+  const { locale, t } = useLocale();
   const boxRef = useRef<HTMLDivElement>(null);
   const [widthPx, setWidthPx] = useState(0);
   useEffect(() => {
@@ -81,27 +87,19 @@ export function FallbackMap({
     .filter((o) => o.inBounds);
 
   return (
-    <div
-      ref={boxRef}
-      className="relative w-full overflow-hidden rounded-2xl border border-line"
-      style={{ aspectRatio: String(MAP_CONFIG.aspectRatio) }}
-    >
+    <div ref={boxRef} className="map__box" style={{ aspectRatio: String(MAP_CONFIG.aspectRatio) }}>
       {/* eslint-disable-next-line @next/next/no-img-element */}
       <img src={MAP_CONFIG.fallbackImage} alt="" className="absolute inset-0 h-full w-full" draggable={false} />
 
-      <svg
-        className="absolute inset-0 h-full w-full pointer-events-none"
-        viewBox="0 0 100 100"
-        preserveAspectRatio="none"
-        aria-hidden
-      >
+      {/* 7.6: straight dashed lines in visit order. Not a road route. */}
+      <svg className="pointer-events-none absolute inset-0 h-full w-full" viewBox="0 0 100 100" preserveAspectRatio="none" aria-hidden>
         {markers.length > 1 && (
           <polyline
             points={markers.map((p) => `${p.x},${p.y}`).join(" ")}
             fill="none"
             stroke={MAP_CONFIG.routeColor}
             strokeWidth={2.5}
-            strokeDasharray="6 5"
+            strokeDasharray="2 6"
             strokeLinecap="round"
             strokeLinejoin="round"
             vectorEffect="non-scaling-stroke"
@@ -110,38 +108,37 @@ export function FallbackMap({
       </svg>
 
       {others.map(({ p, x, y }) => (
-        <button
-          key={p.id}
-          onClick={() => onSelect({ place: p, stay: p.avg_stay_min })}
-          className="absolute -translate-x-1/2 -translate-y-1/2 rounded-full bg-white/80 border border-white text-[10px] leading-none opacity-70 hover:opacity-100"
-          style={{ left: `${x}%`, top: `${y}%`, width: 18, height: 18, zIndex: 1 }}
-          aria-label={p.name_en}
-        >
-          {CATEGORY_META[p.category].icon}
-        </button>
+        <span key={p.id} className="absolute -translate-x-1/2 -translate-y-1/2" style={{ left: `${x}%`, top: `${y}%`, zIndex: selectedPlaceId === p.id ? 2 : 1 }}>
+          <button
+            type="button"
+            className={`map-dot ${selectedPlaceId === p.id ? "is-selected" : ""}`}
+            onClick={() => onPick({ kind: "place", place: p })}
+            aria-label={`${localizedPlaceName(p, locale)} (${t.map.notOnRoute})`}
+            aria-pressed={selectedPlaceId === p.id}
+          />
+        </span>
       ))}
 
       {markers.map(({ it, ...pt }) => {
-        const meta = CATEGORY_META[it.place.category];
         const done = tripMode && it.status === "done";
         const current = tripMode && it.status === "current";
+        const selected = selectedOrder === it.order;
         return (
-          <button
+          <span
             key={it.order}
-            onClick={() => onSelect({ place: it.place, stay: it.stay_min, order: it.order })}
-            className={`absolute -translate-x-1/2 -translate-y-1/2 flex items-center justify-center rounded-full border-2 border-white shadow-md transition-transform ${
-              current ? "scale-125 ring-4 ring-tangerine/50" : ""
-            } ${done ? "opacity-40" : ""}`}
-            style={{ left: `${pt.x}%`, top: `${pt.y}%`, width: MARKER_PX, height: MARKER_PX, background: meta.color, zIndex: current ? 4 : 3 }}
-            aria-label={`${it.order}. ${it.place.name_en}`}
+            className="absolute -translate-x-1/2 -translate-y-1/2"
+            style={{ left: `${pt.x}%`, top: `${pt.y}%`, zIndex: selected ? 5 : current ? 4 : 3 }}
           >
-            <span className="text-[13px] leading-none" aria-hidden>
-              {meta.icon}
-            </span>
-            <span className="absolute -right-1.5 -top-1.5 min-w-[17px] h-[17px] rounded-full bg-ink text-white text-[10px] font-bold leading-[17px] text-center px-0.5">
+            <button
+              type="button"
+              className={`map-pin ${current ? "is-current" : ""} ${done ? "is-done" : ""} ${selected ? "is-selected" : ""}`}
+              onClick={() => onPick({ kind: "stop", order: it.order })}
+              aria-label={t.map.stopLabel(it.order, localizedPlaceName(it.place, locale))}
+              aria-pressed={selected}
+            >
               {it.order}
-            </span>
-          </button>
+            </button>
+          </span>
         );
       })}
     </div>

@@ -20,7 +20,7 @@ export const MAP_CONFIG = {
   // gets no fallback map, only the list of stops.
   fallbackBounds: { lngMin: 126.44, lngMax: 126.56, latMin: 33.46, latMax: 33.53 },
   // Course line (7.6), shared by both maps.
-  routeColor: "#1f7a8c",
+  routeColor: "#0f5a5f",
 };
 
 export type Bounds = typeof MAP_CONFIG.bounds;

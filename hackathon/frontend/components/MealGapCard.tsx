@@ -1,33 +1,60 @@
+"use client";
+
+import { type Messages, useLocale } from "@/lib/i18n";
 import type { CourseItem, MealGap } from "@/lib/types";
-import { CategoryIcon } from "./CategoryIcon";
+import { Icon } from "./Icon";
 
 // prd-recommendation-p1 US-P07: a meal time we kept free. Not a stop: no photo, no badges, no driver card,
 // no map marker and no move. The dashed border says "time kept free", not "a place to go".
-export function MealGapCard({ gap, compact = false }: { gap: MealGap; compact?: boolean }) {
-  const title = `Free time for ${gap.meal}`;
-  const time = `${gap.start_time}–${gap.end_time}`;
-  if (compact) {
-    return (
-      <div className="flex items-start gap-3 rounded-xl border-2 border-dashed border-line bg-sand/50 px-3 py-2.5">
-        <span className="w-12 shrink-0 font-semibold tabular-nums">{gap.start_time}</span>
-        <div className="min-w-0 flex-1">
-          <p className="font-medium">{title}</p>
-          <p className="text-xs text-muted">{gap.message_en}</p>
-        </div>
-      </div>
-    );
-  }
+
+function gapText(C: Messages["course"], gap: MealGap) {
+  const meal = C.meals[gap.meal];
+  const body =
+    gap.reason === "no_diet_match"
+      ? C.gapNoDiet(gap.start_time, gap.end_time, meal)
+      : C.gapNoneNearby(gap.start_time, gap.end_time, meal);
+  return { title: C.mealGap(meal), body };
+}
+
+/** Timeline card on the course page. */
+export function MealGapCard({ gap }: { gap: MealGap }) {
+  const { t } = useLocale();
+  const { title, body } = gapText(t.course, gap);
   return (
-    <article aria-label={title} className="rounded-2xl border-2 border-dashed border-line bg-sand/50 p-4">
+    <article
+      aria-label={title}
+      className="my-3 border-2 border-dashed border-line-strong bg-sand p-4"
+      style={{ borderRadius: "var(--radius-card)" }}
+    >
       <div className="flex items-start gap-2.5">
-        <CategoryIcon category="food" />
+        <span className="stop-no" aria-hidden="true" style={{ background: "var(--paper)", color: "var(--muted)" }}>
+          <Icon name="food" size={16} />
+        </span>
         <div className="min-w-0 flex-1">
-          <h3 className="text-lg font-bold leading-tight">{title}</h3>
-          <p className="text-sm font-semibold text-muted tabular-nums">{time}</p>
+          <h3 className="font-bold leading-tight">{title}</h3>
+          <p className="text-sm font-semibold text-muted tabular-nums">{t.stop.timeRange(gap.start_time, gap.end_time)}</p>
         </div>
       </div>
-      <p className="mt-3 text-[15px] leading-relaxed">{gap.message_en}</p>
+      <p className="mt-3 text-[15px] leading-relaxed">{body}</p>
     </article>
+  );
+}
+
+/** Row in the trip screen's "Up next" list (same grid as a stop row: icon, time, text). */
+export function MealGapRow({ gap }: { gap: MealGap }) {
+  const { t } = useLocale();
+  const { title, body } = gapText(t.course, gap);
+  return (
+    <li aria-label={title}>
+      <span className="stop-no" aria-hidden="true" style={{ background: "var(--paper)", color: "var(--muted)", border: "1px dashed var(--line-strong)" }}>
+        <Icon name="food" size={14} />
+      </span>
+      <time>{gap.start_time}</time>
+      <div className="min-w-0">
+        <p className="font-semibold">{title}</p>
+        <small>{body}</small>
+      </div>
+    </li>
   );
 }
 
