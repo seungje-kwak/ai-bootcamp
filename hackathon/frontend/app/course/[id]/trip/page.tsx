@@ -1,52 +1,42 @@
 "use client";
 
 import Link from "next/link";
+import { V9Header } from "@/components/V9Header";
 import { useParams } from "next/navigation";
 import { useEffect, useMemo, useRef, useState } from "react";
-import { BottomBar } from "@/components/BottomBar";
-import { Icon, type IconName } from "@/components/Icon";
 import { JejuMap } from "@/components/JejuMap";
-import { LanguageSelect } from "@/components/LanguageSelect";
-import { MealGapRow, withMealGaps } from "@/components/MealGapCard";
 import { QuickNavigator } from "@/components/QuickNavigator";
-import { CourseSkeleton, MessageScreen, NewPlanLink, PrimaryButton } from "@/components/States";
-import { hasMove, MoveLeg, StopCard } from "@/components/StopCard";
-import { api, ApiError } from "@/lib/api";
-import { useLocale, type Messages } from "@/lib/i18n";
+import { WindowSummary } from "@/components/WindowSummary";
+import { travelMessages, useLocale } from "@/lib/i18n";
 import { localizedPlaceName } from "@/lib/localized-place";
-import { scrollBehavior, scrollToId } from "@/lib/motion";
-import { addMinutes } from "@/lib/time";
-import { loadTripProgress, saveTripProgress } from "@/lib/trip-store";
+import { CourseSkeleton, MessageScreen, NewPlanLink, PrimaryButton } from "@/components/States";
+import { moveLabel, MoveInfo, StopCard } from "@/components/StopCard";
+import { api, ApiError } from "@/lib/api";
 import type { Course, CourseItem, ReplanReason } from "@/lib/types";
 import { useCourse } from "@/lib/useCourse";
 
-const REASONS: { reason: ReplanReason; icon: IconName }[] = [
-  { reason: "rain", icon: "rain" },
-  { reason: "closed", icon: "closed" },
-  { reason: "hungry", icon: "hungry" },
-  { reason: "tired", icon: "tired" },
+const BUTTONS: { reason: ReplanReason; label: string; icon: string }[] = [
+  { reason: "rain", label: "It's raining", icon: "🌧️" },
+  { reason: "closed", label: "It's closed", icon: "🚫" },
+  { reason: "hungry", label: "I'm hungry", icon: "🍜" },
+  { reason: "tired", label: "I'm tired", icon: "🥱" },
 ];
 
-function successText(T: Messages["trip"], reason: ReplanReason, closedName: string) {
+function successText(reason: ReplanReason, closedName: string, locale: "en" | "zh" | "ja" | "ko") {
+  if (locale === "ko") return ({ rain: "비에 맞춰 실내 중심으로 일정을 변경했어요.", closed: `${closedName}이(가) 휴업 중인 것으로 확인하고 대체 장소를 추천했어요.`, hungry: "근처에서 식사할 수 있는 장소를 반영했어요.", tired: "걷는 부담이 적은 일정으로 바꿨어요." } as const)[reason];
+  if (locale === "zh") return ({ rain: "已更新行程，接下来优先安排室内地点。", closed: `已记录${closedName}暂停营业，正在推荐替代地点。`, hungry: "已为你安排附近的用餐地点。", tired: "已调整为步行更轻松的行程。" } as const)[reason];
+  if (locale === "ja") return ({ rain: "雨でも楽しめる屋内中心の旅程に更新しました。", closed: `${closedName}の休業を記録し、別のスポットをご案内します。`, hungry: "近くで食事できる場所を追加しました。", tired: "歩く負担の少ない旅程に変更しました。" } as const)[reason];
   switch (reason) {
     case "rain":
-      return T.successRain;
+      return "Plan updated. Indoor stops for the rest of your day.";
     case "closed":
-      return T.successClosed(closedName);
+      return `Thanks, we've noted that ${closedName} was closed. Here's an alternative.`;
     case "hungry":
-      return T.successHungry;
+      return "Added a place to eat nearby.";
     case "tired":
-      return T.successTired;
+      return "Plan updated. Easier stops with less walking.";
   }
 }
-
-function moveText(T: Messages["trip"], item: CourseItem) {
-  if (item.move_method == null || item.move_min == null) return null;
-  return item.move_method === "walk" ? T.walkTo(item.move_min) : item.move_method === "taxi" ? T.taxiTo(item.move_min) : T.busTo(item.move_min);
-}
-
-// Identifies one exact itinerary, so progress saved for an older version of the plan is ignored.
-const signatureOf = (course: Course) => course.items.map((i) => `${i.order}:${i.place_id}`).join(",");
 
 type Replan =
   | { kind: "idle" }
@@ -64,34 +54,34 @@ export default function TripPage() {
   const [confirmClosed, setConfirmClosed] = useState(false);
   const [newKeys, setNewKeys] = useState<Set<string>>(new Set());
   const [showMap, setShowMap] = useState(false);
-  const [selected, setSelected] = useState<number | null>(null);
   const inFlight = useRef(false);
-  const cancelRef = useRef<HTMLButtonElement>(null);
-  const { locale, t } = useLocale();
-  const T = t.trip;
+  const { locale } = useLocale();
+  const tx = travelMessages[locale];
 
-  // First visit: the item the server marks as current (Q-11: progress lives in the browser until a replan).
-  // A reload in the same tab resumes where the traveler was, as long as the itinerary is the same one.
+  const [pendingPlaceId, setPendingPlaceId] = useState<number | null>(null);
+  useEffect(() => {
+    const revealMap = (event: Event) => {
+      const placeId = (event as CustomEvent<{placeId:number}>).detail?.placeId;
+      if (typeof placeId === "number") setPendingPlaceId(placeId);
+      setShowMap(true);
+    };
+    window.addEventListener("mypace:select-place", revealMap);
+    return () => window.removeEventListener("mypace:select-place", revealMap);
+  }, []);
+  useEffect(() => {
+    if (!showMap || pendingPlaceId == null) return;
+    const timer = window.setTimeout(() => window.dispatchEvent(new CustomEvent("mypace:select-place", { detail: {placeId: pendingPlaceId} })), 0);
+    setPendingPlaceId(null);
+    return () => window.clearTimeout(timer);
+  }, [showMap, pendingPlaceId]);
+
+  // first visit: the item the server marks as current (Q-11: progress lives in the browser until a replan)
   useEffect(() => {
     if (course && cur === null) {
-      const serverCurrent = course.items.find((i) => i.status === "current") ?? course.items[0];
-      const saved = loadTripProgress(course.id);
-      if (saved && saved.signature === signatureOf(course) && course.items.some((i) => i.order === saved.order)) {
-        setCur(Math.max(saved.order, serverCurrent?.order ?? 0));
-        setFinished(saved.finished);
-      } else {
-        setCur(serverCurrent ? serverCurrent.order : null);
-      }
+      const c = course.items.find((i) => i.status === "current") ?? course.items[0];
+      setCur(c ? c.order : null);
     }
   }, [course, cur]);
-
-  useEffect(() => {
-    if (course && cur !== null) saveTripProgress(course.id, { order: cur, finished, signature: signatureOf(course) });
-  }, [course, cur, finished]);
-
-  useEffect(() => {
-    if (confirmClosed) cancelRef.current?.focus();
-  }, [confirmClosed]);
 
   const items: CourseItem[] = useMemo(() => {
     if (!course || cur === null) return [];
@@ -102,37 +92,26 @@ export default function TripPage() {
   }, [course, cur]);
 
   if (state.kind === "loading") return <CourseSkeleton />;
-  if (state.kind === "notfound") {
-    return <MessageScreen icon="alert" title={t.states.notFound} body={t.states.notFoundBody} action={<NewPlanLink />} />;
-  }
-  if (state.kind === "error" || !course) {
+  if (state.kind === "notfound")
+    return <MessageScreen title={tx.notfound} action={<NewPlanLink />} />;
+  if (state.kind === "error" || !course)
     return (
-      <MessageScreen
-        icon="alert"
-        title={t.states.error}
-        body={t.states.errorBody}
-        action={<PrimaryButton onClick={reload}>{t.common.retry}</PrimaryButton>}
-      />
+      <MessageScreen title={tx.error} action={<PrimaryButton onClick={reload}>{tx.retry}</PrimaryButton>} />
     );
-  }
 
   const current = items.find((i) => i.status === "current");
   const upcoming = items.filter((i) => i.status === "upcoming");
   const done = items.filter((i) => i.status === "done");
-  // US-P07: free meal times from the current stop on go in the "Next" list, in time order
-  const nextGaps = (course.meal_gaps ?? []).filter((g) => !current || g.start_time >= current.start_time);
   const busy = replan.kind === "loading";
-  const previous = current ? items.filter((i) => i.order < current.order).pop() : undefined;
-  const after = current ? upcoming[0] : undefined;
 
   function next() {
     if (!current) return;
+    const after = items.find((i) => i.order > current.order);
     setToast(null);
     setNewKeys(new Set());
-    setSelected(null);
     if (after) {
       setCur(after.order);
-      window.scrollTo({ top: 0, behavior: scrollBehavior() });
+      window.scrollTo({ top: 0, behavior: "smooth" });
     } else setFinished(true);
   }
 
@@ -151,11 +130,7 @@ export default function TripPage() {
       setCur(c ? c.order : current.order);
       setNewKeys(new Set(updated.items.map((i) => `${i.order}:${i.place_id}`).filter((k) => !before.has(k))));
       setReplan({ kind: "idle" });
-      // prd-recommendation-p1 US-P08: no restaurant nearby -> the server kept the next 45 minutes free instead
-      const addedFood = updated.items.some(
-        (i) => !before.has(`${i.order}:${i.place_id}`) && i.place.category === "food",
-      );
-      setToast(reason === "hungry" && !addedFood ? T.successHungryGap : successText(T, reason, closedName));
+      setToast(successText(reason, closedName, locale));
     } catch (e) {
       setReplan({ kind: "error", reason, noCandidates: e instanceof ApiError && e.code === "NO_CANDIDATES" });
     } finally {
@@ -164,265 +139,181 @@ export default function TripPage() {
   }
 
   if (finished) {
-    const preview = course.locked_count > 0;
     return (
       <MessageScreen
-        icon={preview ? "lock" : "check"}
-        title={preview ? T.endPreviewTitle : T.endTitle}
-        body={preview ? T.endPreviewBody(course.locked_count) : T.endBody}
+        title={course.locked_count > 0 ? tx.endPreview : tx.endDay}
+        body={
+          course.locked_count > 0
+            ? `${course.locked_count} ${tx.lock}`
+            : tx.finish
+        }
         action={
-          <>
-            {preview && (
-              <Link href={`/course/${course.id}/purchase`} className="btn btn-accent">
-                {t.course.unlock}
+          <div className="flex flex-col gap-3 w-full">
+            {course.locked_count > 0 && (
+              <Link
+                href={`/course/${course.id}/purchase`}
+                className="rounded-2xl bg-tangerine text-white font-semibold py-3.5 px-6"
+              >
+                {tx.unlock}
               </Link>
             )}
-            <Link href={`/course/${course.id}`} className={`btn ${preview ? "btn-secondary" : "btn-primary"}`}>
-              {T.backToPlan}
+            <Link href={`/course/${course.id}`} className="rounded-2xl bg-sea text-white font-semibold py-3.5 px-6">
+              {tx.back}
             </Link>
-            <button
-              type="button"
-              className="btn btn-ghost"
-              onClick={() => {
-                const first = course.items.find((i) => i.status === "current") ?? course.items[0];
-                setFinished(false);
-                setCur(first ? first.order : null);
-              }}
-            >
-              {T.again}
-            </button>
-          </>
+          </div>
         }
       />
     );
   }
 
-  const position = current ? items.findIndex((i) => i.order === current.order) + 1 : 0;
-  const thenMove = after ? moveText(T, after) : null;
-
   return (
-    <main className="trip with-bottom-bar">
-      <header className="trip__bar">
-        <div className="page">
-          <div className="trip__bar-inner">
-            <Link href={`/course/${course.id}`} className="icon-btn" aria-label={T.backAria}>
-              <Icon name="arrowLeft" size={20} />
-            </Link>
-            <div className="trip__heading">
-              <h1>{T.title}</h1>
-              {current && <p>{T.progress(position, items.length)}</p>}
-            </div>
-            <button
-              type="button"
-              className="btn btn-secondary btn-sm trip__map-toggle"
-              aria-expanded={showMap}
-              aria-controls="trip-map"
-              onClick={() => setShowMap((v) => !v)}
-            >
-              <Icon name="map" size={18} />
-              {showMap ? T.hideMap : T.map}
-            </button>
-            <LanguageSelect compact />
+    <main className="trip-page v9-trip"><V9Header/>
+      <header className="sticky top-0 z-10 bg-white/95 backdrop-blur border-b border-line px-5 py-3 flex items-center justify-between">
+        <div className="flex items-center gap-2">
+          <Link href={`/course/${course.id}`} className="text-sea text-sm font-semibold" aria-label="Back to plan">
+            ←
+          </Link>
+          <h1 className="text-xl font-bold">{tx.now}</h1>
+          {course.user_profile.conditions.indoor_only && (
+            <span className="rounded-full bg-sea-soft text-sea px-2 py-0.5 text-xs font-bold">{tx.indoorPlan}</span>
+          )}
+          {course.user_profile.conditions.low_walking && (
+            <span className="rounded-full bg-leaf/10 text-leaf px-2 py-0.5 text-xs font-bold">{tx.easyPace}</span>
+          )}
+        </div>
+        <button onClick={() => setShowMap((v) => !v)} className="text-sm font-semibold text-sea">
+          {showMap ? tx.hideMap : tx.map}
+        </button>
+      </header>
+
+      <div className="px-4 mt-3"><WindowSummary courseId={course.id}/></div>
+      {toast && (
+        <div role="status" className="mx-4 mt-3 rounded-xl bg-sea text-white px-4 py-3 text-sm font-medium">
+          {toast}
+        </div>
+      )}
+
+      {showMap && (
+        <section className="px-4 mt-3">
+          <JejuMap items={items} tripMode />
+        </section>
+      )}
+
+      {current && (
+        <section className="px-4 mt-4">
+          {moveLabel(current) && <MoveInfo item={current} />}
+          <StopCard
+            item={current}
+            tier={course.tier}
+            diet={course.user_profile.diet}
+            size="large"
+            isNew={newKeys.has(`${current.order}:${current.place_id}`)}
+          >
+            <PrimaryButton className="mt-3 w-full" onClick={next} disabled={busy}>
+              {tx.done}
+            </PrimaryButton>
+          </StopCard>
+        </section>
+      )}
+
+      <section className="px-4 mt-6">
+        <h2 className="text-sm font-bold text-muted uppercase tracking-wide">{tx.next}</h2>
+        {replan.kind === "loading" ? (
+          <div className="mt-3 flex items-center gap-3 rounded-2xl border border-line p-4">
+            <div className="spinner" />
+            <p className="font-medium">{tx.replanLoading}</p>
           </div>
-          <div className="trip__meter" aria-hidden="true">
-            {items.map((i) => (
-              <span key={i.order} data-state={i.status} />
+        ) : replan.kind === "error" ? (
+          <div role="alert" className="mt-3 rounded-2xl bg-tangerine-soft border border-[#f6c99a] p-4">
+            <p className="font-semibold">
+              {replan.noCandidates
+                ? tx.noCandidates
+                : tx.replanError}
+            </p>
+            <div className="mt-3 flex gap-2">
+              {!replan.noCandidates && (
+                <PrimaryButton onClick={() => doReplan(replan.reason)}>{tx.retry}</PrimaryButton>
+              )}
+              <button onClick={() => setReplan({ kind: "idle" })} className="rounded-2xl border border-line px-4 font-semibold">
+                {tx.dismiss}
+              </button>
+            </div>
+          </div>
+        ) : upcoming.length === 0 ? (
+          <p className="mt-3 rounded-2xl bg-sand px-4 py-3 text-muted">
+            {course.locked_count > 0
+              ? `${tx.last} ${course.locked_count} ${tx.lock}`
+              : tx.last}
+          </p>
+        ) : (
+          <ul className="mt-3 divide-y divide-line rounded-2xl border border-line">
+            {upcoming.map((i) => (
+              <li key={i.order} className="flex items-center gap-3 px-4 py-3">
+                <span className="w-12 shrink-0 font-semibold tabular-nums">{i.start_time}</span>
+                <div className="min-w-0 flex-1">
+                  <p className="truncate font-medium">
+                    {localizedPlaceName(i.place, locale)}
+                    {newKeys.has(`${i.order}:${i.place_id}`) && (
+                      <span className="ml-2 rounded-full bg-tangerine text-white px-1.5 py-0.5 text-[10px] font-bold align-middle">
+                        {tx.new}
+                      </span>
+                    )}
+                  </p>
+                  {i.move_min != null && <p className="text-xs text-muted">{i.move_min} {tx.min} · {i.move_method === "taxi" ? tx.moveTaxi : i.move_method === "bus" ? tx.moveBus : tx.moveWalk}</p>}
+                </div>
+              </li>
+            ))}
+          </ul>
+        )}
+      </section>
+
+      {done.length > 0 && (
+        <details className="px-4 mt-6">
+          <summary className="cursor-pointer text-sm font-bold text-muted uppercase tracking-wide">
+            {tx.earlier} ({done.length})
+          </summary>
+          <ul className="mt-2 space-y-1 opacity-50">
+            {done.map((i) => (
+              <li key={i.order} className="flex gap-3 text-sm">
+                <span className="w-12 tabular-nums">{i.start_time}</span>
+                <span className="line-through">{localizedPlaceName(i.place, locale)}</span>
+              </li>
+            ))}
+          </ul>
+        </details>
+      )}
+
+      <QuickNavigator currentStopId={current ? `stop-${current.order}` : undefined} trip />
+
+      <div className="fixed bottom-0 left-0 right-0 z-20">
+        <div className="mx-auto max-w-[840px] bg-white/95 backdrop-blur border-t border-line px-3 pt-2 pb-3">
+          <p className="px-1 pb-1.5 text-xs text-muted">{tx.ready}</p>
+          <div className="grid grid-cols-4 gap-2">
+            {BUTTONS.map((b) => (
+              <button
+                key={b.reason}
+                disabled={busy || !current}
+                onClick={() => (b.reason === "closed" ? setConfirmClosed(true) : doReplan(b.reason))}
+                className="flex flex-col items-center gap-0.5 rounded-xl border border-line bg-white py-2 text-[12px] font-semibold disabled:opacity-40 active:bg-sand"
+              >
+                <span className="text-xl" aria-hidden>
+                  {b.icon}
+                </span>
+                {locale === "en" ? b.label : b.reason === "rain" ? tx.rain : b.reason === "closed" ? tx.closed : b.reason === "hungry" ? tx.hungry : tx.tired}
+              </button>
             ))}
           </div>
         </div>
-      </header>
-
-      <div className="trip__grid page">
-        <section className="min-w-0" aria-label={T.now}>
-          {(course.user_profile.conditions.indoor_only || course.user_profile.conditions.low_walking) && (
-            <ul className="mb-3 flex flex-wrap gap-2">
-              {course.user_profile.conditions.indoor_only && (
-                <li className="chip chip-sea">
-                  <Icon name="home" size={14} />
-                  {T.indoorPlan}
-                </li>
-              )}
-              {course.user_profile.conditions.low_walking && (
-                <li className="chip chip-leaf">
-                  <Icon name="bench" size={14} />
-                  {T.easyPace}
-                </li>
-              )}
-            </ul>
-          )}
-
-          {toast && (
-            <div role="status" className="toast">
-              <Icon name="check" size={20} />
-              <span>{toast}</span>
-              <button type="button" onClick={() => setToast(null)} aria-label={t.common.dismiss}>
-                <Icon name="close" size={18} />
-              </button>
-            </div>
-          )}
-
-          {current && (
-            <>
-              {/* What to do now, and what comes next: readable at a glance, mid-trip. */}
-              <div className="guide">
-                <p className="label">{T.now}</p>
-                <p>{T.guideNow(localizedPlaceName(current.place, locale), addMinutes(current.start_time, current.stay_min))}</p>
-                <p>{after && thenMove ? T.guideThen(thenMove, localizedPlaceName(after.place, locale)) : T.guideLast}</p>
-              </div>
-
-              {hasMove(current) && <MoveLeg from={previous} to={current} />}
-              <StopCard
-                item={current}
-                tier={course.tier}
-                diet={course.user_profile.diet}
-                size="large"
-                status="current"
-                isNew={newKeys.has(`${current.order}:${current.place_id}`)}
-                onShowOnMap={() => {
-                  setShowMap(true);
-                  setSelected(current.order);
-                  requestAnimationFrame(() => document.getElementById("trip-map")?.scrollIntoView({ behavior: scrollBehavior(), block: "nearest" }));
-                }}
-              >
-                <PrimaryButton className="btn-block mt-3" onClick={next} disabled={busy}>
-                  {after ? T.doneNext : T.doneLast}
-                </PrimaryButton>
-              </StopCard>
-            </>
-          )}
-        </section>
-
-        <aside className="trip__side">
-          <section className="card panel trip__map" id="trip-map" data-open={showMap} aria-label={T.map} style={{ scrollMarginTop: 96 }}>
-            <JejuMap
-              items={items}
-              tripMode
-              selectedOrder={selected}
-              onSelectOrder={setSelected}
-              onViewStop={(order) => current && order === current.order && scrollToId(`stop-${order}`)}
-            />
-            <p className="fine mt-3">{t.course.lineNote}</p>
-          </section>
-
-          <section className="card panel" aria-labelledby="next-title">
-            <div className="panel__head">
-              <h2 id="next-title" className="section-title">
-                {T.next}
-              </h2>
-            </div>
-            {replan.kind === "loading" ? (
-              <div className="flex items-center gap-3 py-2" role="status">
-                <div className="spinner" />
-                <p className="font-semibold">{T.replanning}</p>
-              </div>
-            ) : replan.kind === "error" ? (
-              <div role="alert" className="notice notice-error">
-                <Icon name="alert" size={20} />
-                <div className="min-w-0 flex-1">
-                  <p className="font-semibold">{replan.noCandidates ? T.replanNoCandidates : T.replanError}</p>
-                  <div className="mt-3 flex flex-wrap gap-2">
-                    {!replan.noCandidates && (
-                      <PrimaryButton className="btn-sm" onClick={() => doReplan(replan.reason)}>
-                        {t.common.retry}
-                      </PrimaryButton>
-                    )}
-                    <button type="button" onClick={() => setReplan({ kind: "idle" })} className="btn btn-secondary btn-sm">
-                      {t.common.dismiss}
-                    </button>
-                  </div>
-                </div>
-              </div>
-            ) : upcoming.length === 0 && nextGaps.length === 0 ? (
-              <p className="text-[15px] text-muted">{course.locked_count > 0 ? T.lastPreview(course.locked_count) : T.lastStop}</p>
-            ) : (
-              <ol className="next-list">
-                {withMealGaps(upcoming, nextGaps).map((e) => {
-                  if (e.kind === "gap") return <MealGapRow key={`gap-${e.gap.meal}-${e.gap.start_time}`} gap={e.gap} />;
-                  const i = e.item;
-                  return (
-                  <li key={i.order}>
-                    <span className="stop-no" aria-hidden="true">
-                      {i.order}
-                    </span>
-                    <time>{i.start_time}</time>
-                    <div className="min-w-0">
-                      <p className="truncate font-semibold">
-                        {localizedPlaceName(i.place, locale)}
-                        {newKeys.has(`${i.order}:${i.place_id}`) && (
-                          <span className="chip chip-solid ml-2 align-middle" style={{ padding: "1px 7px", fontSize: 11 }}>
-                            {t.stop.isNew}
-                          </span>
-                        )}
-                      </p>
-                      {i.move_method != null && i.move_min != null && (
-                        <small>{t.move.summary(t.move.method[i.move_method], i.move_min)}</small>
-                      )}
-                    </div>
-                  </li>
-                  );
-                })}
-              </ol>
-            )}
-          </section>
-
-          {done.length > 0 && (
-            <details className="card panel">
-              <summary className="section-title flex cursor-pointer items-center justify-between" style={{ listStyle: "none" }}>
-                {T.completed(done.length)}
-                <Icon name="chevronDown" size={18} />
-              </summary>
-              <ol className="done-list mt-2">
-                {done.map((i) => (
-                  <li key={i.order}>
-                    <span className="stop-no is-done" aria-hidden="true">
-                      <Icon name="check" size={15} strokeWidth={2.4} />
-                    </span>
-                    <time>{i.start_time}</time>
-                    <span className="truncate">{localizedPlaceName(i.place, locale)}</span>
-                  </li>
-                ))}
-              </ol>
-            </details>
-          )}
-        </aside>
       </div>
 
-      <QuickNavigator targetId={current ? `stop-${current.order}` : undefined} mode="current" />
-
-      <BottomBar label={T.replanTitle}>
-        <p className="label replan__title">{T.replanTitle}</p>
-        <div className="replan">
-          {REASONS.map((b) => (
-            <button
-              key={b.reason}
-              type="button"
-              disabled={busy || !current}
-              onClick={() => (b.reason === "closed" ? setConfirmClosed(true) : doReplan(b.reason))}
-            >
-              <Icon name={b.icon} size={22} />
-              {T.reasons[b.reason]}
-            </button>
-          ))}
-        </div>
-      </BottomBar>
-
       {confirmClosed && current && (
-        <div
-          className="sheet-backdrop"
-          role="dialog"
-          aria-modal="true"
-          aria-labelledby="closed-title"
-          onClick={(e) => e.target === e.currentTarget && setConfirmClosed(false)}
-          onKeyDown={(e) => e.key === "Escape" && setConfirmClosed(false)}
-        >
-          <div className="sheet">
-            <p id="closed-title" className="display" style={{ fontSize: 22 }}>
-              {T.confirmClosed(localizedPlaceName(current.place, locale))}
-            </p>
-            <div className="mt-6 grid gap-2.5">
-              <PrimaryButton onClick={() => doReplan("closed")}>{T.yesClosed}</PrimaryButton>
-              <button ref={cancelRef} type="button" onClick={() => setConfirmClosed(false)} className="btn btn-secondary">
-                {t.common.cancel}
+        <div className="fixed inset-0 z-50 bg-black/40 flex items-end justify-center" role="dialog" aria-modal="true">
+          <div className="w-full max-w-[560px] rounded-t-3xl bg-white p-6">
+            <p className="text-lg font-bold">{tx.confirm}</p>
+            <div className="mt-5 flex flex-col gap-2">
+              <PrimaryButton onClick={() => doReplan("closed")}>{tx.yesClosed}</PrimaryButton>
+              <button onClick={() => setConfirmClosed(false)} className="rounded-2xl border border-line py-3.5 font-semibold">
+                {tx.cancel}
               </button>
             </div>
           </div>

@@ -1,97 +1,44 @@
 "use client";
 
 import Link from "next/link";
-import { BottomBar } from "@/components/BottomBar";
-import { Brand } from "@/components/Brand";
-import { HeroArt } from "@/components/HeroArt";
-import { Icon, type IconName } from "@/components/Icon";
-import { LanguageSelect } from "@/components/LanguageSelect";
+import { V9Header } from "@/components/V9Header";
 import { useLocale } from "@/lib/i18n";
+import { useV6Copy } from "@/lib/v6-copy";
 
-const FEATURE_ICONS: IconName[] = ["photo", "route", "taxi"];
+const ICONS = ["🌿", "🕰️", "🗺️", "☂️"];
 
-// 6.1 Landing. One action (start planning); no data requests.
 export default function Landing() {
-  const { t } = useLocale();
-  const L = t.landing;
-  // Longest headline line, in characters. CSS sizes CJK headlines from it so no line wraps.
-  const chars = Math.max(...L.titleLines.map((line) => Array.from(line).length));
-
-  return (
-    <main className="landing">
-      <header className="landing__bar page">
-        <Brand href={null} />
-        <LanguageSelect variant="segmented" />
-      </header>
-
-      <div className="landing__grid page">
-        <section className="landing__copy">
-          <div className="landing__intro">
-          <p className="landing__kicker">{L.kicker}</p>
-          <h1 className="display landing__title" style={{ "--chars": chars } as React.CSSProperties}>
-            {L.titleLines.map((line) => (
-              <span key={line}>{line}</span>
-            ))}
-          </h1>
-          <p className="landing__sub">{L.sub}</p>
-
-          <div className="landing__cta">
-            <Link className="btn btn-primary" href="/onboarding">
-              {L.cta}
-            </Link>
-            <p className="fine">{L.ctaNote}</p>
-          </div>
-          </div>
-
-          <h2 className="sr-only">{L.featuresTitle}</h2>
-          <ul className="landing__features">
-            {L.features.map((f, i) => (
-              <li key={f.title} className="landing__feature">
-                <span className="landing__feature-icon">
-                  <Icon name={FEATURE_ICONS[i]} size={22} />
-                </span>
-                <div>
-                  <h3>{f.title}</h3>
-                  <p>{f.body}</p>
-                </div>
-              </li>
-            ))}
-          </ul>
-        </section>
-
-        <figure className="landing__art">
-          <div className="landing__art-frame">
-            <HeroArt label={L.artAlt} />
-          </div>
-          <div className="card landing__sample">
-            <p className="label">{L.sampleLabel}</p>
-            <ol>
-              {L.sample.map((s, i) => (
-                <li key={s.time}>
-                  <span className="stop-no" aria-hidden="true">
-                    {i + 1}
-                  </span>
-                  <time>{s.time}</time>
-                  <span className="min-w-0">
-                    <span className="block truncate font-semibold">{s.name}</span>
-                    <small>{s.note}</small>
-                  </span>
-                </li>
-              ))}
-            </ol>
-          </div>
-          <figcaption className="fine landing__caption">{L.artCaption}</figcaption>
-        </figure>
+  const { locale } = useLocale();
+  const c = useV6Copy(locale);
+  return <main className="v9-site v9-home">
+    <V9Header />
+    <section className="v9-hero" aria-labelledby="v9-home-title">
+      {/* 3D illustration; never presented as a photograph of a real place. */}
+      {/* eslint-disable-next-line @next/next/no-img-element */}
+      <img className="v9-hero-image" src="/images/jeju-3d-hero.webp" alt="" aria-hidden="true" />
+      <div className="v9-hero-content">
+        <p className="v9-eyebrow">YOUR PRIVATE AI TRAVEL GUIDE</p>
+        <h1 id="v9-home-title"><span>{c.hero1}</span><span>{c.hero2}</span></h1>
+        <p className="v9-hero-description">{c.heroDesc}</p>
+        <Link href="/onboarding" className="v9-primary v9-hero-start">{c.begin}</Link>
+        <p className="v9-fineprint">{c.homeFoot}</p>
       </div>
-
-      <div className="landing__mobile-cta">
-        <BottomBar>
-          <Link className="btn btn-primary btn-block" href="/onboarding">
-            {L.cta}
-          </Link>
-          <p className="fine mt-2 text-center">{L.ctaNote}</p>
-        </BottomBar>
+    </section>
+    <section className="v9-guides" aria-labelledby="v9-guides-title">
+      <div className="v9-guides-heading">
+        <p className="v9-eyebrow">DISCOVER MY PACE JEJU</p>
+        <h2 id="v9-guides-title">{c.guideTitle}</h2>
+        <p>{c.guideIntro}</p>
       </div>
-    </main>
-  );
+      <div className="v9-guide-grid">
+        {c.guide.map((title,i)=><article key={title} className="v9-guide-card">
+          <span className="v9-guide-icon" aria-hidden="true">{ICONS[i]}</span>
+          <h3>{title}</h3><p>{c.guideDesc[i]}</p>
+        </article>)}
+      </div>
+      <div className="v9-guide-how">{c.guideHow}</div>
+      <div className="v9-guide-cta"><Link href="/onboarding" className="v9-primary">{c.begin}</Link></div>
+    </section>
+    <footer className="v9-footer"><span>MY PACE, MY JEJU</span><span>YOUR LOCAL COMPANION</span></footer>
+  </main>;
 }

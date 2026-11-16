@@ -9,12 +9,17 @@ export type KMap = {
   setCenter(p: KLatLng): void;
   panTo(p: KLatLng): void;
   setLevel(level: number): void;
+  getLevel(): number;
   relayout(): void;
 };
 export type KLayer = { setMap(map: KMap | null): void };
 
 export type KakaoMaps = {
   load(cb: () => void): void;
+  event?: {
+    addListener(target: KMap, eventName: string, callback: () => void): void;
+    removeListener(target: KMap, eventName: string, callback: () => void): void;
+  };
   LatLng: new (lat: number, lng: number) => KLatLng;
   LatLngBounds: new () => KLatLngBounds;
   Map: new (el: HTMLElement, opts: { center: KLatLng; level: number }) => KMap;

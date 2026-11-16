@@ -1,308 +1,131 @@
 "use client";
 
 import { useState } from "react";
-import { kakaoDirectionsUrl } from "@/lib/directions";
-import { straightLineMeters } from "@/lib/geo";
-import { useLocale } from "@/lib/i18n";
-import { localizedCategory, localizedPhrase, localizedPlaceName } from "@/lib/localized-place";
-import { useRouteEstimate } from "@/lib/route-estimate";
-import { addMinutes } from "@/lib/time";
-import type { CourseItem, ItemStatus, Place, Tier, UserProfile } from "@/lib/types";
+import { useLocale, travelMessages } from "@/lib/i18n";
+import { contentHelp, localizedCategory, localizedPlaceName, localizedReason } from "@/lib/localized-place";
+import type { CourseItem, Tier, UserProfile } from "@/lib/types";
 import { CategoryIcon } from "./CategoryIcon";
 import { DriverCard } from "./DriverCard";
 import { FoodBadges } from "./FoodBadges";
-import { Icon, MOVE_ICON } from "./Icon";
-import { PlaceDescription, ReasonText } from "./LocalizedText";
 import { PhotoCredit, PlacePhoto } from "./PlacePhoto";
+import { PlaceGuide } from "./PlaceGuide";
 
-/** How the traveler reaches `to` from `from`. Null for the first stop (no move_method / move_min). */
-export function hasMove(item: Pick<CourseItem, "move_method" | "move_min">): boolean {
-  return item.move_method != null && item.move_min != null;
+export function moveLabel(item: Pick<CourseItem, "move_method" | "move_min">): string | null {
+  if (item.move_method == null || item.move_min == null) return null;
+  if (item.move_method === "walk") return `${item.move_min} min walk`;
+  if (item.move_method === "taxi") return `${item.move_min} min by taxi`;
+  return `${item.move_min} min by bus`;
 }
 
-// The leg between two stops. What is known and what is estimated are kept apart:
-//   time            -> from the itinerary (planner estimate), labelled as such
-//   distance        -> straight line between the two coordinates, labelled as such
-//   road distance,
-//   taxi fare       -> only when the route service answered; otherwise no number at all
-// `from` is missing when the previous place is no longer in the plan (for example the closed
-// place that an alternative replaced): then only the planned time and the directions link are shown.
-export function MoveLeg({ from, to }: { from?: CourseItem; to: CourseItem }) {
-  const { locale, t } = useLocale();
-  const isTaxi = to.move_method === "taxi" && from !== undefined;
-  const route = useRouteEstimate(from?.place ?? null, to.place, isTaxi);
-  if (to.move_method == null || to.move_min == null) return null;
-
-  const straight = from ? t.common.distance(straightLineMeters(from.place, to.place)) : null;
-  const toName = localizedPlaceName(to.place, locale);
-
-  return (
-    <div className="leg">
-      <div className="leg__rail" aria-hidden="true">
-        <span className="leg__icon">
-          <Icon name={MOVE_ICON[to.move_method]} size={17} />
-        </span>
-      </div>
-      <div className="leg__body">
-        <p className="leg__main">
-          {t.move.summary(t.move.method[to.move_method], to.move_min)}
-        </p>
-        <p className="leg__route">
-          {from && (
-            <>
-              <span>{localizedPlaceName(from.place, locale)}</span>
-              <Icon name="arrowRight" size={14} />
-            </>
-          )}
-          <span>{toName}</span>
-        </p>
-        {straight && <p className="leg__meta">{t.move.legNote(straight)}</p>}
-        {isTaxi && route.status === "ok" && (
-          <>
-            <p className="leg__fare">
-              {t.move.fareLine(t.common.won(route.taxiFareKrw), t.common.distance(route.distanceM), route.durationMin)}
-            </p>
-            <p className="leg__meta">{t.move.fareSource}</p>
-          </>
-        )}
-        {isTaxi && route.status !== "ok" && route.status !== "idle" && (
-          <p className="leg__meta" role="note">
-            {route.status === "loading" ? t.move.fareLoading : route.status === "error" ? t.move.fareFailed : t.move.fareNone}
-          </p>
-        )}
-        <a
-          className="leg__link text-link"
-          href={kakaoDirectionsUrl(to.place)}
-          target="_blank"
-          rel="noopener noreferrer"
-          aria-label={`${t.move.directions}: ${toName}`}
-        >
-          {t.move.directions}
-          <Icon name="external" size={15} />
-        </a>
-      </div>
-    </div>
-  );
+export function MoveInfo({ item }: { item: CourseItem }) {
+  const { locale } = useLocale();
+  const tx = travelMessages[locale];
+  if (!moveLabel(item)) return null;
+  const directions = `https://map.kakao.com/link/to/${encodeURIComponent(item.place.name_ko)},${item.place.lat},${item.place.lng}`;
+  const method = item.move_method === "taxi" ? tx.moveTaxi : item.move_method === "bus" ? tx.moveBus : tx.moveWalk;
+  return <div className="move-strip">
+    <span className="move-strip__symbol" aria-hidden="true">
+      <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round">
+        {item.move_method === "walk" ? <><circle cx="13" cy="4" r="2"/><path d="m7 21 3-6 2-3m-4-5 4 2 3 3 3 1m-9 1-3 1m8-3 3 5v4"/></> : item.move_method === "taxi" ? <><path d="M5 10 7 5h10l2 5M4 10h16v8H4zM6 18v2m12-2v2M7 14h2m6 0h2"/></> : <><rect x="5" y="3" width="14" height="16" rx="2"/><path d="M5 9h14M8 22l2-3m4 0 2 3M8 13h2m4 0h2"/></>}
+      </svg>
+    </span>
+    <span className="move-strip__content"><small>{tx.nextMove}</small><strong>{item.move_min} {tx.min} · {method}</strong></span>
+    <a className="move-strip__link" href={directions} target="_blank" rel="noopener noreferrer" aria-label={`${tx.route}: ${item.place.name_ko}`}>
+      {tx.route}<span aria-hidden="true"> ↗</span>
+    </a>
+    {item.move_method === "taxi" && <span className="move-strip__fare">{tx.fare}</span>}
+  </div>;
 }
 
-const SIMPLE_HOURS = /^[\d:\s\-–~]+$/; // "09:00-18:00": reads the same in every language
-const ALWAYS_OPEN = new Set(["Open 24 hours", "24h / always open"]);
-
-function Facts({ place }: { place: Place }) {
-  const { t } = useLocale();
-  const a = place.accessibility;
-  const f = t.stop.facts;
-  const facts: { text: string; warn?: boolean }[] = [];
-  facts.push({ text: a.walking_level === 1 ? f.walk1 : a.walking_level === 2 ? f.walk2 : f.walk3, warn: a.walking_level === 3 });
-  facts.push({ text: a.terrain === "flat" ? f.flat : a.terrain === "slope" ? f.slope : f.steep, warn: a.terrain !== "flat" });
-  if (a.has_stairs === true) facts.push({ text: f.stairs, warn: true });
-  if (a.has_stairs === false) facts.push({ text: f.noStairs });
-  if (a.restroom === true) facts.push({ text: f.restroom });
-  if (a.has_seating === true) facts.push({ text: f.seating });
-  if (a.wheelchair_ok === true) facts.push({ text: f.wheelchair });
-  if (a.wheelchair_ok === false) facts.push({ text: f.noWheelchair, warn: true });
-
-  return (
-    <div className="stop__section">
-      <span className="label">{t.stop.goodToKnow}</span>
-      <ul className="facts-list">
-        {facts.map((x) => (
-          <li key={x.text} data-tone={x.warn ? "warn" : undefined}>
-            <Icon name={x.warn ? "alert" : "check"} size={15} />
-            {x.text}
-          </li>
-        ))}
-      </ul>
-    </div>
-  );
-}
-
-function About({ place }: { place: Place }) {
-  const { locale, t } = useLocale();
-  const hours = place.opening_hours?.trim();
-  const closed = (place.closed_days ?? [])
-    .map((d) => t.stop.weekdays[d as keyof typeof t.stop.weekdays])
-    .filter(Boolean)
-    .join(t.stop.listJoin);
-  const hoursNeutral = hours ? SIMPLE_HOURS.test(hours) : false;
-  return (
-    <details className="disclosure">
-      <summary>
-        {t.stop.about}
-        <Icon name="chevronDown" size={18} />
-      </summary>
-      <dl className="disclosure__body">
-        <div>
-          <PlaceDescription place={place} />
-        </div>
-        {(hours || closed) && (
-          <div>
-            <dt>{t.stop.hours}</dt>
-            {hours && (
-              <dd lang={locale !== "en" && !hoursNeutral && !ALWAYS_OPEN.has(hours) ? "en" : undefined}>
-                {ALWAYS_OPEN.has(hours) ? t.stop.open24 : hours}
-              </dd>
-            )}
-            {closed && <dd>{t.stop.closedOn(closed)}</dd>}
-          </div>
-        )}
-      </dl>
-    </details>
-  );
-}
-
-// US-18 (P1): premium shows the cards; the free preview shows a lock row.
-function PhraseCards({ item, tier }: { item: CourseItem; tier: Tier }) {
-  const { locale, t } = useLocale();
-  if (tier === "free") {
-    return (
-      <p className="lock-row">
-        <Icon name="lock" size={16} />
-        {t.stop.phrasesLocked}
-      </p>
-    );
-  }
-  if (!item.phrase_cards.length) return null;
-  return (
-    <details className="disclosure">
-      <summary>
-        <span className="inline-flex items-center gap-2">
-          <Icon name="chat" size={17} />
-          {t.stop.phrases(item.phrase_cards.length)}
-        </span>
-        <Icon name="chevronDown" size={18} />
-      </summary>
-      <ul className="phrases" style={{ paddingBottom: 14 }}>
-        {item.phrase_cards.map((c, i) => {
-          const gloss = localizedPhrase(c.text_en, locale);
-          return (
-            <li key={i} className="phrase">
-              <p lang="ko" className="phrase__ko">
-                {c.text_ko}
-              </p>
-              {locale !== "ko" && (
-                <p className="phrase__gloss" lang={gloss.translated ? undefined : "en"}>
-                  {gloss.text}
-                </p>
-              )}
-            </li>
-          );
-        })}
-      </ul>
-    </details>
-  );
-}
-
-// 6.3 timeline card. Order of information: name, when and how long, why it was chosen,
-// what is useful to know there, then the actions. `size="large"` is the current stop in trip mode (6.4).
-export function StopCard({
-  item,
-  tier,
-  diet = "none",
-  size = "normal",
-  isNew = false,
-  status,
-  selected = false,
-  onShowOnMap,
-  children,
-}: {
+export function StopCard({ item, tier, diet = "none", size = "normal", isNew = false, children }: {
   item: CourseItem;
   tier: Tier;
   diet?: UserProfile["diet"];
   size?: "normal" | "large";
   isNew?: boolean;
-  /** Trip mode only: marks the card the traveler is at. */
-  status?: ItemStatus;
-  selected?: boolean;
-  onShowOnMap?: () => void;
   children?: React.ReactNode;
 }) {
   const [driverOpen, setDriverOpen] = useState(false);
-  const { locale, t } = useLocale();
+  const { locale } = useLocale();
+  const tx = travelMessages[locale];
   const p = item.place;
-  const name = localizedPlaceName(p, locale);
-  const current = status === "current";
-
+  const localized = localizedReason(item, locale);
+  const large = size === "large";
   return (
-    <article
-      id={`stop-${item.order}`}
-      tabIndex={-1}
-      aria-label={`${t.stop.order(item.order)}: ${name}`}
-      className={`card stop ${size === "large" ? "is-large" : ""} ${current ? "is-current" : selected ? "is-selected" : ""}`}
-    >
-      <div className="stop__media">
-        <PlacePhoto place={p} />
-        <span className={`stop-no stop__no ${current ? "is-current" : ""}`} aria-hidden="true">
-          {item.order}
-        </span>
-        {isNew && <span className="chip chip-solid stop__flag">{t.stop.isNew}</span>}
+    <article id={`stop-${item.order}`} className={`stop-card ${large ? "stop-card--current" : ""}`}>
+      <div className="stop-card__media">
+        <PlacePhoto place={p} className={large ? "h-52" : "h-40"} />
+        <span className="stop-card__time"><span className="stop-card__ordinal">{String(item.order).padStart(2, "0")}</span><span className="stop-card__time-dot">·</span>{item.start_time}</span>
+        {isNew && <span className="stop-card__new">{tx.new}</span>}
       </div>
-
-      <div className="stop__body">
-        <PhotoCredit place={p} />
-        <h3 className="display stop__name">{name}</h3>
-        {name !== p.name_ko && (
-          <p lang="ko" className="stop__ko">
-            {p.name_ko}
-          </p>
-        )}
-
-        <p className="stop__time">
-          <span>
-            <Icon name="clock" size={17} />
-            {t.stop.timeRange(item.start_time, addMinutes(item.start_time, item.stay_min))}
-          </span>
-          <span className="chip chip-sea">{t.stop.stay(item.stay_min)}</span>
-        </p>
-
-        <ul className="stop__chips">
-          <li className="chip">
-            <CategoryIcon category={p.category} size={14} />
-            {localizedCategory(p.category, locale)}
-          </li>
-          {p.accessibility.indoor && (
-            <li className="chip">
-              <Icon name="home" size={14} />
-              {t.stop.indoor}
-            </li>
-          )}
-          {item.is_rest_stop && (
-            <li className="chip chip-leaf">
-              <Icon name="bench" size={14} />
-              {t.stop.rest}
-            </li>
-          )}
-        </ul>
-
-        <div className="stop__why">
-          <p className="label">
-            <Icon name="sparkle" size={16} />
-            {t.stop.why}
-          </p>
-          <ReasonText item={item} />
+      <div className="stop-card__body">
+        <div className="stop-card__heading">
+          <CategoryIcon category={p.category} size={42} />
+          <div className="stop-card__title-block">
+            <p className="stop-card__category">{localizedCategory(p.category, locale)}</p>
+            <h3>{localizedPlaceName(p, locale)}</h3>
+            <p className="stop-card__korean-name" lang="ko">{p.name_ko}</p>
+          </div>
         </div>
-
-        <FoodBadges food={p.food_options} diet={diet} />
-        <Facts place={p} />
-        <About place={p} />
-        <PhraseCards item={item} tier={tier} />
-
-        <div className="stop__actions">
-          <button type="button" className="btn btn-secondary btn-sm" onClick={() => setDriverOpen(true)}>
-            <Icon name="taxi" size={19} />
-            {t.stop.driver}
-          </button>
-          {onShowOnMap && (
-            <button type="button" className="btn btn-ghost btn-sm" onClick={onShowOnMap}>
-              <Icon name="map" size={19} />
-              {t.stop.showOnMap}
-            </button>
+        <div className="stop-card__metadata">
+          <span className="stop-card__duration">◷ {tx.stay} {item.stay_min} {tx.min}</span>
+          {p.accessibility.indoor && <span>{tx.indoor}</span>}
+          {item.is_rest_stop && <span>{tx.rest}</span>}
+        </div>
+        <div className="stop-card__why">
+          <div className="stop-card__eyebrow"><span className="stop-card__eyebrow-rule" />{tx.whyStop}</div>
+          <p>{localized.text}</p>
+          {locale !== "en" && !localized.hasTranslation && localized.original && (
+            <details className="stop-card__original">
+              <summary>{contentHelp(locale).original} <span aria-hidden="true">⌄</span></summary>
+              <p lang="en">{localized.original}</p>
+            </details>
           )}
+        </div>
+        <PlaceGuide place={p} />
+        <FoodBadges food={p.food_options} diet={diet} locale={locale} />
+        <PhraseCards item={item} tier={tier} />
+        <button type="button" onClick={() => setDriverOpen(true)} className="stop-card__driver">
+          <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="m5 11 2-5h10l2 5M5 11h14v7H5zM7 18v2m10-2v2M5 14h2m10 0h2"/></svg>
+          <span>{tx.driver}</span><span className="stop-card__driver-arrow" aria-hidden="true">↗</span>
+        </button>
+        <div className="stop-card__map-actions">
+          <button type="button" className="stop-card__map-link" onClick={() => {
+            window.dispatchEvent(new CustomEvent("mypace:select-place", { detail: { placeId: p.id } }));
+          }}>
+            <span aria-hidden="true">⌖</span> {locale === "ko" ? "지도에서 확인" : locale === "en" ? "View on map" : locale === "zh" ? "在地图查看" : "地図で確認"}
+          </button>
+          <a className="stop-card__map-link" href={`https://map.kakao.com/link/map/${encodeURIComponent(p.name_ko)},${p.lat},${p.lng}`} target="_blank" rel="noopener noreferrer">
+            {locale === "ko" ? "카카오맵 열기" : locale === "en" ? "Open Kakao Map" : locale === "zh" ? "打开Kakao地图" : "カカオマップで見る"} ↗
+          </a>
         </div>
         {children}
+        <PhotoCredit place={p} />
       </div>
-
       {driverOpen && <DriverCard place={p} onClose={() => setDriverOpen(false)} />}
     </article>
   );
+}
+
+function PhraseCards({ item, tier }: { item: CourseItem; tier: Tier }) {
+  const [open, setOpen] = useState(false);
+  const { locale } = useLocale();
+  const tx = travelMessages[locale];
+  if (tier === "free") return (
+    <div className="phrase-preview" aria-label={`${tx.phrases} · ${tx.premium}`}>
+      <span className="phrase-preview__lock" aria-hidden="true"><svg viewBox="0 0 24 24" width="17" height="17" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><rect x="5" y="10" width="14" height="11" rx="2"/><path d="M8 10V7a4 4 0 0 1 8 0v3"/></svg></span>
+      <span className="phrase-preview__text"><strong>{tx.phrases}</strong><small>{tx.premium} · {tx.lockedFeature}</small></span>
+      <span className="phrase-preview__chevron" aria-hidden="true">›</span>
+    </div>
+  );
+  if (!item.phrase_cards.length) return null;
+  return <div className="phrase-list">
+    <button type="button" onClick={() => setOpen(v => !v)} className="phrase-list__toggle" aria-expanded={open}>
+      <span>✦ &nbsp;{tx.phrases} ({item.phrase_cards.length})</span><span aria-hidden="true">{open ? "−" : "+"}</span>
+    </button>
+    {open && <ul className="phrase-list__items">{item.phrase_cards.map((c, i) => <li key={i}>
+      <p lang="ko" className="phrase-list__ko">{c.text_ko}</p>
+      <p lang="en" className="phrase-list__en"><small>EN</small>{c.text_en}</p>
+    </li>)}</ul>}
+  </div>;
 }

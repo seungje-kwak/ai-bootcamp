@@ -1,139 +1,111 @@
 "use client";
 
-import { useState } from "react";
-import { type LatLng, MAP_CONFIG, toPercent } from "@/config/map";
-import { kakaoPlaceUrl } from "@/lib/directions";
-import { useLocale } from "@/lib/i18n";
-import { localizedPlaceName } from "@/lib/localized-place";
-import type { CourseItem, Place } from "@/lib/types";
-import { FallbackMap } from "./FallbackMap";
-import { Icon } from "./Icon";
+import { useEffect, useState } from "react";
+import { useLocale, travelMessages } from "@/lib/i18n";
+import { contentHelp, localizedDescription, localizedPlaceName } from "@/lib/localized-place";
+import { MAP_CONFIG } from "@/config/map";
+import type { Category, CourseItem, Place } from "@/lib/types";
+import { MapCategoryLegend, CATEGORY_OPTIONS } from "./MapCategoryLegend";
 import { KakaoMap } from "./KakaoMap";
-import { PlaceDescription } from "./LocalizedText";
+import { FallbackMap } from "./FallbackMap";
 import { PhotoCredit, PlacePhoto } from "./PlacePhoto";
 
-/** What a tap on the map picked: a numbered stop of the course, or another place nearby. */
-export type MapPick = { kind: "stop"; order: number } | { kind: "place"; place: Place };
+type Selected = { place: Place; stay: number; order?: number };
+export type MapSelect = (s: Selected) => void;
 
-// 7장: Kakao map when NEXT_PUBLIC_KAKAO_MAP_KEY is set and the SDK loads; otherwise the stand-in map (7.1).
-// Both draw the same numbered markers and line. The selection and the detail card (7.7) live here,
-// so they behave the same on either map and stay in step with the timeline.
-// `center` is the first view when the course has no stops: the center of the traveler's area.
+// 7장: Kakao map when NEXT_PUBLIC_KAKAO_MAP_KEY is set and the SDK loads; otherwise the fallback SVG (7.1).
+// Both draw the same markers and line; the bottom card (7.7) lives here so it is shared.
 export function JejuMap({
   items,
   places = [],
   tripMode = false,
-  selectedOrder,
-  onSelectOrder,
-  onViewStop,
-  center,
 }: {
   items: CourseItem[];
   places?: Place[];
   tripMode?: boolean;
-  /** Controlled selection shared with the timeline. Leave undefined to let the map keep its own. */
-  selectedOrder?: number | null;
-  onSelectOrder?: (order: number | null) => void;
-  /** "See this stop": scroll the timeline to that card. */
-  onViewStop?: (order: number) => void;
-  center?: LatLng;
 }) {
-  const { locale, t } = useLocale();
-  const [innerOrder, setInnerOrder] = useState<number | null>(null);
-  const [other, setOther] = useState<Place | null>(null);
-  const [kakaoFailed, setKakaoFailed] = useState(false);
-  const useKakao = Boolean(MAP_CONFIG.kakaoKey) && !kakaoFailed;
+  const [selected, setSelected] = useState<Selected | null>(null);
+  const { locale } = useLocale();
+  const tx = travelMessages[locale];
+  const selectedDescription = selected ? localizedDescription(selected.place, locale) : null;
+  const [mapFailure, setMapFailure] = useState(false);
+  const [mapAttempt, setMapAttempt] = useState(0);
+  const [activeCategories, setActiveCategories] = useState<Set<Category>>(() => new Set(CATEGORY_OPTIONS.map(c => c.id)));
+  const toggleCategory = (cat: Category) => setActiveCategories(prev => { const next = new Set(prev); if (next.has(cat)) next.delete(cat); else next.add(cat); return next; });
+  const useKakao = Boolean(MAP_CONFIG.kakaoKey) && !mapFailure;
 
-  const order = selectedOrder !== undefined ? selectedOrder : innerOrder;
-  const setOrder = (next: number | null) => {
-    setInnerOrder(next);
-    onSelectOrder?.(next);
-  };
-  const stop = order != null ? items.find((i) => i.order === order) : undefined;
-
-  function pick(p: MapPick) {
-    if (p.kind === "stop") {
-      setOther(null);
-      setOrder(order === p.order ? null : p.order);
-    } else {
-      setOrder(null);
-      setOther(other?.id === p.place.id ? null : p.place);
+  useEffect(() => {
+    function handleSelection(e: Event) {
+      const id = (e as CustomEvent<{ placeId: number }>).detail?.placeId;
+      const item = items.find((it) => it.place_id === id);
+      const place = item?.place ?? places.find((candidate) => candidate.id === id);
+      if (!place) return;
+      setSelected({ place, stay: item?.stay_min ?? place.avg_stay_min, order: item?.order });
+      document.getElementById("course-map")?.scrollIntoView({ behavior: "smooth", block: "center" });
     }
-  }
-  function close() {
-    setOther(null);
-    setOrder(null);
-  }
-
-  const shared = {
-    items,
-    places,
-    tripMode,
-    selectedOrder: order ?? null,
-    selectedPlaceId: stop ? null : (other?.id ?? null),
-    onPick: pick,
-  };
-  const place = stop?.place ?? other;
-  // The fallback SVG cannot show a stop outside the old town: no map then, the page still lists the stops.
-  const fitsFallback = items.every((it) => toPercent(it.place.lat, it.place.lng, MAP_CONFIG.fallbackBounds).inBounds);
-  if (!useKakao && !fitsFallback) return null;
+    window.addEventListener("mypace:select-place", handleSelection);
+    return () => window.removeEventListener("mypace:select-place", handleSelection);
+  }, [items, places]);
 
   return (
-    <div className="map">
+    <div id="course-map" className="relative">
       {useKakao ? (
         <KakaoMap
-          {...shared}
-          center={center}
+          key={mapAttempt}
+          items={items}
+          places={places}
+          tripMode={tripMode}
+          activeCategories={activeCategories}
+          focusPlace={selected?.place ?? null}
+          onSelect={setSelected}
           onError={(e) => {
-            console.warn("Kakao map unavailable, using the stand-in map:", e);
-            setKakaoFailed(true);
+            console.warn("Kakao Maps SDK could not load:", e);
+            setMapFailure(true);
           }}
         />
       ) : (
-        <FallbackMap {...shared} />
+        <div className="v9-fallback-map">
+          <FallbackMap items={items} places={places} tripMode={tripMode} activeCategories={activeCategories} onSelect={setSelected}/>
+          <p className="v9-fallback-notice" role="status">
+            {locale === "ko" ? "현재는 일러스트 개념도입니다. 실제 도로 경로나 위치를 정확히 나타내지 않으며, 카카오맵 연결 후 실제 지도로 전환됩니다." : locale === "en" ? "Illustrated overview only, not a real road map or precise route. Connect Kakao Maps for a live map." : locale === "zh" ? "目前为示意地图，并非真实道路或精确路线。连接 Kakao 地图后显示真实地图。" : "現在はイメージ図です。実際の道路・正確な経路ではありません。Kakaoマップ接続後に切り替わります。"}
+          </p>
+          {Boolean(MAP_CONFIG.kakaoKey) && <button className="v9-map-retry" type="button" onClick={() => {setMapFailure(false);setMapAttempt(n=>n+1);}}>{locale === "ko" ? "카카오맵 다시 연결" : locale === "en" ? "Retry Kakao Maps" : locale === "zh" ? "重试 Kakao 地图" : "Kakaoマップを再試行"}</button>}
+        </div>
       )}
 
-      {place && (
-        <div className="map__popup" role="region" aria-live="polite" aria-label={localizedPlaceName(place, locale)}>
-          <div className="map__popup-photo">
-            <PlacePhoto place={place} className="" compact />
-          </div>
-          <div className="min-w-0">
-            <div className="flex items-start justify-between gap-2">
-              <div className="min-w-0">
-                <p className="fine font-semibold" style={{ color: stop ? "var(--sea)" : undefined }}>
-                  {stop ? `${t.stop.order(stop.order)}, ${stop.start_time}` : t.map.notOnRoute}
-                </p>
-                <h3>{localizedPlaceName(place, locale)}</h3>
-                {locale !== "ko" && (
-                  <p lang="ko" className="fine">
-                    {place.name_ko}
-                  </p>
-                )}
+      <MapCategoryLegend active={activeCategories} onToggle={toggleCategory} />
+
+      {selected && (
+        <>
+          <button className="fixed inset-0 z-30 cursor-default" aria-label={tx.close} onClick={() => setSelected(null)} />
+          <div className="absolute inset-x-2 bottom-2 z-40 overflow-hidden rounded-2xl bg-white shadow-xl border border-line">
+            <div className="flex">
+              <div className="w-28 shrink-0">
+                <PlacePhoto place={selected.place} className="h-full min-h-[112px]" />
               </div>
-              <button type="button" className="icon-btn" style={{ width: 36, height: 36 }} onClick={close} aria-label={t.map.close}>
-                <Icon name="close" size={16} />
-              </button>
+              <div className="min-w-0 flex-1 p-3">
+                <div className="flex items-start justify-between gap-2">
+                  <p className="font-bold leading-tight">
+                    {selected.order ? `${selected.order}. ` : ""}
+                    {localizedPlaceName(selected.place, locale)}
+                  </p>
+                  <button onClick={() => setSelected(null)} className="text-muted text-lg leading-none" aria-label={tx.close}>
+                    ×
+                  </button>
+                </div>
+                {selectedDescription && <p className="mt-1 text-xs text-muted line-clamp-2">{selectedDescription.text}</p>}
+                {locale !== "en" && selectedDescription && !selectedDescription.hasTranslation && selectedDescription.original && (
+                  <details className="mt-2 text-xs text-sea">
+                    <summary className="cursor-pointer">{contentHelp(locale).originalDescription}</summary>
+                    <p className="mt-1 text-muted" lang="en">{selectedDescription.original}</p>
+                  </details>
+                )}
+                <p className="mt-1 text-xs font-medium text-sea">{tx.stay} {selected.stay} {tx.min}</p>
+                <PhotoCredit place={selected.place} />
+              </div>
             </div>
-            <PlaceDescription place={place} className="map__popup-desc" />
-            <p className="fine mt-1.5 font-semibold" style={{ color: "var(--ink-soft)" }}>
-              {t.stop.stay(stop ? stop.stay_min : place.avg_stay_min)}
-            </p>
-            <div className="map__popup-actions">
-              {stop && onViewStop && (
-                <button type="button" className="text-link" onClick={() => onViewStop(stop.order)}>
-                  {t.map.viewStop}
-                  <Icon name="chevronRight" size={15} />
-                </button>
-              )}
-              <a className="text-link" href={kakaoPlaceUrl(place)} target="_blank" rel="noopener noreferrer">
-                {t.map.openKakao}
-                <Icon name="external" size={14} />
-              </a>
-            </div>
-            <PhotoCredit place={place} />
           </div>
-        </div>
+        </>
       )}
     </div>
   );
