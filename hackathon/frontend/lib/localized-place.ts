@@ -1,226 +1,234 @@
-// Presentation-only language helpers. The API contract stays English (`name_en`, `reason_en`,
-// `description_en`); nothing here writes back to it. Three sources, in this order:
-//   1. reviewed dictionaries for the seeded places and fixed strings   (lib/content/*)
-//   2. templates for the rule planner's fixed sentences                 (this file)
-//   3. a translation service for free-form AI text                      (lib/translation.ts)
-// When none applies the English original is shown and labelled as such. Text is never
-// invented to fill the gap.
-import type { Locale } from "@/lib/locale";
+// Presentation-only language helpers for the current Jeju demo catalog.
+// Never modify or overwrite the original English text returned by the API.
 import type { Category, CourseItem, Place } from "@/lib/types";
-import { PLACE_NAMES } from "./content/place-names";
-import { ALLERGENS, MENU, PHRASES } from "./content/phrases";
-import { textHash } from "./text-hash";
+import type { Locale } from "@/lib/i18n";
 
-type Target = Exclude<Locale, "en">;
-// Dictionary rows are [简体中文, 日本語, 한국어].
-type Row = readonly [zh: string, ja: string, ko: string];
-const COLUMN: Record<Target, 0 | 1 | 2> = { zh: 0, ja: 1, ko: 2 };
-const pick = (row: Row, locale: Target) => row[COLUMN[locale]];
-
-export type LocalizedText = {
-  /** What to show. Equals `original` when no reviewed translation exists. */
-  text: string;
-  /** false = `text` is still the English original. */
-  translated: boolean;
-  original: string;
-};
-
-const asIs = (original: string): LocalizedText => ({ text: original, translated: true, original });
-const untranslated = (original: string): LocalizedText => ({ text: original, translated: false, original });
-
-// ---------------------------------------------------------------------------- categories
 const CATEGORY_NAMES: Record<Locale, Record<Category, string>> = {
   en: { nature: "Nature", market: "Market", cafe: "Café", food: "Food", culture: "Culture", photo: "Photo spot" },
-  zh: { nature: "自然风光", market: "市场", cafe: "咖啡馆", food: "美食", culture: "文化历史", photo: "拍照景点" },
+  zh: { nature: "自然风光", market: "市场", cafe: "咖啡馆", food: "当地美食", culture: "文化历史", photo: "摄影景点" },
   ja: { nature: "自然", market: "市場", cafe: "カフェ", food: "グルメ", culture: "文化・歴史", photo: "写真スポット" },
-  ko: { nature: "자연", market: "시장", cafe: "카페", food: "음식", culture: "문화·역사", photo: "사진 명소" },
+  ko: { nature: "자연", market: "시장", cafe: "카페", food: "맛집", culture: "문화·역사", photo: "사진 명소" },
 };
 export const localizedCategory = (category: Category, locale: Locale) => CATEGORY_NAMES[locale][category];
 
-// ---------------------------------------------------------------------------- place names
+// Names are hand-localized for the currently seeded demonstration places.
+// A Korean-name check prevents an unrelated live API record sharing an ID
+// from accidentally being displayed with the wrong translation.
+const PLACE_NAMES: Record<number, [string, string, string]> = {
+  1: ["용두암", "龙头岩", "龍頭岩"],
+  2: ["제주목 관아", "济州牧官衙", "済州牧官衙"],
+  3: ["제주 삼성혈", "三姓穴", "三姓穴"],
+  4: ["국립제주박물관", "国立济州博物馆", "国立済州博物館"],
+  5: ["제주특별자치도 민속자연사박물관", "济州民俗自然史博物馆", "済州民俗自然史博物館"],
+  6: ["동문재래시장", "东门传统市场", "東門在来市場"],
+  7: ["사라봉공원", "沙罗峰公园", "サラボン公園"],
+  8: ["도두봉", "道头峰", "トドゥボン"],
+  9: ["이호테우해수욕장", "梨湖Tewoo海水浴场", "イホテウ海水浴場"],
+  10: ["한라수목원", "汉拿树木园", "漢拏樹木園"],
+  11: ["제주특별자치도립미술관", "济州道立美术馆", "済州道立美術館"],
+  12: ["함덕해수욕장", "咸德海水浴场", "ハムドク海水浴場"],
+  13: ["제주4·3평화공원", "济州4·3和平公园", "済州4・3平和公園"],
+  14: ["제주절물자연휴양림", "济州节物自然休养林", "済州チョルムル自然休養林"],
+  15: ["김만덕객주", "金万德客栈", "金萬徳客主"],
+  16: ["넥슨뮤지엄", "Nexon博物馆", "ネクソンミュージアム"],
+  17: ["제주돌문화공원", "济州石文化公园", "済州石文化公園"],
+  18: ["제주시민속오일시장", "济州市民俗五日市场", "済州市民俗五日市場"],
+  19: ["노루생태관찰원", "狍子生态观察园", "ノロ生態観察園"],
+  20: ["칠성로상점가", "七星路购物街", "七星路ショッピング通り"],
+  21: ["아살람 레스토랑", "Asalam 餐厅", "アサラム・レストラン"],
+  22: ["팟타이시암", "暹罗泰式餐厅", "パッタイ・シアム"],
+  23: ["우진해장국", "乌珍醒酒汤", "ウジンヘジャングク"],
+  24: ["자매국수", "姐妹面馆", "チャメグクス"],
+  25: ["카페 델문도", "Delmoondo 咖啡馆", "カフェ・デルムンド"],
+  26: ["참맛나김밥", "Chammatna 紫菜包饭", "チャムマッナ・キンパ"],
+  27: ["마음에온", "Maeumeon 韩屋咖啡馆", "マウメオン韓屋カフェ"],
+  28: ["오현단", "五贤坛", "五賢壇"],
+  29: ["산지천", "山地川", "サンジチョン"],
+  30: ["산지천갤러리", "山地川画廊", "サンジチョンギャラリー"],
+  31: ["아라리오뮤지엄 동문모텔", "Arario 美术馆·东门馆", "アラリオミュージアム東門館"],
+  32: ["김만덕기념관", "金万德纪念馆", "金萬徳記念館"],
+  33: ["별도봉", "别刀峰", "ピョルドボン"],
+  34: ["신산공원", "新山公园", "シンサン公園"],
+  35: ["제주특별자치도문예회관", "济州文化艺术会馆", "済州文化芸術会館"],
+  36: ["두맹이골목", "都孟伊小巷", "トゥメンイ路地"],
+  37: ["곤을동4.3유적지", "济州4·3贡乙洞遗址", "コンウルドン4・3遺跡"],
+  38: ["남수각하늘길벽화거리", "南水阁壁画街", "ナムスガク壁画通り"],
+  39: ["제주향교", "济州乡校", "済州郷校"],
+  40: ["아라리오뮤지엄 탑동시네마", "Arario 美术馆·塔洞馆", "アラリオミュージアム塔洞館"],
+  41: ["탑동광장", "塔洞广场", "タプドン広場"],
+  42: ["서문공설시장", "西门公设市场", "西門公設市場"],
+  43: ["용담/용두암 해안도로", "龙潭海岸公路", "ヨンダム海岸道路"],
+  44: ["어영공원", "Eoyeong 公园", "オヨン公園"],
+  45: ["용담레포츠공원", "龙潭休闲运动公园", "ヨンダム・レジャー公園"],
+  46: ["예술공간 이아", "IA 艺术空间", "アートスペースIA"],
+  47: ["제주 전농로 벚꽃거리", "济州全农路樱花街", "済州チョンノン路桜並木"],
+  48: ["용담포구", "龙潭渔港", "ヨンダム漁港"],
+  49: ["제주4.3유적지 도령마루", "济州4·3道令岭遗址", "済州4・3トリョンマル遺跡"],
+  50: ["도두동 무지개해안도로", "道头洞彩虹海岸路", "トドゥドン虹の海岸道路"],
+  51: ["누웨마루거리", "Nuwemaru 步行街", "ヌウェマル通り"],
+  52: ["수목원테마파크", "树木园主题公园", "樹木園テーマパーク"],
+  53: ["민오름", "民岳（Oreum）", "ミノルム"],
+  54: ["도두항", "道头港", "トドゥ港"],
+  55: ["도두오래물", "道头泉水", "トドゥオレムル"],
+  56: ["현사포구", "Hyeonsa 渔港", "ヒョンサ漁港"],
+  57: ["이호-내도 해안도로", "梨湖—内都海岸路", "イホ～ネド海岸道路"],
+  58: ["노형수퍼마켙", "Nohyung 复古超市", "ノヒョン・スーパー"],
+  59: ["연미마을", "Yeonmi 村", "ヨンミ村"],
+  60: ["돈사돈 본점", "Donsadon 总店", "トンサドン本店"],
+  61: ["신설오름", "Sinsol Oreum", "シンソルオルム"],
+  62: ["돌하르방 식당", "石头爷爷餐厅", "トルハルバン食堂"],
+  63: ["순옥이네 명가", "Sunokine 餐厅", "スノギネ名家"],
+  64: ["은희네해장국", "Eunhee 醒酒汤", "ウニネヘジャングク"],
+  65: ["고집돌우럭 제주공항점", "Gozip Dol Ureok · 济州机场店", "コジプトルウロク・済州空港店"],
+  66: ["이금돈지 통갈치조림 제주공항본점", "E-Geumdonji · 机场总店", "イグムトンジ・済州空港本店"],
+  67: ["갱이네보말칼국수", "Gaengine 海螺刀切面", "ゲンイネ・ボマルカルグクス"],
+  68: ["원담 제주본점", "Wondam 济州总店", "ウォンダム済州本店"],
+  69: ["탑동산호전복", "塔洞珊瑚鲍鱼", "タプドン・サンホアワビ"],
+  70: ["갯것이식당", "Gaetgeotsi 餐厅", "ケットゴッシ食堂"],
+  71: ["말고기연구소 제주공항점", "马肉研究所·济州机场店", "馬肉研究所・済州空港店"],
+  72: ["제주토속", "济州土俗餐厅", "済州トソク"],
+  73: ["덕인당보리빵 제주점", "德仁堂大麦面包·济州店", "トギンダン麦パン・済州店"],
+  74: ["카카듀", "Kakadu 咖啡馆", "カカドゥ"],
+};
+
 export function localizedPlaceName(place: Place, locale: Locale): string {
   if (locale === "en") return place.name_en;
-  if (locale === "ko") return place.name_ko || place.name_en; // the API's own Korean name
+  if (locale === "ko") return place.name_ko || place.name_en;
   const entry = PLACE_NAMES[place.id];
-  // The Korean-name check stops an unrelated live record that reuses an id from getting the wrong name.
-  if (entry && place.name_ko.trim() === entry[0]) return locale === "zh" ? entry[1] : entry[2];
-  // The official Korean name is safer than an invented proper noun.
+  if (entry && place.name_ko.includes(entry[0])) return locale === "zh" ? entry[1] : entry[2];
+  // Official Korean name is safer than inventing a translated proper noun.
   return place.name_ko || place.name_en;
 }
 
-// ---------------------------------------------------------------------------- recommendation reasons
-// Sentences the rule planner builds from fixed parts (backend planner._rule_reason / validate).
-// The Korean column carries its object particle (을/를), which depends on the word.
-const INTERESTS: Record<string, Row> = {
-  nature: ["自然风光", "自然", "자연을"],
-  markets: ["逛市场", "市場めぐり", "시장 구경을"],
-  "cafés": ["咖啡馆", "カフェ", "카페를"],
-  "local food": ["当地美食", "地元グルメ", "현지 음식을"],
-  "culture and history": ["文化和历史", "文化と歴史", "문화와 역사를"],
-  "photo spots": ["拍照景点", "写真スポット", "사진 명소를"],
+const INTEREST_WORDS: Record<string, [string, string]> = {
+  nature: ["自然风光", "自然"], markets: ["逛市场", "市場"], "cafés": ["咖啡馆", "カフェ"],
+  "local food": ["当地美食", "地元グルメ"], "culture and history": ["文化和历史", "文化と歴史"],
+  "photo spots": ["拍照景点", "写真スポット"],
+};
+const LEADS: Record<string, [string, string]> = {
+  "Some time in nature": ["在自然中放松", "自然を楽しむ"],
+  "A market stop": ["逛逛当地市场", "地元の市場を楽しむ"],
+  "A café break": ["在咖啡馆小憩", "カフェでひと休み"],
+  "A local food stop": ["品尝当地美食", "地元グルメを楽しむ"],
+  "A culture and history stop": ["感受济州的文化与历史", "済州の文化と歴史に触れる"],
+  "A photo stop": ["享受摄影时光", "写真撮影を楽しむ"],
 };
 
-const ROUND_OUT: Record<string, Row> = {
-  "Some time in nature": ["去自然里走一走，让这一天更完整。", "自然の中で過ごす時間を加えて、一日をより充実させます。", "자연 속에서 시간을 보내며 하루를 더 알차게 채워 보세요."],
-  "A market stop": ["逛一逛市场，让这一天更完整。", "市場に立ち寄って、一日をより充実させます。", "시장에 들러 하루를 더 알차게 채워 보세요."],
-  "A café break": ["在咖啡馆歇一歇，让这一天更完整。", "カフェでひと休みして、一日をより充実させます。", "카페에서 잠시 쉬며 하루를 더 알차게 채워 보세요."],
-  "A local food stop": ["尝一尝当地美食，让这一天更完整。", "地元グルメを味わって、一日をより充実させます。", "현지 음식을 맛보며 하루를 더 알차게 채워 보세요."],
-  "A culture and history stop": ["感受一下文化与历史，让这一天更完整。", "文化と歴史に触れて、一日をより充実させます。", "문화와 역사를 만나며 하루를 더 알차게 채워 보세요."],
-  "A photo stop": ["去一处拍照景点，让这一天更完整。", "写真スポットに立ち寄って、一日をより充実させます。", "사진 명소에 들러 하루를 더 알차게 채워 보세요."],
-};
-
-const FIXED: Record<string, Row> = {
-  "Flat ground with little walking.": ["地势平坦，不用走太多路。", "平坦で、あまり歩かずに楽しめます。", "평지라 많이 걷지 않아도 됩니다."],
-  "It's indoors, so the rain won't matter.": ["这里在室内，下雨也不受影响。", "屋内なので、雨でも大丈夫です。", "실내라서 비가 와도 괜찮습니다."],
-  "Take a seat and rest here.": ["可以在这里坐下来休息。", "ここで座ってひと休みしましょう。", "여기서 앉아 쉬어 가세요."],
-  "A nearby alternative so you can keep going from where you are.": [
-    "这是附近的替代地点，方便你从现在的位置继续行程。",
-    "いまいる場所からそのまま旅を続けられる、近くの代わりのスポットです。",
-    "지금 계신 곳에서 바로 이어 갈 수 있는 가까운 대체 장소입니다.",
-  ],
-};
-
-const DIET_WORDS: Record<"vegan" | "vegetarian" | "halal", Row> = {
-  vegan: ["纯素", "ヴィーガン", "비건"],
-  vegetarian: ["素食", "ベジタリアン", "채식"],
-  halal: ["清真", "ハラール", "할랄"],
-};
-
-const ORDER_FOR_ONE: Row = ["可以只点一人份", "おひとり様でも注文できます", "1인분 주문이 가능합니다"];
-const ENGLISH_MENU: Row = ["提供英文菜单", "英語メニューがあります", "영어 메뉴가 있습니다"];
-
-function translateRuleSentence(sentence: string, locale: Target): string | null {
-  const fixed = FIXED[sentence];
-  if (fixed) return pick(fixed, locale);
-
-  const interest = /^You said you enjoy (.+), and this is one of them\.$/.exec(sentence);
+function translateRuleSentence(sentence: string, locale: "zh" | "ja"): string | null {
+  const which = locale === "zh" ? 0 : 1;
+  const interest = /^You said you enjoy (nature|markets|cafés|local food|culture and history|photo spots), and this is one of them\.$/i.exec(sentence);
   if (interest) {
-    const theme = INTERESTS[interest[1].toLowerCase()];
-    if (!theme) return null;
-    if (locale === "zh") return `你说过喜欢${theme[0]}，这里正是这样的地方。`;
-    if (locale === "ja") return `${theme[1]}がお好きとのことなので、ぴったりのスポットです。`;
-    return `${theme[2]} 좋아한다고 하셔서 고른 곳입니다.`;
+    const theme = INTEREST_WORDS[interest[1].toLowerCase()]?.[which];
+    return theme ? (locale === "zh" ? `你喜欢${theme}，这里正好符合你的兴趣。` : `お好みの${theme}に合うスポットです。`) : null;
   }
-
-  const roundOut = /^(.+) to round out your day\.$/.exec(sentence);
-  if (roundOut) {
-    const line = ROUND_OUT[roundOut[1]];
-    return line ? pick(line, locale) : null;
+  const broaden = /^(Some time in nature|A market stop|A café break|A local food stop|A culture and history stop|A photo stop) to round out your day\.$/.exec(sentence);
+  if (broaden) {
+    const lead = LEADS[broaden[1]]?.[which];
+    if (!lead) return null;
+    if (locale === "zh") return `${lead}，为你的旅程增添不同体验。`;
+    const japanese: Record<string, string> = {
+      "Some time in nature": "自然に触れ、旅のひとときを楽しみましょう。",
+      "A market stop": "地元の市場めぐりを楽しめるスポットです。",
+      "A café break": "カフェでひと休みできるスポットです。",
+      "A local food stop": "地元グルメを楽しめるスポットです。",
+      "A culture and history stop": "済州の文化と歴史に触れられるスポットです。",
+      "A photo stop": "写真撮影を楽しめるスポットです。",
+    };
+    return japanese[broaden[1]] ?? null;
   }
-
-  const food = /^(A place to eat|A café stop)(?: where (.+))?\.$/.exec(sentence);
+  const food = /^(A place to eat|A café stop)(?: where (.*))?\.$/.exec(sentence);
   if (food) {
     const dining = food[1] === "A place to eat";
-    const parts: string[] = [];
-    for (const fragment of food[2] ? food[2].split(", ") : []) {
-      const diet = /^there are (vegan|vegetarian|halal) options$/.exec(fragment);
-      if (fragment === "you can order for one") parts.push(pick(ORDER_FOR_ONE, locale));
-      else if (fragment === "there is an English menu") parts.push(pick(ENGLISH_MENU, locale));
-      else if (diet) {
-        const word = pick(DIET_WORDS[diet[1] as keyof typeof DIET_WORDS], locale);
-        parts.push(locale === "zh" ? `提供${word}餐点` : locale === "ja" ? `${word}対応のメニューがあります` : `${word} 메뉴가 있습니다`);
-      } else return null;
+    let intro = locale === "zh" ? (dining ? "适合用餐的地点" : "适合休息的咖啡馆") : (dining ? "食事におすすめの場所" : "ひと休みにおすすめのカフェ");
+    if (food[2]) {
+      const fragments = food[2].split(", ");
+      const parts: string[] = [];
+      for (const frag of fragments) {
+        const option = /^there are (vegan|vegetarian|halal) options$/.exec(frag);
+        if (frag === "you can order for one") parts.push(locale === "zh" ? "可以一人用餐" : "おひとり様でも注文できます");
+        else if (frag === "there is an English menu") parts.push(locale === "zh" ? "提供英文菜单" : "英語メニューがあります");
+        else if (option) {
+          const label = { vegan: ["纯素", "ヴィーガン"], vegetarian: ["素食", "ベジタリアン"], halal: ["清真", "ハラール"] }[option[1] as "vegan" | "vegetarian" | "halal"][which];
+          parts.push(locale === "zh" ? `提供${label}选项` : `${label}対応メニューがあります`);
+        } else return null;
+      }
+      intro += locale === "zh" ? `，${parts.join("，")}` : `。${parts.join("。")} `;
     }
-    if (locale === "zh") {
-      const lead = dining ? "适合用餐的地点" : "适合歇脚的咖啡馆";
-      return `${[lead, ...parts].join("，")}。`;
-    }
-    if (locale === "ja") {
-      const lead = dining ? "食事におすすめのお店です。" : "ひと休みにおすすめのカフェです。";
-      return lead + parts.map((p) => `${p}。`).join("");
-    }
-    const lead = dining ? "식사하기 좋은 곳입니다." : "쉬어 가기 좋은 카페입니다.";
-    return [lead, ...parts.map((p) => `${p}.`)].join(" ");
+    return `${intro.trim()}${locale === "zh" ? "。" : (intro.trim().endsWith("。")==true ? "" : "。")}`;
   }
+  if (sentence === "Flat ground with little walking.") return locale === "zh" ? "地势平坦，步行负担较少。" : "平坦な道が多く、歩く負担が少なめです。";
+  if (sentence === "It's indoors, so the rain won't matter.") return locale === "zh" ? "这里是室内地点，下雨也能安心游览。" : "屋内スポットなので、雨の日でも楽しめます。";
+  if (sentence === "Take a seat and rest here.") return locale === "zh" ? "可以在这里坐下来休息。" : "ここでは座って休憩できます。";
   return null;
 }
 
-// Hand-written reasons of the Emma demo course (data/demo/emma_course.json), reviewed translations.
-const DEMO_REASONS: Record<string, Row> = {
-  "You said you enjoy photo spots. This wave-carved rock on the north shore looks like a dragon's head rising from the sea.": [
-    "你说过喜欢拍照景点。北岸这块被海浪雕琢的岩石，看起来就像从海中升起的龙头。",
-    "写真スポットがお好きと伺いました。北岸にある波に削られたこの岩は、海から立ち上がる龍の頭のように見えます。",
-    "사진 명소를 좋아한다고 하셨죠. 북쪽 해안의 이 파도에 깎인 바위는 바다에서 솟아오르는 용의 머리처럼 보입니다.",
-  ],
-  "You said you enjoy markets. Jeju City's oldest downtown shopping street, with a car-free section and small cafés.": [
-    "你说过喜欢逛市场。这是济州市最古老的市中心购物街，设有步行街区段和小咖啡馆。",
-    "市場めぐりがお好きと伺いました。済州市で最も古い繁華街の商店街で、歩行者専用の区間や小さなカフェがあります。",
-    "시장 구경을 좋아한다고 하셨죠. 제주시에서 가장 오래된 도심 상점가로, 차 없는 거리 구간과 작은 카페들이 있습니다.",
-  ],
-  "A lunch stop where you can order for one, with a separately labelled vegan section and an English menu.": [
-    "可以一人点餐的午餐地点，设有单独标注的纯素菜单区，并提供英文菜单。",
-    "ひとりでも注文できるランチスポット。ヴィーガンメニューが別に表示され、英語メニューもあります。",
-    "1인분 주문이 가능한 점심 식당으로, 비건 메뉴가 따로 표시되어 있고 영어 메뉴가 있습니다.",
-  ],
-  "You said you enjoy markets. Jeju's biggest permanent market, a covered maze of stalls with tangerines and local snacks.": [
-    "你说过喜欢逛市场。这是济州最大的常设市场，带顶棚的通道里摊位密布，有柑橘和当地小吃。",
-    "市場めぐりがお好きと伺いました。済州最大の常設市場で、屋根付きの通路に店が迷路のように並び、ミカンや地元のおやつが楽しめます。",
-    "시장 구경을 좋아한다고 하셨죠. 제주에서 가장 큰 상설 시장으로, 지붕 덮인 미로 같은 골목에 감귤과 지역 간식을 파는 가게가 가득합니다.",
-  ],
-  "You said you enjoy photo spots. A grey-sand beach with a pair of red and white horse-shaped lighthouses on the breakwater.": [
-    "你说过喜欢拍照景点。这是一片灰色沙滩，防波堤上有一红一白两座马形灯塔。",
-    "写真スポットがお好きと伺いました。灰色の砂浜で、防波堤には赤と白の馬の形をした一対の灯台があります。",
-    "사진 명소를 좋아한다고 하셨죠. 잿빛 모래 해변으로, 방파제 위에 빨간색과 하얀색 말 모양 등대 한 쌍이 있습니다.",
-  ],
-  "Red-pillared halls and pavilions in the old city center, on flat ground with little walking.": [
-    "老城中心的红柱殿堂和亭阁，地势平坦，不用走太多路。",
-    "旧市街の中心にある赤い柱の建物と東屋。平坦で、あまり歩かずに楽しめます。",
-    "원도심 한가운데 붉은 기둥의 건물과 정자가 있는 곳으로, 평지라 많이 걷지 않아도 됩니다.",
-  ],
+// Known demo-course sentences have reviewed translations. This does not
+// imply arbitrary LLM output can be translated without a service.
+const DEMO_REASONS: Record<string, [string, string]> = {
+  "You said you enjoy photo spots. This wave-carved rock on the north shore looks like a dragon's head rising from the sea.": ["你喜欢拍照景点。北岸的这块海蚀岩看起来像一条从海中升起的龙头。", "写真スポットがお好きなあなたへ。北岸にある波で削られた岩が、海から顔を出す龍の頭のように見えます。"],
+  "You said you enjoy markets. Jeju City's oldest downtown shopping street, with a car-free section and small cafés.": ["你喜欢逛市场。这里是济州市中心历史悠久的购物街，设有步行区和小咖啡馆。", "市場めぐりがお好きなあなたへ。済州市中心部の歴史ある商店街で、歩行者専用区間や小さなカフェがあります。"],
+  "A lunch stop where you can order for one, with a separately labelled vegan section and an English menu.": ["适合独自用餐的午餐地点，提供单独标注的纯素菜单区和英文菜单。", "おひとり様でランチを楽しめるお店です。ヴィーガン向けメニューが区別され、英語メニューもあります。"],
+  "You said you enjoy markets. Jeju's biggest permanent market, a covered maze of stalls with tangerines and local snacks.": ["你喜欢逛市场。这里是济州规模最大的常设市场，有遮棚的摊位中售卖柑橘和当地小吃。", "市場めぐりがお好きなあなたへ。済州最大の常設市場で、屋根付きの通路にはミカンや地元のおやつが並びます。"],
+  "You said you enjoy photo spots. A grey-sand beach with a pair of red and white horse-shaped lighthouses on the breakwater.": ["你喜欢拍照景点。这片灰沙海滩的防波堤上有一红一白两座马形灯塔。", "写真スポットがお好きなあなたへ。灰色の砂浜と、防波堤に立つ赤と白の馬の形をした灯台が見どころです。"],
+  "Red-pillared halls and pavilions in the old city center, on flat ground with little walking.": ["老城区内的红柱殿堂与亭阁，地势平坦，步行负担较少。", "旧市街にある赤い柱の建物や東屋を見学できます。平坦な場所なので歩く負担も少なめです。"],
 };
 
-/** Reason shown on a stop. Rule-planner and demo sentences are translated here; anything
- *  else (free-form LLM text) comes back untranslated so the caller can ask the translation
- *  service or show the English original with a notice. */
-export function localizedReason(item: Pick<CourseItem, "reason_en">, locale: Locale): LocalizedText {
+const CONTENT_HELP: Record<"zh" | "ja", { generic: string; original: string; description: string; originalDescription: string }> = {
+  zh: { generic: "已为你选好这一站。详细推荐理由请查看英文原文。", original: "查看英文推荐原文", description: "此地点的详细介绍暂未翻译。", originalDescription: "查看英文景点介绍" },
+  ja: { generic: "おすすめスポットです。詳しい理由は英語原文をご覧ください。", original: "おすすめ理由の英語原文", description: "スポットの詳しい説明は翻訳準備中です。", originalDescription: "スポット紹介の英語原文" },
+};
+export const contentHelp = (locale: "zh" | "ja" | "ko") => locale === "ko"
+  ? { generic: "당신의 취향에 맞춘 추천 장소예요. 자세한 이유는 영어 원문을 확인해 주세요.", original: "영어 원문 보기", description: "장소 소개는 영어 원문에서 확인할 수 있어요.", originalDescription: "영어 장소 소개 보기" }
+  : CONTENT_HELP[locale];
+
+/**
+ * Translate deterministic rule-based text accurately. Free-form LLM strings
+ * cannot be translated by a static dictionary, so present a clearly labeled
+ * local-language summary with an opt-in view of the original.
+ */
+export function localizedReason(item: CourseItem, locale: Locale): { text: string; hasTranslation: boolean; original: string } {
   const original = item.reason_en?.trim() ?? "";
-  if (locale === "en" || !original) return asIs(original);
-  const demo = DEMO_REASONS[original];
-  if (demo) return { text: pick(demo, locale), translated: true, original };
-  const sentences = original.match(/[^.!?]+[.!?]+/g)?.map((s) => s.trim()) ?? [];
-  if (sentences.length > 0 && sentences.join(" ") === original) {
-    const out = sentences.map((s) => translateRuleSentence(s, locale));
-    if (out.every((s): s is string => s !== null)) {
-      // Chinese and Japanese sentences follow each other without a space; Korean ones need it.
-      return { text: out.join(locale === "ko" ? " " : ""), translated: true, original };
+  if (locale === "en") return { text: original, hasTranslation: true, original };
+  if (locale === "ko") {
+    const translated: string[] = [];
+    const sentences = original.match(/[^.!?]+[.!?]/g)?.map(x => x.trim()) ?? [];
+    for (const sentence of sentences) {
+      if (/^Flat ground with little walking\.$/.test(sentence)) translated.push("평탄한 지형이라 걷는 부담이 적어요.");
+      else if (/^It's indoors, so the rain won't matter\.$/.test(sentence)) translated.push("실내 공간이라 비 오는 날에도 방문하기 좋아요.");
+      else if (/^Take a seat and rest here\.$/.test(sentence)) translated.push("앉아서 잠시 쉬어가기 좋아요.");
+      else if (/^You said you enjoy (nature|markets|cafés|local food|culture and history|photo spots), and this is one of them\.$/.test(sentence)) {
+        const m = sentence.match(/^You said you enjoy (nature|markets|cafés|local food|culture and history|photo spots)/);
+        const dictionary: Record<string, string> = { nature:"자연", markets:"시장 탐방", cafés:"카페", "local food":"로컬 맛집", "culture and history":"문화와 역사", "photo spots":"사진 명소" };
+        translated.push(`${dictionary[m?.[1] ?? ""] || "관심사"}에 관심이 있다고 하셔서 추천했어요.`);
+      } else if (/^(Some time in nature|A market stop|A café break|A local food stop|A culture and history stop|A photo stop) to round out your day\.$/.test(sentence)) {
+        const type = sentence.split(" to round out")[0];
+        const dictionary: Record<string,string> = {"Some time in nature":"자연 속에서 쉬어가는 곳", "A market stop":"현지 시장을 즐길 수 있는 곳", "A café break":"카페에서 휴식하는 곳", "A local food stop":"제주 음식을 맛볼 수 있는 곳", "A culture and history stop":"문화와 역사를 만나는 곳", "A photo stop":"기념사진을 남기기 좋은 곳"};
+        translated.push(`${dictionary[type]}으로 일정을 채워보세요.`);
+      } else if (/^(A place to eat|A café stop)(?: where .*)?\.$/.test(sentence)) {
+        const s = sentence.includes("A café") ? "카페에서 편하게 쉬어갈 수 있어요." : "식사를 즐기기 좋은 장소예요.";
+        const extras = [sentence.includes("order for one") && "혼자 주문하기 편해요.", sentence.includes("English menu") && "영어 메뉴가 있어요.", sentence.includes("vegan options") && "비건 메뉴 선택지가 있어요.", sentence.includes("vegetarian options") && "채식 메뉴 선택지가 있어요.", sentence.includes("halal options") && "할랄 메뉴 선택지가 있어요."].filter(Boolean).join(" ");
+        translated.push(s+" "+extras);
+      } else break;
     }
+    if (sentences.length && translated.length === sentences.length && sentences.join(" ") === original) return { text: translated.join(" "), hasTranslation: true, original };
+    return { text: contentHelp("ko").generic, hasTranslation: false, original };
   }
-  return untranslated(original);
+  const demo = DEMO_REASONS[original];
+  if (demo) return { text: demo[locale === "zh" ? 0 : 1], hasTranslation: true, original };
+  const sentences = original.match(/[^.!?]+[.!?]/g)?.map(s=>s.trim()) ?? [];
+  if (sentences.join(" ") === original && sentences.length > 0) {
+    const translated = sentences.map(sentence=>translateRuleSentence(sentence, locale));
+    if (translated.every(Boolean)) return { text: translated.join(" "), hasTranslation: true, original };
+  }
+  return { text: CONTENT_HELP[locale].generic, hasTranslation: false, original };
 }
 
-// ---------------------------------------------------------------------------- short fixed strings
-function fromTable(
-  table: Record<string, readonly [zh: string, ja: string, ko?: string]>,
-  text: string | null | undefined,
-  locale: Locale,
-): LocalizedText {
-  const original = text?.trim() ?? "";
-  if (locale === "en" || !original) return asIs(original);
-  const found = table[original]?.[COLUMN[locale]];
-  return found ? { text: found, translated: true, original } : untranslated(original);
-}
-
-export const localizedMenu = (text: string | null, locale: Locale) => fromTable(MENU, text, locale);
-export const localizedAllergens = (text: string | null, locale: Locale) => fromTable(ALLERGENS, text, locale);
-export const localizedPhrase = (textEn: string, locale: Locale) => fromTable(PHRASES, textEn, locale);
-
-// ---------------------------------------------------------------------------- descriptions (loaded on demand)
-type DescriptionTable = Record<number, { src: string; text: string }>;
-const tables: Partial<Record<Target, Promise<DescriptionTable>>> = {};
-
-export function loadDescriptions(locale: Target): Promise<DescriptionTable> {
-  tables[locale] ??= (
-    locale === "zh"
-      ? import("./content/descriptions.zh")
-      : locale === "ja"
-        ? import("./content/descriptions.ja")
-        : import("./content/descriptions.ko")
-  ).then((m) => m.DESCRIPTIONS);
-  return tables[locale]!;
-}
-
-/** The reviewed description for a place, only if it was translated from this exact English text. */
-export function describeFrom(table: DescriptionTable, place: Pick<Place, "id" | "description_en">): string | null {
-  const entry = table[place.id];
-  return entry && entry.src === textHash(place.description_en.trim()) ? entry.text : null;
+export function localizedDescription(place: Place, locale: Locale): { text: string; hasTranslation: boolean; original: string } {
+  const original = place.description_en?.trim() ?? "";
+  if (locale === "en") return { text: original, hasTranslation: true, original };
+  if (locale === "ko") return { text: `${localizedCategory(place.category, "ko")}에 해당하는 장소예요. 자세한 정보는 영어 소개를 확인해 주세요.`, hasTranslation: false, original };
+  // Display a verified category-level summary, never an invented translation of the source description.
+  const category = localizedCategory(place.category, locale);
+  const text = locale === "zh" ? `这里是${category}类景点。可查看英文原文了解更多详情。` : `「${category}」に分類されるスポットです。詳しい説明は英語原文をご確認ください。`;
+  return { text, hasTranslation: false, original };
 }

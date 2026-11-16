@@ -2,12 +2,12 @@
 
 import Link from "next/link";
 import { MAP_CONFIG } from "@/config/map";
-import { useLocale } from "@/lib/i18n";
+import { MESSAGES, useLocale } from "@/lib/i18n";
 import { Icon, type IconName } from "./Icon";
 
 // Loading: the shape of the course screen (facts, map, cards) so nothing jumps when data arrives.
 export function CourseSkeleton() {
-  const { t } = useLocale();
+  const t = MESSAGES[useLocale().locale];
   return (
     <div className="page" aria-busy="true" aria-label={t.states.loading} style={{ paddingBlock: 24 }}>
       <div className="skeleton h-7 w-40 rounded-lg" />
@@ -71,7 +71,7 @@ export function PrimaryButton({ children, className = "", type = "button", ...re
 }
 
 export function NewPlanLink({ label }: { label?: string }) {
-  const { t } = useLocale();
+  const t = MESSAGES[useLocale().locale];
   return (
     <Link href="/onboarding" className="btn btn-primary">
       {label ?? t.common.newPlan}

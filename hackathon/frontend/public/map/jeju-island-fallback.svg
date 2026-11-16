@@ -1,0 +1,18 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1000 700" role="img" aria-label="Stylized overview of Jeju Island. Not for navigation.">
+  <defs>
+    <linearGradient id="sea" x1="0" y1="0" x2="1" y2="1"><stop stop-color="#d5eeed"/><stop offset="1" stop-color="#a8d5d4"/></linearGradient>
+    <linearGradient id="land" x1=".2" y1="0" x2=".8" y2="1"><stop stop-color="#f7f3df"/><stop offset="1" stop-color="#dfeaca"/></linearGradient>
+    <filter id="shadow"><feDropShadow dx="0" dy="8" stdDeviation="13" flood-color="#256b67" flood-opacity=".17"/></filter>
+    <pattern id="grain" width="33" height="33" patternUnits="userSpaceOnUse"><circle cx="8" cy="11" r="1.3" fill="#fff" opacity=".23"/><circle cx="28" cy="27" r="1" fill="#fff" opacity=".16"/></pattern>
+  </defs>
+  <rect width="1000" height="700" fill="url(#sea)"/><rect width="1000" height="700" fill="url(#grain)"/>
+  <g opacity=".35" stroke="#f6fffd" stroke-width="3" fill="none"><path d="M-20 100q70-25 140 0t140 0M740 128q70-25 140 0t140 0M40 590q70-25 140 0t140 0M710 594q70-25 140 0t140 0"/></g>
+  <path d="M84 344C92 295 160 275 225 259C303 231 335 178 430 156C512 133 603 156 682 193C779 210 871 215 908 259C929 284 917 314 870 345C808 385 762 408 715 454C676 496 590 556 504 580C433 597 369 568 312 541C248 516 188 483 141 440C106 405 71 375 84 344Z" fill="url(#land)" stroke="#fffdfa" stroke-width="14" filter="url(#shadow)"/>
+  <path d="M110 340C176 314 235 310 299 298C392 281 521 267 662 273C744 274 829 270 895 286M195 469C304 414 424 382 570 367C680 355 765 348 862 345M317 529C396 467 476 421 519 356C555 308 585 250 649 187" fill="none" stroke="#c2cdaf" stroke-width="13" stroke-linecap="round" opacity=".64"/>
+  <path d="M110 340C176 314 235 310 299 298C392 281 521 267 662 273C744 274 829 270 895 286M195 469C304 414 424 382 570 367C680 355 765 348 862 345M317 529C396 467 476 421 519 356C555 308 585 250 649 187" fill="none" stroke="#fffef7" stroke-width="6" stroke-linecap="round" opacity=".87"/>
+  <path d="M356 386Q420 312 465 285T581 315Q635 383 591 451T486 511Q403 484 356 386Z" fill="#a7c49d" opacity=".77"/>
+  <path d="M392 405Q442 344 488 315Q532 345 564 400Q519 448 477 469Q429 447 392 405Z" fill="#739f7f" opacity=".53"/>
+  <path d="M454 391 494 314 534 392 515 405 492 375 472 416Z" fill="#6e907e"/><path d="M477 347 494 314 512 350" fill="#f8faf4"/>
+  <g fill="#bdd3ab" opacity=".69"><ellipse cx="245" cy="352" rx="30" ry="19"/><ellipse cx="760" cy="316" rx="31" ry="23"/><ellipse cx="636" cy="488" rx="40" ry="25"/></g>
+  <g font-family="system-ui, sans-serif" font-weight="750" fill="#3d726c" letter-spacing="2"><text x="42" y="75" font-size="23">JEJU ISLAND</text><text x="45" y="100" font-size="12" opacity=".75">ILLUSTRATED MAP · NOT ROAD NAVIGATION</text></g>
+</svg>

@@ -2,108 +2,48 @@
 
 import { useEffect, useRef, useState } from "react";
 import { createPortal } from "react-dom";
-import { useLocale } from "@/lib/i18n";
 import type { Place } from "@/lib/types";
-import { Icon } from "./Icon";
+import { travelMessages, useLocale } from "@/lib/i18n";
 
-// US-07: a full-screen card the traveler holds up to a taxi driver.
-// The Korean name, address and request always come straight from the API and are never translated.
-// Closing it returns to exactly where the traveler was: same scroll position, focus back on the button.
 export function DriverCard({ place, onClose }: { place: Place; onClose: () => void }) {
-  const { t } = useLocale();
-  const [copy, setCopy] = useState<"idle" | "done" | "failed">("idle");
-  const sheetRef = useRef<HTMLDivElement>(null);
+  const { locale } = useLocale();
+  const tx = travelMessages[locale];
+  const [copied, setCopied] = useState(false);
   const closeRef = useRef<HTMLButtonElement>(null);
-  const onCloseRef = useRef(onClose);
-  onCloseRef.current = onClose;
-
   useEffect(() => {
-    const opener = document.activeElement instanceof HTMLElement ? document.activeElement : null;
-    const scrollY = window.scrollY;
-    const { body } = document;
-    const prevOverflow = body.style.overflow;
-    body.style.overflow = "hidden";
-    closeRef.current?.focus({ preventScroll: true });
-
-    const onKey = (e: KeyboardEvent) => {
-      if (e.key === "Escape") {
-        e.preventDefault();
-        onCloseRef.current();
-        return;
-      }
-      if (e.key !== "Tab" || !sheetRef.current) return;
-      // keep keyboard focus inside the card while it is open
-      const focusable = sheetRef.current.querySelectorAll<HTMLElement>("button, a[href]");
-      if (!focusable.length) return;
-      const first = focusable[0];
-      const last = focusable[focusable.length - 1];
-      if (e.shiftKey && document.activeElement === first) {
-        e.preventDefault();
-        last.focus();
-      } else if (!e.shiftKey && document.activeElement === last) {
-        e.preventDefault();
-        first.focus();
-      }
-    };
+    const before = document.body.style.overflow;
+    document.body.style.overflow = "hidden";
+    closeRef.current?.focus();
+    const onKey = (e: KeyboardEvent) => { if (e.key === "Escape") onClose(); };
     window.addEventListener("keydown", onKey);
-
-    return () => {
-      window.removeEventListener("keydown", onKey);
-      body.style.overflow = prevOverflow;
-      window.scrollTo({ top: scrollY, behavior: "instant" });
-      opener?.focus({ preventScroll: true });
-    };
-  }, []);
-
+    return () => { document.body.style.overflow = before; window.removeEventListener("keydown", onKey); };
+  }, [onClose]);
   async function copyAddress() {
-    try {
-      await navigator.clipboard.writeText(place.address_ko);
-      setCopy("done");
-    } catch {
-      setCopy("failed"); // e.g. http on a phone: the address stays selectable instead
-    }
+    try { await navigator.clipboard.writeText(place.address_ko); setCopied(true); } catch { /* clipboard may be unavailable */ }
   }
-
   return createPortal(
-    <div
-      className="driver"
-      role="dialog"
-      aria-modal="true"
-      aria-labelledby="driver-title"
-      onClick={(e) => e.target === e.currentTarget && onClose()}
-    >
-      <div className="driver__sheet" ref={sheetRef}>
-        <div className="driver__top">
-          <p id="driver-title" className="driver__title">
-            <Icon name="taxi" size={22} />
-            <span>{t.driver.title}</span>
-          </p>
-          <button ref={closeRef} type="button" className="icon-btn" onClick={onClose} aria-label={t.common.close}>
-            <Icon name="close" size={20} />
-          </button>
+    <div role="dialog" aria-modal="true" aria-label={tx.driverTitle} className="driver-modal">
+      <div className="driver-sheet" aria-describedby="driver-info" >
+        <div className="driver-sheet__top">
+          <div className="v9-brand v9-driver-brand">MyPace <strong>Jeju</strong></div>
+          <button ref={closeRef} onClick={onClose} className="driver-close" aria-label={tx.close}>✕</button>
         </div>
-
-        <div className="driver__card" lang="ko">
-          <p className="driver__label">목적지</p>
-          <p className="driver__name">{place.name_ko}</p>
-          <p className="driver__addr">{place.address_ko}</p>
-          <p className="driver__ask">이 주소로 가 주세요.</p>
+        <div className="driver-sheet__body">
+          <div className="driver-sheet__eyebrow">🚕 &nbsp;{tx.driverTitle}</div>
+          <p className="driver-sheet__hint" id="driver-info">{tx.driverHint}</p>
+          <div className="driver-address" lang="ko">
+            <div className="driver-address__label">DESTINATION / 목적지</div>
+            <h2>{place.name_ko || place.name_en}</h2>
+            <p className="driver-address__street">{place.address_ko || "주소 정보 확인 필요"}</p>
+            <div className="driver-address__line" />
+            <p className="driver-address__request">기사님, 이 주소로 가 주세요.</p>
+          </div>
         </div>
-
-        <p className="driver__meaning">{t.driver.meaning}</p>
-
-        <div className="driver__actions">
-          <button type="button" className="btn btn-primary" onClick={copyAddress}>
-            <Icon name={copy === "done" ? "check" : "copy"} size={19} />
-            {copy === "done" ? t.driver.copied : t.driver.copy}
-          </button>
-          <button type="button" className="btn btn-secondary" onClick={onClose}>
-            {t.driver.done}
-          </button>
+        <div className="driver-sheet__actions">
+          <p className="driver-sheet__footer" lang="ko">목적지를 확인해 주셔서 감사합니다.</p>
+          <button className="driver-copy" type="button" onClick={copyAddress}>{copied ? `✓ ${tx.copied}` : `▢ ${tx.copy}`}</button>
+          <button className="driver-done" type="button" onClick={onClose}>{tx.close}</button>
         </div>
-        <p className="driver__status" role="status" aria-live="polite">
-          {copy === "failed" ? t.driver.copyFailed : ""}
-        </p>
       </div>
     </div>,
     document.body,
