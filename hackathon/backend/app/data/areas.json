@@ -1,0 +1,16 @@
+[
+  {"id": "jeju-city", "group": "jeju", "name_en": "Jeju City Downtown", "name_ko": "제주시 도심", "description_en": "Tapdong, Dongmun Market, Yongduam Rock", "center_lat": 33.5, "center_lng": 126.52, "sort_order": 1},
+  {"id": "hallim", "group": "jeju", "name_en": "Hallim", "name_ko": "한림읍", "description_en": "Hyeopjae Beach, Hallim Park", "center_lat": 33.41, "center_lng": 126.269, "sort_order": 2},
+  {"id": "aewol", "group": "jeju", "name_en": "Aewol", "name_ko": "애월읍", "description_en": "Coastal cafés and sea views", "center_lat": 33.463, "center_lng": 126.331, "sort_order": 3},
+  {"id": "gujwa", "group": "jeju", "name_en": "Gujwa", "name_ko": "구좌읍", "description_en": "Woljeong and Sehwa beaches", "center_lat": 33.522, "center_lng": 126.853, "sort_order": 4},
+  {"id": "jocheon", "group": "jeju", "name_en": "Jocheon", "name_ko": "조천읍", "description_en": "Hamdeok Beach", "center_lat": 33.538, "center_lng": 126.65, "sort_order": 5},
+  {"id": "hangyeong", "group": "jeju", "name_en": "Hangyeong", "name_ko": "한경면", "description_en": "Suwolbong Peak and the west coast", "center_lat": 33.344, "center_lng": 126.18, "sort_order": 6},
+  {"id": "chuja", "group": "jeju", "name_en": "Chuja Islands", "name_ko": "추자면", "description_en": "Small islands north of Jeju", "center_lat": 33.962, "center_lng": 126.3, "sort_order": 7},
+  {"id": "udo", "group": "jeju", "name_en": "Udo Island", "name_ko": "우도면", "description_en": "A small island off Seongsan", "center_lat": 33.504, "center_lng": 126.953, "sort_order": 8},
+  {"id": "seogwipo-city", "group": "seogwipo", "name_en": "Seogwipo Downtown", "name_ko": "서귀포시 도심", "description_en": "Cheonjiyeon Falls, Olle Market, Jungmun", "center_lat": 33.253, "center_lng": 126.56, "sort_order": 9},
+  {"id": "daejeong", "group": "seogwipo", "name_en": "Daejeong", "name_ko": "대정읍", "description_en": "Moseulpo Port, Songaksan", "center_lat": 33.224, "center_lng": 126.252, "sort_order": 10},
+  {"id": "namwon", "group": "seogwipo", "name_en": "Namwon", "name_ko": "남원읍", "description_en": "Keuneong coastal walk", "center_lat": 33.28, "center_lng": 126.718, "sort_order": 11},
+  {"id": "seongsan", "group": "seogwipo", "name_en": "Seongsan", "name_ko": "성산읍", "description_en": "Seongsan Ilchulbong, Seopjikoji", "center_lat": 33.442, "center_lng": 126.911, "sort_order": 12},
+  {"id": "andeok", "group": "seogwipo", "name_en": "Andeok", "name_ko": "안덕면", "description_en": "Sanbangsan, Yongmeori Coast", "center_lat": 33.256, "center_lng": 126.334, "sort_order": 13},
+  {"id": "pyoseon", "group": "seogwipo", "name_en": "Pyoseon", "name_ko": "표선면", "description_en": "Pyoseon Beach, Jeju Folk Village", "center_lat": 33.326, "center_lng": 126.832, "sort_order": 14}
+]

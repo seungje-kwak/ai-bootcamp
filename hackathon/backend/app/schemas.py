@@ -27,17 +27,27 @@ class UserProfileIn(BaseModel):
     avoid_slopes: bool
     condition_today: Literal["great", "normal", "tired"]
     diet: Literal["none", "vegan", "vegetarian", "halal"]
-    duration: Literal["half_day", "full_day"]
 
 
 class UserProfile(UserProfileIn):
+    """What is stored. The server adds `conditions`, `start_time`, `end_time` and `area_id`.
+    Courses saved before the trip-time change have `duration` instead of the two times, and
+    courses saved before areas existed have no `area_id`."""
     model_config = ConfigDict(extra="ignore")
     conditions: Conditions = Conditions()
+    area_id: Optional[str] = None
+    start_time: Optional[str] = None
+    end_time: Optional[str] = None
 
 
 class CreateCourseRequest(BaseModel):
+    """Both times are required "HH:MM" strings. Their range is checked in planner.check_time_window,
+    which answers 422 INVALID_TIME_WINDOW in the 9.2 error shape. `area_id` is checked in
+    areas.check_area, which answers 422 INVALID_AREA."""
     user_profile: UserProfileIn
-    start_time: Optional[str] = Field(default=None, pattern=r"^([01]\d|2[0-3]):[0-5]\d$")
+    area_id: str
+    start_time: str
+    end_time: str
 
 
 class ReplanRequest(BaseModel):

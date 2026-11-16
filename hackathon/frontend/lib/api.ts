@@ -1,5 +1,5 @@
 // The frontend only talks to FastAPI (1.3). Base URL comes from NEXT_PUBLIC_API_URL.
-import type { Course, Place, ReplanReason, UserProfileInput } from "./types";
+import type { Area, Course, Place, ReplanReason, UserProfileInput } from "./types";
 
 const API_URL = (process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000").replace(/\/$/, "");
 const TIMEOUT_MS = 45_000; // 11.1
@@ -49,15 +49,24 @@ async function request<T>(path: string, init?: RequestInit): Promise<T> {
 }
 
 export const api = {
-  places: () => request<{ places: Place[] }>("/places"),
-  createCourse: (user_profile: UserProfileInput, start_time?: string) =>
-    request<Course>("/courses", { method: "POST", body: JSON.stringify({ user_profile, start_time }) }),
+  areas: () => request<{ areas: Area[] }>("/areas"),
+  // With area_id: only that area's places (the course map). Without: every place in Jeju.
+  places: (area_id?: string) =>
+    request<{ places: Place[] }>(area_id ? `/places?area_id=${encodeURIComponent(area_id)}` : "/places"),
+  createCourse: (user_profile: UserProfileInput, area_id: string, start_time: string, end_time: string) =>
+    request<Course>("/courses", {
+      method: "POST",
+      body: JSON.stringify({ user_profile, area_id, start_time, end_time }),
+    }),
   getCourse: (id: string) => request<Course>(`/courses/${encodeURIComponent(id)}`),
   replan: (id: string, reason: ReplanReason, current_order: number) =>
     request<Course>(`/courses/${encodeURIComponent(id)}/replan`, {
       method: "POST",
       body: JSON.stringify({ reason, current_order }),
     }),
+  // prd-recommendation-p1 US-P15: a new course with the same choices (201). The old course stays.
+  shuffleCourse: (id: string) =>
+    request<Course>(`/courses/${encodeURIComponent(id)}/shuffle`, { method: "POST" }),
   purchase: (course_id: string) =>
     request<Course>("/purchase", { method: "POST", body: JSON.stringify({ course_id }) }),
 };

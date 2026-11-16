@@ -1,5 +1,4 @@
 // Small browser-only stores. Nothing here is sent to the API.
-const WINDOW_KEY = "mypace-jeju-window:";
 const PROGRESS_KEY = "mypace-jeju-progress:";
 const DRAFT_KEY = "mypace-jeju-onboarding";
 
@@ -21,17 +20,7 @@ function write(storage: () => Storage, key: string, value: unknown) {
   }
 }
 
-const local = () => window.localStorage;
 const session = () => window.sessionStorage;
-
-/** The time window the traveler asked for. The API stores only start_time and duration,
- *  so the course screen reads this to show how much of their time stays free. */
-export type TravelWindow = { start: string; end: string };
-export const saveTravelWindow = (courseId: string, w: TravelWindow) => write(local, WINDOW_KEY + courseId, w);
-export function loadTravelWindow(courseId: string): TravelWindow | null {
-  const w = read<TravelWindow>(local, WINDOW_KEY + courseId);
-  return w && /^\d\d:\d\d$/.test(w.start) && /^\d\d:\d\d$/.test(w.end) ? w : null;
-}
 
 /** Trip progress for this tab, so an accidental reload mid-trip does not jump back to stop 1.
  *  `signature` ties it to the exact item list; a re-plan or a reset makes it stale. */

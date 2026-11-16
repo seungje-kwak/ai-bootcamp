@@ -18,8 +18,9 @@ from app import config, planner  # noqa: E402
 
 EMMA = {
     "interests": ["photo", "market", "cafe"], "fitness_level": 2, "max_walk_min": 20, "avoid_slopes": False,
-    "condition_today": "normal", "diet": "vegan", "duration": "full_day",
+    "condition_today": "normal", "diet": "vegan",
 }
+START, END = "10:00", "18:00"   # the 8-hour day the older tests were written for
 
 
 @pytest.fixture(scope="session")
@@ -39,7 +40,9 @@ def emma() -> dict:
 
 @pytest.fixture(autouse=True)
 def _deterministic(monkeypatch):
-    """Rule planner, no weekday closures, no photo requirement: results do not depend on the day or the LLM."""
+    """Rule planner, no weekday closures, no photo requirement, seed 1 when a test gives none: results do
+    not depend on the day, the LLM or chance."""
     monkeypatch.setattr(config, "USE_LLM", False)
+    monkeypatch.setattr(planner, "new_seed", lambda: 1)
     monkeypatch.setattr(config, "REQUIRE_VERIFIED", False)
     monkeypatch.setattr(planner, "today_kst_dow", lambda: "none")

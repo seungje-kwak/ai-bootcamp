@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { MAP_CONFIG } from "@/config/map";
+import { type LatLng, MAP_CONFIG, toPercent } from "@/config/map";
 import { kakaoPlaceUrl } from "@/lib/directions";
 import { useLocale } from "@/lib/i18n";
 import { localizedPlaceName } from "@/lib/localized-place";
@@ -18,6 +18,7 @@ export type MapPick = { kind: "stop"; order: number } | { kind: "place"; place: 
 // 7장: Kakao map when NEXT_PUBLIC_KAKAO_MAP_KEY is set and the SDK loads; otherwise the stand-in map (7.1).
 // Both draw the same numbered markers and line. The selection and the detail card (7.7) live here,
 // so they behave the same on either map and stay in step with the timeline.
+// `center` is the first view when the course has no stops: the center of the traveler's area.
 export function JejuMap({
   items,
   places = [],
@@ -25,6 +26,7 @@ export function JejuMap({
   selectedOrder,
   onSelectOrder,
   onViewStop,
+  center,
 }: {
   items: CourseItem[];
   places?: Place[];
@@ -34,6 +36,7 @@ export function JejuMap({
   onSelectOrder?: (order: number | null) => void;
   /** "See this stop": scroll the timeline to that card. */
   onViewStop?: (order: number) => void;
+  center?: LatLng;
 }) {
   const { locale, t } = useLocale();
   const [innerOrder, setInnerOrder] = useState<number | null>(null);
@@ -71,12 +74,16 @@ export function JejuMap({
     onPick: pick,
   };
   const place = stop?.place ?? other;
+  // The fallback SVG cannot show a stop outside the old town: no map then, the page still lists the stops.
+  const fitsFallback = items.every((it) => toPercent(it.place.lat, it.place.lng, MAP_CONFIG.fallbackBounds).inBounds);
+  if (!useKakao && !fitsFallback) return null;
 
   return (
     <div className="map">
       {useKakao ? (
         <KakaoMap
           {...shared}
+          center={center}
           onError={(e) => {
             console.warn("Kakao map unavailable, using the stand-in map:", e);
             setKakaoFailed(true);

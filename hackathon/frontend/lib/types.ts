@@ -17,12 +17,13 @@ export type Accessibility = {
   fatigue_score: 1 | 2 | 3 | 4 | 5;
 };
 
+// true / false / null (not known). Badges show only for true.
 export type FoodOptions = {
-  solo_ok: boolean;
-  vegan: boolean;
-  vegetarian: boolean;
-  halal: boolean;
-  english_menu: boolean;
+  solo_ok: boolean | null;
+  vegan: boolean | null;
+  vegetarian: boolean | null;
+  halal: boolean | null;
+  english_menu: boolean | null;
   signature_menu_en: string | null;
   allergens: string | null;
 };
@@ -35,14 +36,18 @@ export type Place = {
   name_en: string;
   name_ko: string;
   category: Category;
+  place_type: string | null; // stay-time type (oreum_hike, port, cafe, ...). Not shown on screen
   description_en: string;
   lat: number;
   lng: number;
   address_ko: string;
+  area_id: string;
   image_url: string | null;
   image_source: string | null;
   avg_stay_min: number;
   opening_hours: string | null;
+  open_time: string | null; // "HH:MM"; both null = always open
+  close_time: string | null; // "HH:MM" or "24:00"
   closed_days: string[];
   price_level: number | null;
   last_verified_at: string | null;
@@ -51,6 +56,22 @@ export type Place = {
   food_options: FoodOptions | null;
 };
 
+// One of the 14 areas a traveler can pick (GET /areas).
+export type Area = {
+  id: string;
+  group: "jeju" | "seogwipo";
+  name_en: string;
+  name_ko: string;
+  description_en: string;
+  center_lat: number;
+  center_lng: number;
+  place_count: number;
+  selectable: boolean; // false while the area does not have enough places yet
+};
+
+// Courses saved before areas existed have no area_id; they are Jeju City courses.
+export const DEFAULT_AREA_ID = "jeju-city";
+
 export type UserProfileInput = {
   interests: Category[];
   fitness_level: 1 | 2 | 3;
@@ -58,11 +79,16 @@ export type UserProfileInput = {
   avoid_slopes: boolean;
   condition_today: "great" | "normal" | "tired";
   diet: "none" | "vegan" | "vegetarian" | "halal";
-  duration: "half_day" | "full_day";
 };
 
+// The server adds conditions, start_time, end_time and area_id. Courses saved before the trip-time
+// change have `duration` instead of the two times.
 export type UserProfile = UserProfileInput & {
   conditions: { indoor_only: boolean; low_walking: boolean };
+  area_id?: string;
+  start_time?: string;
+  end_time?: string;
+  duration?: "half_day" | "full_day";
 };
 
 export type CourseItem = {
@@ -79,6 +105,16 @@ export type CourseItem = {
   phrase_cards: PhraseCard[];
 };
 
+// A meal time we kept free because no restaurant fits (prd-recommendation-p1 FR-11). Not a stop:
+// no place, no map marker, no move.
+export type MealGap = {
+  meal: "lunch" | "dinner";
+  start_time: string; // "HH:MM"
+  end_time: string;
+  reason: "no_diet_match" | "none_nearby";
+  message_en: string;
+};
+
 export type Course = {
   id: string;
   tier: Tier;
@@ -87,4 +123,5 @@ export type Course = {
   total_items: number;
   locked_count: number;
   items: CourseItem[];
+  meal_gaps: MealGap[]; // in start_time order; a free plan only gets the ones among its visible stops
 };

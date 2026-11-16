@@ -2,18 +2,21 @@
 
 The store returns plain dicts:
   place        -> PRD 9.3 `Place` (with nested accessibility / food_options)
-  course row   -> {id, user_profile, tier, created_at}
+  course row   -> {id, user_profile, tier, created_at, meal_gaps}
   item row     -> {course_id, order, place_id, start_time, stay_min, move_method, move_min,
                    reason_en, is_rest_stop, status}
 """
 from __future__ import annotations
 
 import copy
+import logging
 import time
 from datetime import datetime, timezone
 from typing import Any, Optional, Protocol
 
-from . import config
+from . import areas, config
+
+log = logging.getLogger("mypace.store")
 
 
 def now_iso() -> str:
@@ -22,12 +25,14 @@ def now_iso() -> str:
 
 class Store(Protocol):
     def list_places(self) -> list[dict]: ...
+    def list_areas(self) -> list[dict]: ...
     def list_phrase_cards(self) -> list[dict]: ...
     def get_course(self, course_id: str) -> Optional[dict]: ...
     def get_items(self, course_id: str) -> list[dict]: ...
     def create_course(self, course: dict, items: list[dict]) -> None: ...
     def apply_replan(self, course_id: str, user_profile: dict, statuses: dict[int, str],
-                     delete_orders: list[int], new_items: list[dict], report_place_id: Optional[int]) -> None: ...
+                     delete_orders: list[int], new_items: list[dict], report_place_id: Optional[int],
+                     meal_gaps: Optional[list[dict]] = None) -> None: ...
     def set_tier(self, course_id: str, tier: str) -> None: ...
     def add_report(self, place_id: int, type_: str) -> dict: ...
     def replace_course(self, course: dict, items: list[dict]) -> None: ...
@@ -38,6 +43,7 @@ class SupabaseStore:
     """Tables from sql/schema.sql. Writes happen only after the planner succeeded (10.7 step 5)."""
 
     PLACE_TTL_SEC = 60
+    PAGE_SIZE = 1000
 
     def __init__(self) -> None:
         from supabase import create_client  # imported lazily so local mode needs no network
@@ -45,6 +51,7 @@ class SupabaseStore:
         self._sb = create_client(config.SUPABASE_URL, config.SUPABASE_SERVICE_KEY)
         self._places_cache: tuple[float, list[dict]] | None = None
         self._cards_cache: tuple[float, list[dict]] | None = None
+        self._areas_cache: tuple[float, list[dict]] | None = None
 
     @staticmethod
     def _one(v: Any) -> Optional[dict]:
@@ -55,9 +62,15 @@ class SupabaseStore:
     def list_places(self) -> list[dict]:
         if self._places_cache and time.time() - self._places_cache[0] < self.PLACE_TTL_SEC:
             return copy.deepcopy(self._places_cache[1])
-        rows = (self._sb.table("places")
-                .select("*, place_accessibility(*), food_options(*)")
-                .order("id").execute().data)
+        # Supabase returns at most 1000 rows per request, so read the table page by page.
+        rows: list[dict] = []
+        while True:
+            page = (self._sb.table("places")
+                    .select("*, place_accessibility(*), food_options(*)")
+                    .order("id").range(len(rows), len(rows) + self.PAGE_SIZE - 1).execute().data)
+            rows += page
+            if len(page) < self.PAGE_SIZE:
+                break
         places = []
         for r in rows:
             acc = self._one(r.pop("place_accessibility", None))
@@ -68,11 +81,25 @@ class SupabaseStore:
             if food:
                 food.pop("place_id", None)
             r["closed_days"] = r.get("closed_days") or []
+            # A database without the places.area_id column yet: work the area out from the address.
+            r["area_id"] = r.get("area_id") or areas.area_of_address(r["address_ko"]) or config.DEFAULT_AREA_ID
             r["accessibility"] = acc
             r["food_options"] = food
             places.append(r)
         self._places_cache = (time.time(), places)
         return copy.deepcopy(places)
+
+    def list_areas(self) -> list[dict]:
+        if self._areas_cache and time.time() - self._areas_cache[0] < self.PLACE_TTL_SEC:
+            return copy.deepcopy(self._areas_cache[1])
+        try:
+            rows = self._sb.table("areas").select("*").order("sort_order").execute().data
+        except Exception as e:  # the table is made by sql/schema.sql; an older database does not have it
+            log.warning("areas table not readable (%s); using app/data/areas.json", e)
+            rows = []
+        rows = rows or areas.load_seed_areas()
+        self._areas_cache = (time.time(), rows)
+        return copy.deepcopy(rows)
 
     def list_phrase_cards(self) -> list[dict]:
         if self._cards_cache and time.time() - self._cards_cache[0] < self.PLACE_TTL_SEC:
@@ -108,7 +135,8 @@ class SupabaseStore:
         if items:
             self._sb.table("course_items").insert(items).execute()
 
-    def apply_replan(self, course_id, user_profile, statuses, delete_orders, new_items, report_place_id) -> None:
+    def apply_replan(self, course_id, user_profile, statuses, delete_orders, new_items, report_place_id,
+                     meal_gaps=None) -> None:
         """PostgREST reads `order=` in a URL as the sort option, so rows can't be filtered by the
         "order" column (Q-05). Instead: build the full new item list, delete the course's items by
         course_id, insert the new list, and put the old rows back if the insert fails."""
@@ -131,7 +159,10 @@ class SupabaseStore:
             if old:
                 sb.table("course_items").insert(old).execute()  # keep the previous plan (US-09)
             raise
-        sb.table("courses").update({"user_profile": user_profile}).eq("id", course_id).execute()
+        update = {"user_profile": user_profile}
+        if meal_gaps is not None:
+            update["meal_gaps"] = meal_gaps
+        sb.table("courses").update(update).eq("id", course_id).execute()
         if report_place_id is not None:
             sb.table("place_reports").insert({"place_id": report_place_id, "type": "closed"}).execute()
 

@@ -1,20 +1,20 @@
 "use client";
 
 import { useRouter } from "next/navigation";
-import { useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { BottomBar } from "@/components/BottomBar";
 import { Brand } from "@/components/Brand";
 import { CATEGORY_ICON, Icon, type IconName } from "@/components/Icon";
 import { LanguageSelect } from "@/components/LanguageSelect";
 import { api, ApiError } from "@/lib/api";
 import { useLocale } from "@/lib/i18n";
-import { ceilTo, nowInJejuMinutes, planForWindow, SHORTEST_PLAN_MIN, toHHMM, toMinutes } from "@/lib/time";
-import { loadOnboardingDraft, saveOnboardingDraft, saveTravelWindow } from "@/lib/trip-store";
-import type { Category, UserProfileInput } from "@/lib/types";
+import { ceilTo, nowInJejuMinutes, toHHMM, toMinutes, windowError } from "@/lib/time";
+import { loadOnboardingDraft, saveOnboardingDraft } from "@/lib/trip-store";
+import { TRIP_TIME } from "@/lib/tripTime";
+import type { Area, Category, UserProfileInput } from "@/lib/types";
 
-// 6.2 Onboarding: five steps, one per screen. The values sent to POST /courses are unchanged;
-// only the last step is richer: the traveler gives a start and an end time, and the screen
-// says which of the two plan lengths the server offers (about 4 h or about 8 h) fits inside it.
+// 6.2 Onboarding: six steps, one per screen. The last two pick the area of Jeju (prd-start-area)
+// and the start and end of the day (prd-trip-time); the server fits the stops inside that window.
 
 const INTERESTS: Category[] = ["nature", "market", "cafe", "food", "culture", "photo"];
 const FITNESS = [1, 2, 3] as const;
@@ -23,9 +23,12 @@ const MOODS = ["great", "normal", "tired"] as const;
 const MOOD_ICONS: IconName[] = ["moodGreat", "moodOkay", "moodTired"];
 const DIETS = ["none", "vegan", "vegetarian", "halal"] as const;
 const DIET_ICONS: IconName[] = ["food", "leaf", "sprout", "crescent"];
-const STEP_COUNT = 5;
-const DAY_END = 23 * 60 + 50;
-const MINUTE_STEPS = [0, 10, 20, 30, 40, 50];
+const STEP_COUNT = 6;
+const AREA_STEP = 4;
+const TIME_STEP = 5;
+const AREA_GROUPS: Area["group"][] = ["jeju", "seogwipo"];
+const MINUTE_STEPS = [0, 30]; // the API takes times on the hour or half hour
+const snap = (hhmm: string) => toHHMM(ceilTo(toMinutes(hhmm), TRIP_TIME.step));
 
 type Draft = {
   interests: Category[];
@@ -34,12 +37,20 @@ type Draft = {
   avoid_slopes: boolean;
   condition_today?: UserProfileInput["condition_today"];
   diet?: UserProfileInput["diet"];
+  area_id?: string;
   start: string;
   end: string;
 };
 const EMPTY: Draft = { interests: [], avoid_slopes: false, start: "11:00", end: "16:00" };
 type Saved = { step: number; draft: Draft };
-type Status = { kind: "idle" } | { kind: "loading" } | { kind: "error" } | { kind: "nocandidates" };
+type Status =
+  | { kind: "idle" }
+  | { kind: "loading" }
+  | { kind: "error" }
+  | { kind: "nocandidates" }
+  | { kind: "badtime" }
+  | { kind: "badarea" };
+type AreaList = { kind: "loading" } | { kind: "error" } | { kind: "ok"; areas: Area[] };
 
 function Choice({
   selected,
@@ -48,6 +59,7 @@ function Choice({
   hint,
   icon,
   variant = "row",
+  disabled = false,
 }: {
   selected: boolean;
   onClick: () => void;
@@ -55,11 +67,14 @@ function Choice({
   hint?: string;
   icon?: React.ReactNode;
   variant?: "row" | "tile" | "pill";
+  disabled?: boolean;
 }) {
   return (
     <button
       type="button"
       aria-pressed={selected}
+      disabled={disabled}
+      style={disabled ? { opacity: 0.5, cursor: "not-allowed" } : undefined}
       onClick={onClick}
       className={`choice ${variant === "tile" ? "choice-tile" : variant === "pill" ? "choice-pill" : ""}`}
     >
@@ -101,11 +116,16 @@ function TimeField({
   value,
   onChange,
   invalid,
+  min,
+  max,
 }: {
   label: string;
   value: string;
   onChange: (next: string) => void;
   invalid: boolean;
+  /** Earliest and latest time (minutes) this field offers. */
+  min: number;
+  max: number;
 }) {
   const { t } = useLocale();
   const T = t.onboarding.time;
@@ -113,14 +133,16 @@ function TimeField({
   const hour = Math.floor(total / 60);
   const minute = total % 60;
   const minutes = MINUTE_STEPS.includes(minute) ? MINUTE_STEPS : [...MINUTE_STEPS, minute].sort((a, b) => a - b);
-  const set = (m: number) => onChange(toHHMM(Math.min(DAY_END, Math.max(0, m))));
+  const set = (m: number) => onChange(toHHMM(Math.min(max, Math.max(min, m))));
+  const firstHour = Math.floor(min / 60);
+  const hours = Array.from({ length: Math.floor(max / 60) - firstHour + 1 }, (_, i) => firstHour + i);
   const pad = (n: number) => String(n).padStart(2, "0");
   return (
     <div className="timefield" role="group" aria-label={label} data-invalid={invalid}>
       <span className="label">{label}</span>
       <div className="timefield__value">
         <select aria-label={`${label}: ${T.hour}`} value={hour} onChange={(e) => set(Number(e.target.value) * 60 + minute)}>
-          {Array.from({ length: 24 }, (_, h) => (
+          {(hours.includes(hour) ? hours : [...hours, hour].sort((a, b) => a - b)).map((h) => (
             <option key={h} value={h}>
               {pad(h)}
             </option>
@@ -136,10 +158,10 @@ function TimeField({
         </select>
       </div>
       <div className="timefield__steps">
-        <button type="button" className="icon-btn" onClick={() => set(total - 30)} disabled={total <= 0} aria-label={`${label}: ${T.earlier}`}>
+        <button type="button" className="icon-btn" onClick={() => set(total - 30)} disabled={total <= min} aria-label={`${label}: ${T.earlier}`}>
           <Icon name="minus" size={18} />
         </button>
-        <button type="button" className="icon-btn" onClick={() => set(total + 30)} disabled={total >= DAY_END} aria-label={`${label}: ${T.later}`}>
+        <button type="button" className="icon-btn" onClick={() => set(total + 30)} disabled={total >= max} aria-label={`${label}: ${T.later}`}>
           <Icon name="plus" size={18} />
         </button>
       </div>
@@ -149,11 +171,12 @@ function TimeField({
 
 export default function Onboarding() {
   const router = useRouter();
-  const { t } = useLocale();
+  const { locale, t } = useLocale();
   const O = t.onboarding;
   const [step, setStep] = useState(0);
   const [d, setD] = useState<Draft>(EMPTY);
   const [status, setStatus] = useState<Status>({ kind: "idle" });
+  const [areaList, setAreaList] = useState<AreaList>({ kind: "loading" });
   const [showMissing, setShowMissing] = useState(false);
   const [nowMin, setNowMin] = useState<number | null>(null);
   const restored = useRef(false);
@@ -164,7 +187,9 @@ export default function Onboarding() {
   useEffect(() => {
     const saved = loadOnboardingDraft<Saved>();
     if (saved?.draft && Array.isArray(saved.draft.interests)) {
-      setD({ ...EMPTY, ...saved.draft });
+      const draft = { ...EMPTY, ...saved.draft };
+      // Drafts from before the half-hour rule can hold times like 11:10.
+      setD({ ...draft, start: snap(draft.start), end: snap(draft.end) });
       setStep(Math.min(STEP_COUNT - 1, Math.max(0, Number(saved.step) || 0)));
     }
     restored.current = true;
@@ -172,6 +197,18 @@ export default function Onboarding() {
   useEffect(() => {
     if (restored.current) saveOnboardingDraft({ step, draft: d } satisfies Saved);
   }, [step, d]);
+
+  const loadAreas = useCallback(async () => {
+    setAreaList({ kind: "loading" });
+    try {
+      setAreaList({ kind: "ok", areas: (await api.areas()).areas });
+    } catch {
+      setAreaList({ kind: "error" });
+    }
+  }, []);
+  useEffect(() => {
+    loadAreas();
+  }, [loadAreas]);
 
   // Jeju's clock, for the "start now" shortcut. Read on the client only, so it never mismatches the server render.
   useEffect(() => {
@@ -184,14 +221,18 @@ export default function Onboarding() {
   const startMin = toMinutes(d.start);
   const endMin = toMinutes(d.end);
   const windowMin = endMin - startMin;
-  const plan = planForWindow(windowMin);
-  const timeError = windowMin <= 0 ? O.time.errOrder : !plan ? O.time.errShort : null;
+  const timeErrorKey = windowError(startMin, endMin);
+  const timeError = timeErrorKey ? O.time[timeErrorKey] : null;
+  const areas = areaList.kind === "ok" ? areaList.areas : [];
+  const area = areas.find((a) => a.id === d.area_id);
+  const areaName = (a: Area) => (locale === "ko" ? a.name_ko : a.name_en);
 
   const valid = [
     d.interests.length > 0,
     d.fitness_level != null && d.max_walk_min != null,
     d.condition_today != null,
     d.diet != null,
+    area?.selectable === true,
     timeError === null,
   ];
   const firstInvalid = valid.indexOf(false);
@@ -205,20 +246,24 @@ export default function Onboarding() {
     requestAnimationFrame(() => titleRef.current?.focus({ preventScroll: true }));
   }
 
-  function setWindowLength(minutes: number) {
-    const start = Math.min(startMin, DAY_END - minutes);
-    setD({ ...d, start: toHHMM(start), end: toHHMM(start + minutes) });
+  function setTimes(next: Partial<Pick<Draft, "start" | "end">>) {
+    setD({ ...d, ...next });
+    if (status.kind === "badtime") setStatus({ kind: "idle" });
   }
-  const nowStart = nowMin == null ? null : ceilTo(nowMin, 10);
-  const canStartNow = nowStart != null && nowStart + SHORTEST_PLAN_MIN <= DAY_END;
+  function setWindowLength(minutes: number) {
+    const start = Math.max(TRIP_TIME.minStart, Math.min(startMin, TRIP_TIME.maxStart, TRIP_TIME.maxEnd - minutes));
+    setTimes({ start: toHHMM(start), end: toHHMM(start + minutes) });
+  }
+  const nowStart = nowMin == null ? null : ceilTo(nowMin, TRIP_TIME.step);
+  const canStartNow = nowStart != null && nowStart >= TRIP_TIME.minStart && nowStart <= TRIP_TIME.maxStart;
   function startNow() {
     if (nowStart == null) return;
-    const length = Math.max(SHORTEST_PLAN_MIN, windowMin);
-    setD({ ...d, start: toHHMM(nowStart), end: toHHMM(Math.min(DAY_END, nowStart + length)) });
+    const length = Math.min(TRIP_TIME.maxLength, Math.max(TRIP_TIME.minLength, windowMin));
+    setTimes({ start: toHHMM(nowStart), end: toHHMM(Math.min(TRIP_TIME.maxEnd, nowStart + length)) });
   }
 
   async function submit() {
-    if (inFlight.current || !valid.every(Boolean) || !plan) return;
+    if (inFlight.current || !valid.every(Boolean) || !d.area_id) return;
     inFlight.current = true;
     setStatus({ kind: "loading" });
     const profile: UserProfileInput = {
@@ -228,16 +273,23 @@ export default function Onboarding() {
       avoid_slopes: d.avoid_slopes,
       condition_today: d.condition_today!,
       diet: d.diet!,
-      duration: plan.duration,
     };
     try {
-      // The API takes start_time (HH:MM, Jeju time) and one of two durations.
-      const course = await api.createCourse(profile, d.start);
-      saveTravelWindow(course.id, { start: d.start, end: d.end });
+      // start_time and end_time are HH:MM, Jeju time.
+      const course = await api.createCourse(profile, d.area_id, d.start, d.end);
       router.push(`/course/${course.id}`);
     } catch (e) {
       inFlight.current = false;
-      setStatus({ kind: e instanceof ApiError && e.code === "NO_CANDIDATES" ? "nocandidates" : "error" });
+      const code = e instanceof ApiError ? e.code : null;
+      if (code === "INVALID_AREA") {
+        // The area stopped being available: back to the area step with a fresh list.
+        setD((prev) => ({ ...prev, area_id: undefined }));
+        setStatus({ kind: "badarea" });
+        goTo(AREA_STEP);
+        loadAreas();
+        return;
+      }
+      setStatus({ kind: code === "NO_CANDIDATES" ? "nocandidates" : code === "INVALID_TIME_WINDOW" ? "badtime" : "error" });
     }
   }
 
@@ -276,6 +328,7 @@ export default function Onboarding() {
       : null,
     d.condition_today != null ? O.moods[MOODS.indexOf(d.condition_today)].label : null,
     d.diet != null ? O.diets[DIETS.indexOf(d.diet)].label : null,
+    area ? areaName(area) : null,
     timeError === null ? `${t.stop.timeRange(d.start, d.end)} (${t.common.duration(windowMin)})` : null,
   ];
 
@@ -406,7 +459,58 @@ export default function Onboarding() {
               </div>
             )}
 
-            {step === 4 && (
+            {step === AREA_STEP && areaList.kind === "loading" && (
+              <div className="flex items-center gap-3" role="status">
+                <div className="spinner" />
+                <p className="font-medium">{O.area.loading}</p>
+              </div>
+            )}
+            {step === AREA_STEP && areaList.kind === "error" && (
+              <div role="alert" className="notice notice-error">
+                <Icon name="alert" size={20} />
+                <div>
+                  <p>{O.area.loadError}</p>
+                  <button type="button" className="text-link mt-1" style={{ color: "inherit" }} onClick={loadAreas}>
+                    {t.common.retry}
+                  </button>
+                </div>
+              </div>
+            )}
+            {step === AREA_STEP && areaList.kind === "ok" && (
+              <>
+                {status.kind === "badarea" && (
+                  <div role="alert" className="notice notice-error">
+                    <Icon name="alert" size={20} />
+                    <p>{O.area.badArea}</p>
+                  </div>
+                )}
+                {AREA_GROUPS.map((group) => (
+                  <div key={group} className="onb__group" role="group" aria-label={O.area.groups[group]}>
+                    <span className="label">{O.area.groups[group]}</span>
+                    <div className="choice-list">
+                      {areas
+                        .filter((a) => a.group === group)
+                        .map((a) => (
+                          <Choice
+                            key={a.id}
+                            selected={d.area_id === a.id}
+                            disabled={!a.selectable}
+                            icon={<Icon name="pin" size={22} />}
+                            label={a.selectable ? areaName(a) : `${areaName(a)} · ${O.area.comingSoon}`}
+                            hint={locale === "en" ? a.description_en : undefined}
+                            onClick={() => {
+                              setD({ ...d, area_id: a.id });
+                              if (status.kind === "badarea") setStatus({ kind: "idle" });
+                            }}
+                          />
+                        ))}
+                    </div>
+                  </div>
+                ))}
+              </>
+            )}
+
+            {step === TIME_STEP && (
               <>
                 <div className="onb__group" role="group" aria-label={O.time.quick}>
                   <span className="label">{O.time.quick}</span>
@@ -422,12 +526,26 @@ export default function Onboarding() {
                 <div className="onb__group">
                   <span className="label">{O.time.own}</span>
                   <div className="time-fields">
-                    <TimeField label={O.time.start} value={d.start} invalid={timeError !== null} onChange={(v) => setD({ ...d, start: v })} />
-                    <TimeField label={O.time.end} value={d.end} invalid={timeError !== null} onChange={(v) => setD({ ...d, end: v })} />
+                    <TimeField
+                      label={O.time.start}
+                      value={d.start}
+                      invalid={timeError !== null}
+                      min={TRIP_TIME.minStart}
+                      max={TRIP_TIME.maxStart}
+                      onChange={(v) => setTimes({ start: v })}
+                    />
+                    <TimeField
+                      label={O.time.end}
+                      value={d.end}
+                      invalid={timeError !== null}
+                      min={TRIP_TIME.minStart + TRIP_TIME.minLength}
+                      max={TRIP_TIME.maxEnd}
+                      onChange={(v) => setTimes({ end: v })}
+                    />
                   </div>
 
                   <div className="time-summary" data-invalid={timeError !== null} aria-live="polite">
-                    {timeError || !plan ? (
+                    {timeError ? (
                       <p role="alert">{timeError}</p>
                     ) : (
                       <>
@@ -435,11 +553,16 @@ export default function Onboarding() {
                           <span>{O.time.total}</span>
                           <strong>{t.common.duration(windowMin)}</strong>
                         </div>
-                        <p>{O.time.plan(t.common.duration(plan.planMin), d.start, toHHMM(startMin + plan.planMin))}</p>
-                        <p>{plan.spareMin > 0 ? O.time.spare(t.common.duration(plan.spareMin)) : O.time.exact}</p>
+                        <p>{O.time.fit}</p>
                       </>
                     )}
                   </div>
+                  {status.kind === "badtime" && (
+                    <div role="alert" className="notice notice-error mt-3">
+                      <Icon name="alert" size={20} />
+                      <p>{O.errorBadTime}</p>
+                    </div>
+                  )}
                   <p className="fine mt-3">
                     {O.time.why} {O.time.kst}
                   </p>

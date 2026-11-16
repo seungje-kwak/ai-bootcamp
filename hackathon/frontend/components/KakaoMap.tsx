@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
-import { MAP_CONFIG, toPercent } from "@/config/map";
+import { type LatLng, MAP_CONFIG, toPercent } from "@/config/map";
 import { useLocale } from "@/lib/i18n";
 import { type KakaoMaps, type KLayer, type KMap, loadKakaoMaps } from "@/lib/kakao";
 import { localizedPlaceName } from "@/lib/localized-place";
@@ -43,6 +43,7 @@ export function KakaoMap({
   selectedOrder,
   selectedPlaceId,
   onPick,
+  center,
   onError,
 }: {
   items: CourseItem[];
@@ -51,6 +52,7 @@ export function KakaoMap({
   selectedOrder: number | null;
   selectedPlaceId: number | null;
   onPick: (pick: MapPick) => void;
+  center?: LatLng;
   onError: (e: unknown) => void;
 }) {
   const { locale, t } = useLocale();
@@ -67,6 +69,8 @@ export function KakaoMap({
   errorRef.current = onError;
   const [ready, setReady] = useState(false);
   const [drawn, setDrawn] = useState(0); // bumps after markers are (re)built, so selection is re-applied
+  const centerLat = center?.lat ?? MAP_CONFIG.center.lat;
+  const centerLng = center?.lng ?? MAP_CONFIG.center.lng;
 
   // Create the map once.
   useEffect(() => {
@@ -142,7 +146,7 @@ export function KakaoMap({
     fitRef.current = () => {
       if (stops.length === 0) {
         map.setLevel(MAP_CONFIG.level);
-        map.setCenter(new maps.LatLng(MAP_CONFIG.center.lat, MAP_CONFIG.center.lng));
+        map.setCenter(new maps.LatLng(centerLat, centerLng));
       } else if (stops.length === 1) {
         map.setLevel(MAP_CONFIG.singleStopLevel);
         map.setCenter(ll(stops[0].place));
@@ -155,7 +159,7 @@ export function KakaoMap({
     };
     fitRef.current();
     setDrawn((n) => n + 1);
-  }, [ready, items, places, tripMode, locale, t]);
+  }, [ready, items, places, tripMode, locale, t, centerLat, centerLng]);
 
   // Reflect the selection (from the map itself or from a timeline card) on the markers.
   useEffect(() => {

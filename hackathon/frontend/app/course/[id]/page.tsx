@@ -1,13 +1,14 @@
 "use client";
 
 import Link from "next/link";
-import { useParams } from "next/navigation";
+import { useParams, useRouter } from "next/navigation";
 import { useCallback, useEffect, useState } from "react";
 import { BottomBar } from "@/components/BottomBar";
 import { Brand } from "@/components/Brand";
 import { Icon } from "@/components/Icon";
 import { JejuMap } from "@/components/JejuMap";
 import { LanguageSelect } from "@/components/LanguageSelect";
+import { MealGapCard, withMealGaps } from "@/components/MealGapCard";
 import { QuickNavigator } from "@/components/QuickNavigator";
 import { CourseSkeleton, MessageScreen, NewPlanLink, PrimaryButton } from "@/components/States";
 import { hasMove, MoveLeg, StopCard } from "@/components/StopCard";
@@ -15,9 +16,8 @@ import { api } from "@/lib/api";
 import { useLocale } from "@/lib/i18n";
 import { localizedPlaceName } from "@/lib/localized-place";
 import { scrollBehavior, scrollToId } from "@/lib/motion";
-import { courseSpan, PLAN_MINUTES, toMinutes } from "@/lib/time";
-import { loadTravelWindow, type TravelWindow } from "@/lib/trip-store";
-import type { Place } from "@/lib/types";
+import { courseSpan, courseWindow, toMinutes } from "@/lib/time";
+import { type Area, DEFAULT_AREA_ID, type Place } from "@/lib/types";
 import { useCourse } from "@/lib/useCourse";
 
 // 6.3 Result page: summary, route map, timeline, the lock card for previews, and "Start my day".
@@ -27,15 +27,11 @@ export default function CoursePage() {
   const { locale, t } = useLocale();
   const [places, setPlaces] = useState<Place[]>([]);
   const [selected, setSelected] = useState<number | null>(null);
-  const [travelWindow, setTravelWindow] = useState<TravelWindow | null>(null);
+  const [areas, setAreas] = useState<Area[]>([]);
+  const router = useRouter();
+  const [shuffle, setShuffle] = useState<"idle" | "loading" | "error">("idle");
 
-  useEffect(() => {
-    api
-      .places()
-      .then((r) => setPlaces(r.places))
-      .catch(() => setPlaces([]));
-  }, []);
-  useEffect(() => setTravelWindow(loadTravelWindow(id)), [id]);
+  const areaId = course ? (course.user_profile.area_id ?? DEFAULT_AREA_ID) : null;
 
   // Map -> timeline: on a wide screen both are visible, so bring the card into view as well.
   const selectFromMap = useCallback((order: number | null) => {
@@ -51,6 +47,16 @@ export default function CoursePage() {
     setSelected(order);
     document.getElementById("route-map")?.scrollIntoView({ behavior: scrollBehavior(), block: "nearest" });
   }, []);
+
+  useEffect(() => {
+    api.areas().then((r) => setAreas(r.areas)).catch(() => setAreas([])); // area name only; failure is fine
+  }, []);
+
+  useEffect(() => {
+    if (!areaId) return;
+    // Only the places of the traveler's area. Markers only; failure is fine.
+    api.places(areaId).then((r) => setPlaces(r.places)).catch(() => setPlaces([]));
+  }, [areaId]);
 
   if (state.kind === "loading") return <CourseSkeleton />;
   if (state.kind === "notfound") {
@@ -71,17 +77,28 @@ export default function CoursePage() {
   const items = course.items;
   const free = course.tier === "free";
   const span = courseSpan(items);
-  const planMin = PLAN_MINUTES[course.user_profile.duration];
 
-  // The window the traveler asked for is kept in this browser only. Use it when it belongs to this
-  // course (same start time); the free time is what is left after the plan's length, or after the
-  // real last stop when the whole course is visible.
-  const win = travelWindow && span && travelWindow.start === span.start ? travelWindow : null;
-  const spareMin = win
-    ? free || course.locked_count > 0
-      ? toMinutes(win.end) - (toMinutes(win.start) + planMin)
-      : toMinutes(win.end) - toMinutes(span!.end)
-    : 0;
+  // The day the traveler asked for is stored with the course. The free time after the last stop is
+  // only known when the whole course is visible.
+  const win = courseWindow(course.user_profile, items[0]?.start_time);
+  const planMin = win ? toMinutes(win.end) - toMinutes(win.start) : null;
+  const spareMin = win && span && !free && course.locked_count === 0 ? toMinutes(win.end) - toMinutes(span.end) : 0;
+
+  const area = areas.find((a) => a.id === areaId);
+  const areaName = area ? (locale === "ko" ? area.name_ko : area.name_en) : C.jeju;
+  // US-P16: only before the day has started
+  const canShuffle = !course.items.some((i) => i.status === "done");
+
+  async function shuffleDay() {
+    if (!course || shuffle === "loading") return;
+    setShuffle("loading");
+    try {
+      const next = await api.shuffleCourse(course.id);
+      router.push(`/course/${next.id}`); // a new page: the browser's back button returns to this plan
+    } catch {
+      setShuffle("error");
+    }
+  }
 
   return (
     <main className="course with-bottom-bar" id="course-top">
@@ -92,7 +109,7 @@ export default function CoursePage() {
 
       <section className="course__head page">
         <span className={`chip ${free ? "chip-coral" : "chip-sea"}`}>{free ? C.tierFree : C.tierPremium}</span>
-        <h1 className="display course__title">{C.title}</h1>
+        <h1 className="display course__title">{C.title(areaName)}</h1>
 
         {span && (
           <dl className="facts">
@@ -120,13 +137,15 @@ export default function CoursePage() {
               </dt>
               <dd>{span.end}</dd>
             </div>
-            <div className="fact">
-              <dt>
-                <Icon name="route" size={15} />
-                {C.factLength}
-              </dt>
-              <dd>{C.planLength(t.common.duration(planMin))}</dd>
-            </div>
+            {planMin != null && (
+              <div className="fact">
+                <dt>
+                  <Icon name="route" size={15} />
+                  {C.factLength}
+                </dt>
+                <dd>{C.planLength(t.common.duration(planMin))}</dd>
+              </div>
+            )}
           </dl>
         )}
 
@@ -138,6 +157,21 @@ export default function CoursePage() {
           )}
           <p className="fine">{C.timesNote}</p>
         </div>
+
+        {canShuffle && (
+          <div className="mt-4">
+            <button type="button" className="btn btn-secondary btn-sm" onClick={shuffleDay} disabled={shuffle === "loading"}>
+              <Icon name="sparkle" size={16} />
+              {shuffle === "loading" ? C.shuffling : C.shuffle}
+            </button>
+            {shuffle === "error" && (
+              <p role="alert" className="notice notice-error mt-3">
+                <Icon name="alert" size={20} />
+                <span>{C.shuffleError}</span>
+              </p>
+            )}
+          </div>
+        )}
       </section>
 
       <div className="course__grid page">
@@ -154,18 +188,28 @@ export default function CoursePage() {
             </div>
           ) : (
             <ol className="timeline">
-              {items.map((it, i) => (
-                <li key={`${it.order}:${it.place_id}`}>
-                  {hasMove(it) && <MoveLeg from={i > 0 ? items[i - 1] : undefined} to={it} />}
-                  <StopCard
-                    item={it}
-                    tier={course.tier}
-                    diet={course.user_profile.diet}
-                    selected={selected === it.order}
-                    onShowOnMap={() => showOnMap(it.order)}
-                  />
-                </li>
-              ))}
+              {withMealGaps(items, course.meal_gaps).map((e) => {
+                if (e.kind === "gap")
+                  return (
+                    <li key={`gap-${e.gap.meal}-${e.gap.start_time}`}>
+                      <MealGapCard gap={e.gap} />
+                    </li>
+                  );
+                const it = e.item;
+                const i = items.indexOf(it);
+                return (
+                  <li key={`${it.order}:${it.place_id}`}>
+                    {hasMove(it) && <MoveLeg from={i > 0 ? items[i - 1] : undefined} to={it} />}
+                    <StopCard
+                      item={it}
+                      tier={course.tier}
+                      diet={course.user_profile.diet}
+                      selected={selected === it.order}
+                      onShowOnMap={() => showOnMap(it.order)}
+                    />
+                  </li>
+                );
+              })}
             </ol>
           )}
 
@@ -190,7 +234,14 @@ export default function CoursePage() {
                 {C.mapTitle}
               </h2>
             </div>
-            <JejuMap items={items} places={places} selectedOrder={selected} onSelectOrder={selectFromMap} onViewStop={viewStop} />
+            <JejuMap
+              items={items}
+              places={places}
+              selectedOrder={selected}
+              onSelectOrder={selectFromMap}
+              onViewStop={viewStop}
+              center={area && { lat: area.center_lat, lng: area.center_lng }}
+            />
             <p className="fine mt-3">
               {C.mapHint} {C.lineNote}
             </p>

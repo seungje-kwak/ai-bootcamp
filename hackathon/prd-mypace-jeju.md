@@ -2,7 +2,7 @@
 
 | 항목 | 내용 |
 |---|---|
-| 문서 버전 | v0.9 (2026-11-13: 일정·데모·발표 관련 남은 문구 정리. 미정 사항을 15장에서 13장으로 옮김) · v0.8 (2026-11-13: 이틀 일정, 데모 시나리오 장, 리스크 장을 삭제) · v0.7 (2026-11-13: 대체 SVG 지도를 명세에서 뺌(코드에는 테스트 화면용으로 남김), 7장 정리. 지도 범위는 유지하고 출발 위치·지역 입력 기능은 P2로) · v0.6 (2026-11-13: 6장에 실제 화면 요소를 적음. 404 버튼은 온보딩으로) · v0.5 (2026-11-13: 5장. US-20을 P0로, US-02의 502 조건, 대표 메뉴 표시 규칙, P1 상태, 테스트 위치) · v0.4 (2026-11-13: 4장을 구현 상태에 맞춤. P1 상태 열, 카카오맵을 P0로, 장소 수) · v0.3 (2026-11-13: 1장을 구현에 맞춤. 문서 위치, 저장소 구조, LLM 제공자, Supabase 필수) · v0.2 (2026-11-12: 지도를 일러스트에서 카카오맵으로 변경, 7장) |
+| 문서 버전 | v0.13 (2026-11-16: 추천 알고리즘 개선 P1. `needs_lunch`를 점심·저녁 식사 판단(`meals_needed`, `trip.meals`)으로 바꾸고 식사마다 식당이나 빈 식사 시간(`courses.meal_gaps`, 빈 식사 시간 카드)을 보장함, 장소 유형별 체류 시간(`places.place_type`)과 남는 시간에 맞춘 체류 시간 조정, 2-opt 동선 다듬기, seed로 코스를 다양하게 하고 `POST /courses/{id}/shuffle`과 "Shuffle my day" 버튼. 상세는 `tasks/prd-recommendation-p1.md`) · v0.12 (2026-11-15: 추천 알고리즘 개선 P0. `food_options` 다섯 칸을 참/거짓/`null`(모름) 세 값으로, F-3은 `food`에만 적용하고 `solo_ok`가 `false`인 곳만 뺌, F-9를 앵커 중심 거리 기준으로 교체, LLM 입력에 `trip.anchor`, 장소의 지역을 좌표로 정함. 상세는 `tasks/prd-recommendation-p0.md`) · v0.11 (2026-11-14: 출발 지역 선택. 제주도 전체를 14개 지역으로 나누고 온보딩 5단계에서 지역을 고름(전체 6단계). `areas` 테이블, `places.area_id`, `GET /areas`, 요청의 `area_id`, 오류 `INVALID_AREA`, 이동 30분 상한 `MAX_MOVE_MIN`, 지도 범위를 제주도 전체로, 지도 마커는 고른 지역의 장소만. 상세는 `tasks/prd-start-area.md`) · v0.10 (2026-11-13: 여행 시간 설정. 온보딩 5단계에서 시작·끝 시각을 고르고 `duration`을 없앰. `places`에 `open_time`·`close_time`, 영업시간 필터 F-10, 오류 `INVALID_TIME_WINDOW`. 상세는 `tasks/prd-trip-time.md`) · v0.9 (2026-11-13: 일정·데모·발표 관련 남은 문구 정리. 미정 사항을 15장에서 13장으로 옮김) · v0.8 (2026-11-13: 이틀 일정, 데모 시나리오 장, 리스크 장을 삭제) · v0.7 (2026-11-13: 대체 SVG 지도를 명세에서 뺌(코드에는 테스트 화면용으로 남김), 7장 정리. 지도 범위는 유지하고 출발 위치·지역 입력 기능은 P2로) · v0.6 (2026-11-13: 6장에 실제 화면 요소를 적음. 404 버튼은 온보딩으로) · v0.5 (2026-11-13: 5장. US-20을 P0로, US-02의 502 조건, 대표 메뉴 표시 규칙, P1 상태, 테스트 위치) · v0.4 (2026-11-13: 4장을 구현 상태에 맞춤. P1 상태 열, 카카오맵을 P0로, 장소 수) · v0.3 (2026-11-13: 1장을 구현에 맞춤. 문서 위치, 저장소 구조, LLM 제공자, Supabase 필수) · v0.2 (2026-11-12: 지도를 일러스트에서 카카오맵으로 변경, 7장) |
 | 작성일 | 2026-11-12 |
 | 용도 | 팀원 3명(A 프론트, B 백엔드, C 데이터·기획)이 각자 AI 코딩 도구에 넣고 개발하는 공통 기준 문서 |
 | 둘 곳 | 저장소의 `hackathon/prd-mypace-jeju.md`. 세 사람이 같은 파일을 본다 |
@@ -134,7 +134,7 @@
 
 | 영역 | 포함하는 것 |
 |---|---|
-| 화면 | 랜딩, 온보딩 5단계, 결과 페이지, 여행 모드, 구매 |
+| 화면 | 랜딩, 온보딩 6단계, 결과 페이지, 여행 모드, 구매 |
 | 코스 생성 | 필터링 → LLM → 검증 → 이동 시간 계산 → 저장 (10장) |
 | 지도 | 카카오맵 위 마커, 방문 순서 번호, 점선 동선, 설정 파일 하나 |
 | 신뢰 표시 | 장소마다 실제 사진, 사진 출처, 마지막 확인일 |
@@ -171,7 +171,7 @@ P0가 배포 환경에서 끝난 뒤, 아래 순서대로 한다. 2026-11-13 기
 | `opening_hours`, `price_level`, `allergens` 표시 | 데이터가 채워지고 형식이 정해진 뒤 (Q-14) |
 | 코스 시작 시각 고르기 | MVP는 기본값 사용 (Q-06) |
 | 새로고침해도 여행 모드의 진행 위치 유지 | MVP는 재구성할 때만 서버에 반영한다 (Q-11) |
-| 출발 위치나 여행할 지역을 입력받아 그 주변으로 코스 짜기 | 지금은 지도 범위(7.2) 안의 제주시 원도심만 다룬다. 이 기능을 만들 때 범위와 시드 데이터를 다시 정한다 (Q-27) |
+| 지역 안의 정확한 출발 지점(호텔, 정류장) 입력, 여러 지역을 잇는 코스 | 여행할 지역 고르기는 v0.11에서 만들었다 (6.2의 5단계, `tasks/prd-start-area.md`). 여행자는 14개 지역 중 하나를 고르고 코스는 그 지역 안에서만 짠다. 지역의 장소 데이터가 모자라면 그 지역은 "Coming soon"으로 보인다 (9.4.1) |
 
 ### 4.4 제외 (이번 해커톤에서 만들지 않는다)
 
@@ -187,7 +187,8 @@ P0가 배포 환경에서 끝난 뒤, 아래 순서대로 한다. 2026-11-13 기
 - 회원 가입과 로그인. 테이블에 사용자 정보가 없다. 코스는 `courses.id`로만 구분한다.
 - 버스 이동 안내. `move_method`의 `bus` 값은 남겨 두지만 MVP는 `walk`와 `taxi`만 만든다. 코스 생성 로직이 도보와 택시 시간만 추정하기 때문이다.
 - 날씨 자동 감지. 비는 "비가 와요" 버튼으로만 반영한다.
-- 지도 범위(7.2) 밖의 장소, 이틀 이상의 일정.
+- 지도 범위(7.2, 제주도 전체) 밖의 장소, 이틀 이상의 일정.
+- 여러 지역을 잇는 코스, 지역 사이의 이동, 우도·추자도로 가는 배 시간. 코스는 고른 지역 하나 안에서만 짠다.
 - 영어 외의 화면 언어.
 - 신고를 관리하는 관리자 화면.
 
@@ -199,7 +200,7 @@ P0가 배포 환경에서 끝난 뒤, 아래 순서대로 한다. 2026-11-13 기
 
 | ID | 역할 | 스토리 | 우선순위 | 담당 |
 |---|---|---|---|---|
-| US-01 | 여행자 | 온보딩 5단계로 취향과 몸 상태를 입력한다 | P0 | A |
+| US-01 | 여행자 | 온보딩 6단계로 취향과 몸 상태를 입력한다 | P0 | A |
 | US-02 | 여행자 | 실제 장소만으로 짠 코스를 받는다 | P0 | B |
 | US-03 | 여행자 | 코스를 시간순 타임라인으로 본다 | P0 | A |
 | US-04 | 여행자 | 지도에서 동선을 본다 | P0 | A |
@@ -243,11 +244,11 @@ P0가 배포 환경에서 끝난 뒤, 아래 순서대로 한다. 2026-11-13 기
 
 ### 5.3 P0 스토리와 완료 기준
 
-#### US-01 온보딩 5단계로 취향과 몸 상태를 입력한다 (A)
+#### US-01 온보딩 6단계로 취향과 몸 상태를 입력한다 (A)
 
 혼자 여행하는 외국인으로서, 카드를 고르는 것만으로 취향과 몸 상태를 알려주고 싶다. 그래야 글을 쓰지 않고도 나에게 맞는 코스를 받을 수 있다.
 
-- [ ] `/onboarding`에 5단계가 6.2의 순서, 선택지, 값으로 나온다
+- [ ] `/onboarding`에 6단계가 6.2의 순서, 선택지, 값으로 나온다
 - [ ] 선택하지 않은 단계에서는 Next가 눌리지 않고, Back으로 돌아가면 이전 선택이 남아 있다
 - [ ] 마지막 단계에서 "Create my day"를 누르면 9.5 형식의 `POST /courses` 요청이 한 번만 나간다 (연속으로 눌러도 한 번)
 - [ ] 응답을 기다리는 동안 로딩 화면이 보인다
@@ -440,7 +441,7 @@ P0가 배포 환경에서 끝난 뒤, 아래 순서대로 한다. 2026-11-13 기
 
 ### 6.2 온보딩 (`/onboarding`)
 
-카드 선택형 5단계다. 단계 이름은 팀이 정한 것이고, 선택지와 값은 [제안]이다 (Q-02).
+카드 선택형 6단계다. 단계 이름은 팀이 정한 것이고, 선택지와 값은 [제안]이다 (Q-02). 5단계(지역)는 v0.11에서 넣었다 (`tasks/prd-start-area.md`).
 
 | 단계 | 화면 제목 | 고르는 방식 | 선택지 → 값 | `user_profile` 키 |
 |---|---|---|---|---|
@@ -450,14 +451,23 @@ P0가 배포 환경에서 끝난 뒤, 아래 순서대로 한다. 2026-11-13 기
 | | | | 오르막 피하기: Avoid uphill 켬 → `true`, 끔 → `false` | `avoid_slopes` |
 | 3. 오늘 컨디션 | How do you feel today? | 하나 | Great → `great`, Okay → `normal`, A bit tired → `tired` | `condition_today` |
 | 4. 식단 | Any food needs? | 하나 | No restrictions → `none`, Vegan → `vegan`, Vegetarian → `vegetarian`, Halal → `halal` | `diet` |
-| 5. 일정 | How long is your day? | 하나 | Half day → `half_day`, Full day → `full_day` | `duration` |
+| 5. 지역 | Where will you spend your day? | 하나 | `GET /areas`(9.4.1)로 받은 14개 지역. 버튼마다 `name_en`과 그 아래 작은 글씨의 `description_en` → 그 지역의 `id` | 없음. 요청의 `area_id`로 보낸다 (9.5) |
+| 6. 일정 | When is your day? | 선택 상자 2개 | Start: `08:00`~`16:00`, 30분 단위. End: Start + 2시간부터 Start + 10시간과 `22:00` 중 이른 시각까지, 30분 단위 | 없음. 요청의 `start_time`, `end_time`으로 보낸다 (9.5) |
 
 동작
 
-- 한 화면에 한 단계를 보여준다. 위에 진행 표시("2 / 5"), 아래에 Back과 Next가 있다. 1단계의 Back은 랜딩(`/`)으로 간다.
+- 한 화면에 한 단계를 보여준다. 위에 진행 표시("2 / 6"), 아래에 Back과 Next가 있다. 1단계의 Back은 랜딩(`/`)으로 간다.
 - 2단계는 항목마다 소제목을 둔다: "Energy level", "How long can you walk at a time?".
 - 선택값은 단계를 오가도 남아 있다 (프론트 상태로 보관).
-- 5단계의 버튼은 "Create my day"다. 누르면 위 표의 값으로 `user_profile`을 만들어 `POST /courses`를 보낸다 (9.5).
+- 5단계는 지역을 두 묶음으로 나눠 보여준다. 묶음 제목은 "Jeju City side (north)"와 "Seogwipo side (south)"이고, 묶음 안의 순서는 `GET /areas`의 순서(도심, 읍, 면)다.
+- 5단계에서 `selectable`이 `false`인 지역은 흐리게 보이고 눌리지 않으며 "Coming soon"이 붙는다. 숨기지 않는다. 처음에는 아무 지역도 골라져 있지 않다.
+- 지역 목록은 온보딩에 들어올 때 불러온다. 불러오는 동안 5단계에 "Loading areas…"가 보이고, 실패하면 "We couldn't load the areas."와 "Try again"이 보인다.
+- 6단계는 기본 `<select>` 두 개("Start", "End")와 그 아래의 길이 표시(예: "4 h 30 min")다. 시각은 24시간 형식이다.
+- Start의 처음 값은 기기의 현재 시각을 30분 단위로 올린 값이다 (14:10 → 14:30). 08:00 전이면 `08:00`, 16:00 뒤면 `10:00`이다. End의 처음 값은 Start + 4시간이다 (상한을 넘으면 상한).
+- Start를 바꿔서 End가 허용 범위를 벗어나면 End를 Start + 4시간(상한 적용)으로 다시 맞춘다.
+- 6단계의 버튼은 "Create my day"다. 누르면 위 표의 값으로 `user_profile`을 만들고 `area_id`, `start_time`, `end_time`과 함께 `POST /courses`를 보낸다 (9.5).
+- 서버가 `INVALID_TIME_WINDOW`를 돌려주면 6단계에 머물며 "Please check your start and end time."를 보여준다.
+- 서버가 `INVALID_AREA`를 돌려주면 5단계로 돌아가 지역 목록을 다시 불러오고 "That area isn't available right now. Please pick another."를 보여준다. 고른 지역은 지운다.
 - 성공하면 응답의 `id`로 `/course/{id}`로 이동한다.
 
 상태
@@ -473,17 +483,25 @@ P0가 배포 환경에서 끝난 뒤, 아래 순서대로 한다. 2026-11-13 기
 
 핵심 화면이다. 위에서 아래로 다음 순서다.
 
-1. 헤더: "Your day in Jeju City"와 정차 수("{total_items} stops"). 무료면 "Preview", 프리미엄이면 "Premium" 표시.
-2. 지도 (7장. 카카오맵).
-3. 타임라인 카드 목록. `items`를 `order` 순서대로.
+1. 헤더: "Your day in {고른 지역의 `name_en`}"(예: "Your day in Aewol". 지역 목록을 불러오기 전에는 "Your day in Jeju")와 정차 수("{total_items} stops"). 무료면 "Preview", 프리미엄이면 "Premium" 표시. 그 아래 "Shuffle my day" 버튼 (아래).
+2. 지도 (7장. 카카오맵). 빈 식사 시간은 지도와 동선에 그리지 않는다.
+3. 타임라인 카드 목록. `items`를 `order` 순서대로. 빈 식사 시간 카드(`meal_gaps`)를 `start_time` 순서대로 정류장 사이에 넣는다. 카드는 자기보다 늦게 시작하는 첫 정류장 바로 앞에 놓인다.
 4. 무료일 때만 잠금 카드.
 5. 화면 아래 고정 버튼 "Start my day" → `/course/{id}/trip`.
+
+"Shuffle my day" 버튼 (`tasks/prd-recommendation-p1.md` US-P16)
+
+- 같은 선택으로 다른 코스를 받는 버튼이다. 보조 버튼 모양(테두리만 있는 버튼)이라 "Start my day"보다 눈에 덜 띈다.
+- 여행을 시작하기 전, 즉 `status`가 `done`인 정류장이 하나도 없을 때만 보인다. 여행 모드에는 두지 않는다.
+- 누르면 `POST /courses/{id}/shuffle`(9.6.1)을 부른다. 버튼은 "Finding another day…"로 바뀌고 눌리지 않는다.
+- 성공하면 새 코스 화면 `/course/{새 id}`로 간다. 브라우저 뒤로 가기로 이전 코스에 돌아갈 수 있다.
+- 실패하면 버튼 아래에 "Couldn't shuffle right now. Try again."이 보이고 버튼이 다시 눌린다.
 
 타임라인 카드
 
 | 요소 | 쓰는 데이터 | 표시 규칙 |
 |---|---|---|
-| 이동 정보 (카드 위) | `move_method`, `move_min` | 이전 장소에서 이 장소까지의 이동이다. 둘 다 `null`인 첫 카드에는 없다. `walk`면 "{move_min} min walk", `taxi`면 "{move_min} min by taxi" |
+| 이동 정보 (카드 위) | `move_method`, `move_min` | 이전 장소에서 이 장소까지의 이동이다. 둘 다 `null`인 첫 카드에는 없다. `walk`면 "{move_min} min walk", `taxi`면 "{move_min} min by taxi". 정류장끼리의 이동만 보여준다. 빈 식사 시간 카드에는 이동이 없고, 그 뒤 정류장의 이동은 빈 식사 시간 앞의 정류장에서 온 것이다 |
 | 순서와 시각 | `order`, `start_time` | "2 · 10:45" |
 | 사진 | `place.image_url` | 없거나 불러오지 못하면 자리 표시(카테고리 아이콘 + 단색 배경). 자리 표시에는 글자를 넣지 않는다 |
 | 사진 출처와 확인일 | `place.image_source`, `place.last_verified_at` | "Photo: {image_source} · Verified {last_verified_at}". 값이 없는 쪽은 뺀다 |
@@ -509,6 +527,18 @@ Show to driver 카드 (전체 화면)
 
 밝은 배경에 검은 글자로 하고, 이름은 32px 이상으로 한다 [제안].
 
+빈 식사 시간 카드 (`tasks/prd-recommendation-p1.md` US-P07)
+
+식사 시간에 맞는 식당을 찾지 못해 비워 둔 시간이다 (`Course.meal_gaps`, 9.3). 갈 곳이 아니라 비워 둔 시간임이 드러나게 정류장 카드와 구별한다.
+
+| 요소 | 쓰는 데이터 | 표시 규칙 |
+|---|---|---|
+| 아이콘 | 없음 | 식당 아이콘(카테고리 `food`의 아이콘) |
+| 제목 | `meal` | "Free time for lunch" 또는 "Free time for dinner" |
+| 시간 | `start_time`, `end_time` | "12:00–12:45" |
+| 안내 | `message_en` | 그대로 보여준다 |
+| 모양 | 없음 | 정류장 카드와 같은 폭, 점선 테두리, 옅은 배경. 사진, 배지, Show to driver 카드, 이동 정보, 지도 마커가 없다 |
+
 잠금 카드 (무료)
 
 - 문구: "{locked_count} more stops in your full day"
@@ -530,9 +560,11 @@ Show to driver 카드 (전체 화면)
 
 1. 헤더: "Now". `user_profile.conditions.indoor_only`가 `true`면 "Indoor plan", `low_walking`이 `true`면 "Easy pace" 표시 [제안]. 왼쪽에 결과 페이지로 돌아가는 화살표, 오른쪽에 지도를 열고 닫는 "Map" / "Hide map" 버튼 (US-23).
 2. 현재 일정 카드: 6.3의 카드와 같은 내용을 크게 보여주고 "Done, next stop" 버튼을 둔다.
-3. 다음 일정 목록: 시각, 이름, 이동 정보만 작게.
+3. 다음 일정 목록("Next"): 시각, 이름, 이동 정보만 작게. 현재 일정의 시각 이후에 시작하는 빈 식사 시간도 시간 순서대로 이 목록에 넣는다. 점선 테두리의 작은 카드로 시각, 제목("Free time for lunch"/"Free time for dinner"), `message_en`을 보여준다 (6.3의 빈 식사 시간 카드를 줄인 것).
 4. 지나간 일정: 흐리게 접어 둔다.
 5. 화면 아래 고정: 재구성 버튼.
+
+여행 모드에는 "Shuffle my day" 버튼이 없다 (6.3).
 
 재구성 버튼
 
@@ -566,7 +598,7 @@ Show to driver 카드 (전체 화면)
 |---|---|
 | 로딩 (처음) | 스켈레톤 |
 | 로딩 (재구성) | 현재 일정과 지나간 일정은 그대로 두고, 다음 일정 자리에 "Re-planning the rest of your day…". 재구성 버튼은 비활성 |
-| 빈 상태 | 현재 일정이 마지막이면 다음 일정 자리에 "This is your last stop." 마지막 일정까지 끝내면 "Day complete" + "Back to my plan" |
+| 빈 상태 | 현재 일정이 마지막이고 남은 빈 식사 시간도 없으면 다음 일정 자리에 "This is your last stop." 마지막 일정까지 끝내면 "Day complete" + "Back to my plan" |
 | 빈 상태 (무료, `locked_count` > 0) | 다음 일정 자리에 "This is the last stop in your preview. {locked_count} more in the full day." 끝내면 "That's the end of your preview" + "Unlock full day" → 구매 화면 + "Back to my plan" |
 | 오류: 재구성 502, 네트워크 | "We couldn't re-plan just now. Your current plan is unchanged." + "Retry" + "Dismiss"(오류 상자를 닫는다) |
 | 오류: 재구성 409 `NO_CANDIDATES` | "No other places fit right now. Your current plan is unchanged." + "Dismiss". Retry는 없다 |
@@ -624,13 +656,15 @@ Show to driver 카드 (전체 화면)
 export const MAP_CONFIG = {
   // 카카오 JavaScript 키. 비어 있으면 카카오맵을 그리지 않는다 (7.1)
   kakaoKey: process.env.NEXT_PUBLIC_KAKAO_MAP_KEY ?? "",
-  // 코스가 없을 때의 처음 화면 (제주시 원도심)
+  // 코스가 없고 지역 중심도 모를 때의 처음 화면 (제주시 원도심)
   center: { lat: 33.5, lng: 126.52 },
   level: 7, // 카카오맵 확대 수준. 1이 가장 가깝다
   singleStopLevel: 5, // 코스 장소가 한 곳일 때의 확대 수준
   fitPaddingPx: 40, // 코스 전체를 화면에 맞출 때 둘레에 두는 여백(px)
-  // 장소 데이터의 범위. 이 밖의 장소는 DB에 넣지 않고 지도에도 그리지 않는다 (7.10)
-  bounds: { lngMin: 126.44, lngMax: 126.56, latMin: 33.46, latMax: 33.53 },
+  // 장소 데이터의 범위: 제주도 전체(본섬, 우도, 추자도). 이 밖의 장소는 DB에 넣지 않고 지도에도 그리지 않는다 (7.10)
+  bounds: { lngMin: 126.1, lngMax: 127.0, latMin: 33.1, latMax: 34.0 },
+  // 대체 SVG(테스트 화면용)가 그릴 수 있는 옛 원도심 범위
+  fallbackBounds: { lngMin: 126.44, lngMax: 126.56, latMin: 33.46, latMax: 33.53 },
   // 지도 상자의 가로 ÷ 세로
   aspectRatio: 10 / 7,
   routeColor: "#1f7a8c", // 동선 점선의 색 (7.6)
@@ -638,7 +672,10 @@ export const MAP_CONFIG = {
 ```
 
 - 이 값들은 이 파일에만 둔다. 지도 컴포넌트는 `MAP_CONFIG`를 가져다 쓰고, 숫자를 직접 적지 않는다.
-- 범위를 바꾸면 `bounds`와 백엔드의 `scripts/build_places.py`의 `BOUNDS`를 함께 바꾼다 (Q-27).
+- `bounds`와 백엔드의 `scripts/build_places.py`의 `BOUNDS`는 같은 값이어야 한다 (위도 33.10~34.00, 경도 126.10~127.00). 한쪽을 바꾸면 다른 쪽도 바꾼다.
+- 코스에 정차가 없을 때 지도의 처음 중심은 고른 지역의 `center_lat`, `center_lng`다 (9.4.1). 지역을 모르면 `center`를 쓴다.
+- 지도는 `GET /places?area_id=`를 코스의 `user_profile.area_id`로 불러(없는 옛 코스는 `jeju-city`) 고른 지역의 장소만 그린다. 코스에 든 장소는 번호가 있는 큰 마커, 그 지역의 코스 밖 장소는 작은 마커다. 처음 화면은 코스 전체에 맞춘다. 다른 지역의 장소는 그리지 않는다.
+- 대체 SVG는 `fallbackBounds`만 그릴 수 있다. 코스의 정차가 하나라도 이 범위 밖이면 대체 지도를 그리지 않고 정차 목록만 보여준다.
 
 ### 7.3 좌표
 
@@ -733,7 +770,7 @@ export function toPercent(lat, lng, b = MAP_CONFIG.bounds) {
 
 ### 7.10 범위 밖 장소와 마커 겹침
 
-- DB에는 지도 범위(7.2) 안의 장소만 넣는다 (C, Q-13). 지금은 이 범위를 그대로 둔다. 나중에 사용자가 출발 위치나 여행할 지역을 입력하면 그 주변으로 코스를 짜는 기능을 만들 때 범위를 다시 정한다 (4.3, Q-27).
+- DB에는 지도 범위(7.2) 안의 장소만 넣는다 (C, Q-13). 범위는 v0.11에서 제주도 전체로 넓혔다 (Q-27).
 - 카카오맵에서는 확대하면 겹친 마커가 풀린다. 처음 화면은 코스 전체가 보이게 맞추므로 원도심의 가까운 장소끼리는 겹칠 수 있다. 코스 마커를 항상 위에 쌓고, 코스 밖 마커는 작게 그린다.
 
 ---
@@ -744,6 +781,7 @@ export function toPercent(lat, lng, b = MAP_CONFIG.bounds) {
 
 ### 8.1 테이블 관계
 
+- `areas` 1 : N `places` (모든 장소는 지역 하나에 속한다)
 - `places` 1 : 1 `place_accessibility` (모든 장소에 반드시 있어야 한다)
 - `places` 1 : 0~1 `food_options` (식당·카페만)
 - `places` 1 : N `phrase_cards`
@@ -763,15 +801,38 @@ export function toPercent(lat, lng, b = MAP_CONFIG.bounds) {
 | `description_en` | text | 영어 설명. 지도 하단 카드와 LLM 입력에 쓴다 | 있음 |
 | `lat` | double precision | 위도 | 있음 |
 | `lng` | double precision | 경도 | 있음 |
-| `address_ko` | text | 한글 주소. Show to driver에 쓴다 | 있음 |
+| `address_ko` | text | 한글 주소. Show to driver에 쓴다. `area_id`를 정하는 데도 쓴다 | 있음 |
+| `area_id` | text, `areas.id`를 가리킴 | 장소가 속한 지역 (8.2.1). 사람이 적지 않고 `build_places.py`가 `address_ko`에서 정한다 | 있음 |
 | `image_url` | text, null 허용 | `place-images` 버킷에 올린 사진의 공개 URL | 비어 있음 |
 | `image_source` | text, null 허용 | 사진 출처 표기 (Q-16) | 비어 있음 |
-| `avg_stay_min` | integer | 평균 체류 시간(분) | 있음 |
-| `opening_hours` | text, null 허용 | 영업 시간. 형식 미정 (Q-14) | 비어 있음 |
+| `place_type` | text, null 허용 | 체류 시간을 정하는 장소 유형. `oreum_hike`, `forest`, `waterfall`, `port`, `nature`, `beach`, `park`, `museum`, `history_culture`, `market_shopping`, `cafe`, `restaurant` 중 하나. `build_places.py`가 원본 CSV의 `category`와 영어 이름으로 정한다 (`tasks/prd-recommendation-p1.md` FR-17a). 화면은 쓰지 않는다. `null`은 옛 데이터다 | 있음 |
+| `avg_stay_min` | integer | 평균 체류 시간(분). 원본에 값이 없으면 `place_type`의 기본값이다 (예: 오름 75, 포구 30, 카페 40. `tasks/prd-recommendation-p1.md` FR-17). 원본에 값이 있는 곳은 그 값을 쓴다. 플래너는 이 값과 유형의 범위로 체류 시간을 늘리고 줄인다 (10.6) | 있음 |
+| `opening_hours` | text, null 허용 | 영업 시간을 적은 문장. 화면 표시용이고 코드는 읽지 않는다 (Q-14) | 있음 |
+| `open_time` | text, null 허용 | 여는 시각 `"HH:MM"`. 계절·요일로 다르면 가장 짧은 기본 시간을 적는다 | 있음 |
+| `close_time` | text, null 허용 | 문 닫는 시각 `"HH:MM"` (입장 마감이 아니다). 자정 이후까지 열면 `"24:00"`. `open_time`과 둘 다 `null`이면 항상 열려 있다는 뜻이고, 하나만 `null`일 수는 없다 | 있음 |
 | `closed_days` | text[], 기본값 빈 배열 | 휴무 요일. `mon`~`sun` [제안] (Q-14) | 비어 있음 |
 | `price_level` | integer, null 허용 | 가격대. 기준 미정 (Q-14) | 비어 있음 |
 | `last_verified_at` | date, null 허용 | 마지막 확인일 (Q-15) | 비어 있음 |
 | `source_date` | date, null 허용 | 원본 데이터 기준일. POI 데이터는 `2015-12-31` | 있음 |
+
+### 8.2.1 `areas`
+
+여행자가 고를 수 있는 지역 14곳이다. 읍과 면은 하나가 한 지역이고, 동은 시별로 하나로 묶는다. 값은 `backend/app/data/areas.json`과 `backend/sql/schema.sql`에 있고, 표는 `tasks/prd-start-area.md` 3장이다.
+
+| 컬럼 | 타입 | 설명 |
+|---|---|---|
+| `id` | text, PK | `jeju-city`, `hallim`, `aewol`, `gujwa`, `jocheon`, `hangyeong`, `chuja`, `udo`, `seogwipo-city`, `daejeong`, `namwon`, `seongsan`, `andeok`, `pyoseon` |
+| `group` | text | `jeju`(제주시 쪽) 또는 `seogwipo`(서귀포시 쪽) |
+| `name_en`, `name_ko` | text | 지역 이름. 예: "Aewol", "애월읍" |
+| `description_en` | text, 80자 이하 | 그 지역의 대표 장소. 온보딩 버튼의 작은 글씨 |
+| `center_lat`, `center_lng` | double precision | 코스에 정차가 없을 때 지도의 처음 중심 |
+| `sort_order` | integer | 목록 순서. 1~14 |
+
+장소의 지역을 정하는 규칙 (`backend/app/areas.py`)
+
+- `address_ko`에 읍·면 이름(한림읍, 애월읍, 구좌읍, 조천읍, 한경면, 추자면, 우도면, 대정읍, 남원읍, 성산읍, 안덕면, 표선면)이 있으면 그 지역이다.
+- 없고 "제주시"가 있으면 `jeju-city`, "서귀포시"가 있으면 `seogwipo-city`다. "제주시"는 읍·면 주소에도 들어 있으므로 읍·면 이름을 먼저 찾는다.
+- 어느 것도 없으면 `build_places.py`가 오류로 멈춘다.
 
 ### 8.3 `place_accessibility`
 
@@ -792,16 +853,16 @@ export function toPercent(lat, lng, b = MAP_CONFIG.bounds) {
 
 ### 8.4 `food_options`
 
-아직 데이터가 없다. 1인 주문이 가능한 식당·카페가 최소 5곳 필요하다.
+식당·카페 351곳에 행이 있다. 다섯 개의 boolean 칸은 `true`(확인됨), `false`(아님), `null`(모름) 세 값이다. 조사하지 못한 칸은 `false`가 아니라 `null`로 둔다 (`tasks/prd-recommendation-p0.md` US-R03). 2026-11-15 기준 `solo_ok`는 `true` 6곳, `null` 345곳이다.
 
 | 컬럼 | 타입 | 설명 | 쓰이는 곳 |
 |---|---|---|---|
 | `place_id` | integer, PK, FK → `places.id` | | |
-| `solo_ok` | boolean | 1인분 주문 가능 | 후보 필터 F-3, "Solo OK" 배지 |
-| `vegan` | boolean | 비건 메뉴 있음 | 후보 필터 F-3, "Vegan" 배지 |
-| `vegetarian` | boolean | 채식 메뉴 있음 | 후보 필터 F-3, "Vegetarian" 배지 |
-| `halal` | boolean | 할랄 | 후보 필터 F-3, "Halal" 배지 |
-| `english_menu` | boolean | 영어 메뉴 있음 | "English menu" 배지 |
+| `solo_ok` | boolean, null 허용 | 1인분 주문 가능 | 후보 필터 F-3(`false`만 뺌), 규칙 플래너 가점(`true`), "Solo OK" 배지(`true`) |
+| `vegan` | boolean, null 허용 | 비건 메뉴 있음 | 후보 필터 F-3(`true`만 통과), "Vegan" 배지 |
+| `vegetarian` | boolean, null 허용 | 채식 메뉴 있음 | 후보 필터 F-3(`true`만 통과), "Vegetarian" 배지 |
+| `halal` | boolean, null 허용 | 할랄 | 후보 필터 F-3(`true`만 통과), "Halal" 배지 |
+| `english_menu` | boolean, null 허용 | 영어 메뉴 있음 | "English menu" 배지 |
 | `signature_menu_en` | text, null 허용 | 대표 메뉴(영어) | 카드의 "Try: …" |
 | `allergens` | text, null 허용 | 알레르기 유발 재료. 형식 미정 (Q-14) | MVP에서 쓰지 않음 |
 
@@ -824,6 +885,9 @@ export function toPercent(lat, lng, b = MAP_CONFIG.bounds) {
 | `user_profile` | jsonb | 온보딩 입력과 현재 조건 (8.9) |
 | `tier` | text, 기본값 `free` | `free` 또는 `premium` |
 | `created_at` | timestamptz, 기본값 현재 시각 | |
+| `meal_gaps` | jsonb, not null, 기본값 `'[]'` | 빈 식사 시간 목록. 원소의 모양은 9.3의 `MealGap`(`meal`, `start_time`, `end_time`, `reason`, `message_en`. `tasks/prd-recommendation-p1.md` FR-11)이다. 이 열이 없던 때의 옛 코스는 빈 목록으로 읽는다 |
+
+빈 식사 시간은 `course_items`에 넣지 않는다. `course_items.place_id`가 필수이고, 지도·여행 모드·재구성이 모두 장소를 전제로 하기 때문이다. 이미 만든 DB에는 `alter table courses add column if not exists meal_gaps jsonb not null default '[]'::jsonb;`를 새 백엔드를 배포하기 전에 실행한다 (`tasks/prd-recommendation-p1.md` 8장).
 
 ### 8.7 `course_items`
 
@@ -862,14 +926,20 @@ export function toPercent(lat, lng, b = MAP_CONFIG.bounds) {
 | `avoid_slopes` | `true`, `false` | 2. 체력·몸 상태 | 후보 필터 F-5 |
 | `condition_today` | `great`, `normal`, `tired` | 3. 오늘 컨디션 | 후보 필터 F-4, LLM 입력 |
 | `diet` | `none`, `vegan`, `vegetarian`, `halal` | 4. 식단 | 후보 필터 F-3 |
-| `duration` | `half_day`, `full_day` | 5. 일정 | 코스 길이 (10.6) |
+| `area_id` | `areas.id` | 5. 지역. 서버가 요청의 값을 넣는다 (9.5) | 후보 필터 F-0, 재구성의 지역 (10.7). 이 키가 없는 옛 코스는 `jeju-city`로 본다 |
+| `start_time`, `end_time` | `"HH:MM"` | 없음. 서버가 요청의 값을 넣는다 (9.5) | 코스 시작·종료 시각 (10.3, 10.6), 재구성의 종료 시각 (10.7) |
+| `duration` | `half_day`, `full_day` | 없음. 요청으로 받지 않는다 | v0.9까지 저장된 옛 코스에만 있다. `end_time`이 없으면 재구성이 이 값으로 종료 시각을 계산한다 (10.3) |
 | `conditions` | `{ "indoor_only": boolean, "low_walking": boolean }` | 없음. 서버가 붙인다 | 재구성으로 켜진 조건. 처음에는 둘 다 `false` (10.7) |
+| `_seed` | 정수 | 없음. 서버가 붙인다 | 코스를 만든 seed (10.2). 재구성의 seed는 `_seed + current_order`다. 다시 짜기(9.6.1)는 새 seed를 쓴다 |
+
+밑줄로 시작하는 키(`_seed`, 재구성에서 뺀 장소 `_excluded_place_ids`)는 서버만 쓴다. 응답의 `user_profile`에는 넣지 않는다.
 
 ### 8.10 데이터를 넣을 때 지킬 규칙 (C)
 
 - 모든 `places` 행에 `place_accessibility` 행이 있어야 한다. 새로 추가하는 식당·카페도 같다. 없으면 `indoor` 값을 알 수 없어 "비가 와요" 코스에서 빠진다.
 - `food_options` 행이 있는 장소는 `category`가 `food` 또는 `cafe`다.
 - 모든 좌표는 지도 범위(7.2) 안에 있다.
+- `address_ko`에는 "제주시" 또는 "서귀포시"가 있어야 하고, 읍·면에 있는 장소는 읍·면 이름까지 적는다. 읍·면 이름이 빠지면 그 장소가 도심 지역(`jeju-city`, `seogwipo-city`)으로 들어간다.
 - `image_url`은 `place-images` 버킷의 공개 URL이다. 한국관광공사 TourAPI 등 공공 데이터의 사진을 쓰고 `image_source`에 출처를 남긴다. AI 생성 이미지는 쓰지 않는다.
 - 2015년 기준 데이터라 폐업이나 변경이 있을 수 있다. 확인한 장소에만 `last_verified_at`를 채운다 (Q-15).
 
@@ -884,14 +954,16 @@ export function toPercent(lat, lng, b = MAP_CONFIG.bounds) {
 - 필드명은 snake_case이고 DB 컬럼 이름과 같다.
 - 값이 없으면 키를 빼지 않고 `null`을 넣는다. 배열은 비어 있어도 `[]`를 넣는다.
 - `start_time`은 `"HH:MM"`(24시간, 한국 시간), 날짜는 `"YYYY-MM-DD"`, `created_at`은 ISO 8601 UTC다.
-- `Course`를 돌려주는 엔드포인트 4개(`POST /courses`, `GET /courses/{id}`, `POST /courses/{id}/replan`, `POST /purchase`)는 같은 `Course` 형태를 쓰고, 무료 3곳 제한도 똑같이 적용한다.
+- `Course`를 돌려주는 엔드포인트 5개(`POST /courses`, `GET /courses/{id}`, `POST /courses/{id}/replan`, `POST /courses/{id}/shuffle`, `POST /purchase`)는 같은 `Course` 형태를 쓰고, 무료 3곳 제한도 똑같이 적용한다.
 
 | 엔드포인트 | 하는 일 | 성공 응답 |
 |---|---|---|
-| `GET /places` | 장소 전체 목록 | 200, `{ "places": Place[] }` |
+| `GET /areas` | 지역 14곳과 고를 수 있는지 | 200, `{ "areas": Area[] }` |
+| `GET /places` | 장소 전체 목록. `area_id`를 주면 그 지역만 | 200, `{ "places": Place[] }` |
 | `POST /courses` | 온보딩 입력으로 코스 생성 | 201, `Course` |
 | `GET /courses/{id}` | 코스 조회. 무료는 3곳까지만 | 200, `Course` |
 | `POST /courses/{id}/replan` | 남은 일정 재구성 | 200, `Course` |
+| `POST /courses/{id}/shuffle` | 같은 선택으로 다른 코스를 새로 만듦 | 201, `Course` |
 | `POST /places/{id}/report` | 문 닫았어요 신고 | 201, 신고 1건 |
 | `POST /purchase` | 결제 목업. `tier`를 `premium`으로 변경 | 200, `Course` |
 
@@ -909,7 +981,10 @@ export function toPercent(lat, lng, b = MAP_CONFIG.bounds) {
 | 404 | `COURSE_ITEM_NOT_FOUND` | `current_order`가 그 코스에 없는 값 | 일반 오류 문구 |
 | 404 | `PLACE_NOT_FOUND` | 없는 장소 ID | 일반 오류 문구 |
 | 409 | `NO_CANDIDATES` | 조건에 맞는 후보가 모자라 일정을 만들 수 없음 | 6.2, 6.4의 문구 |
+| 409 | `CANNOT_SHUFFLE` | `user_profile`에 `start_time`이나 `end_time`이 없는 옛 코스를 다시 짜려 함 (9.6.1) | 6.3의 Shuffle 실패 문구 |
 | 502 | `LLM_FAILED` | LLM 호출이나 검증이 재시도 뒤에도 실패 | 6.2, 6.4의 문구 + 다시 시도 |
+| 422 | `INVALID_TIME_WINDOW` | `start_time`, `end_time`이 9.5의 범위를 벗어남 | 6.2의 문구. 온보딩 6단계에 머문다 |
+| 422 | `INVALID_AREA` | `area_id`가 14개 지역에 없거나 `selectable`이 `false`인 지역 | 온보딩 5단계로 돌아가 지역 목록을 다시 불러온다 (6.2) |
 | 422 | 없음 | 요청 형식이 틀림. FastAPI 기본 응답이라 `detail`이 배열이다 | 일반 오류 문구. 개발 중에 잡아야 하는 버그다 |
 
 프론트 규칙: `detail.code`가 문자열이면 그 코드로 분기한다. 아니면 "Something went wrong."과 Retry를 보여준다.
@@ -937,12 +1012,12 @@ type Accessibility = {
   fatigue_score: 1 | 2 | 3 | 4 | 5;
 };
 
-type FoodOptions = {
-  solo_ok: boolean;
-  vegan: boolean;
-  vegetarian: boolean;
-  halal: boolean;
-  english_menu: boolean;
+type FoodOptions = {        // null = 모름. 배지는 true일 때만
+  solo_ok: boolean | null;
+  vegan: boolean | null;
+  vegetarian: boolean | null;
+  halal: boolean | null;
+  english_menu: boolean | null;
   signature_menu_en: string | null;
   allergens: string | null;
 };
@@ -961,8 +1036,11 @@ type Place = {
   address_ko: string;
   image_url: string | null;
   image_source: string | null;
+  place_type: string | null;          // 체류 시간 유형 (8.2). 화면은 쓰지 않는다
   avg_stay_min: number;
   opening_hours: string | null;
+  open_time: string | null;           // "HH:MM". close_time과 둘 다 null이면 항상 열려 있음
+  close_time: string | null;          // "HH:MM" 또는 "24:00"
   closed_days: string[];              // "mon" ~ "sun"
   price_level: number | null;
   last_verified_at: string | null;    // "YYYY-MM-DD"
@@ -978,8 +1056,10 @@ type UserProfile = {
   avoid_slopes: boolean;
   condition_today: "great" | "normal" | "tired";
   diet: "none" | "vegan" | "vegetarian" | "halal";
-  duration: "half_day" | "full_day";
   conditions: { indoor_only: boolean; low_walking: boolean };   // 응답에만 있다
+  start_time?: string;                // "HH:MM". 응답에만 있다
+  end_time?: string;                  // "HH:MM". 응답에만 있다
+  duration?: "half_day" | "full_day"; // 옛 코스의 응답에만 있다
 };
 
 type CourseItem = {
@@ -996,6 +1076,14 @@ type CourseItem = {
   phrase_cards: PhraseCard[];         // tier가 free면 항상 []
 };
 
+type MealGap = {                      // 빈 식사 시간. 장소가 아니다: 지도 마커도 이동도 없다
+  meal: "lunch" | "dinner";
+  start_time: string;                 // "HH:MM"
+  end_time: string;                   // "HH:MM". start_time + 45분 (MEAL_GAP_MIN)
+  reason: "no_diet_match" | "none_nearby";
+  message_en: string;
+};
+
 type Course = {
   id: string;                         // uuid
   tier: Tier;
@@ -1004,14 +1092,24 @@ type Course = {
   total_items: number;                // 가려진 것을 포함한 전체 항목 수
   locked_count: number;               // 가려진 항목 수. premium이면 0
   items: CourseItem[];                // order 오름차순. free면 앞의 3개만
+  meal_gaps: MealGap[];               // start_time 오름차순. 가려진 항목이 있으면 보이는 정류장 안의 것만
 };
 ```
 
 `total_items`, `locked_count`, `user_profile.conditions`, `CourseItem.place`, `CourseItem.phrase_cards`는 테이블에 없는 응답 전용 필드다 [제안]. 잠금 카드와 화면 한 번 호출 구성을 위해 넣었다.
 
+`MealGap` (`tasks/prd-recommendation-p1.md` FR-11)
+
+- 필요한 식사(10.2)에 맞는 식당을 넣지 못했을 때 그 시간을 비워 두고 이유를 알려준다. 예: `{"meal": "lunch", "start_time": "12:00", "end_time": "12:45", "reason": "no_diet_match", "message_en": "We couldn't find a vegan-friendly restaurant in this area, so we kept 12:00–12:45 free for lunch."}`
+- `reason`: `no_diet_match`는 `diet`가 `none`이 아니고 지역 안에 F-3(식단)을 통과하는 식당이 하나도 없을 때다. `none_nearby`는 그 밖의 경우로, 그 시간에 열려 있고 30분 안에 갈 수 있는 식당이 없을 때다.
+- `message_en` (`{diet}`은 `vegan`, `vegetarian`, `halal`, `{meal}`은 `lunch`, `dinner`):
+  - `no_diet_match`: `We couldn't find a {diet}-friendly restaurant in this area, so we kept {start}–{end} free for {meal}.`
+  - `none_nearby`: `No restaurant we know is open near your stops at this time, so we kept {start}–{end} free for {meal}.`
+- 무료 코스에서 가려진 항목이 있으면(`locked_count` > 0) 보이는 정류장 중 마지막 정류장이 끝나는 시각보다 먼저 시작하는 빈 식사 시간만 돌려준다. 가려진 항목이 없으면 모두 돌려준다. 가려진 정류장의 정보가 서버 밖으로 나가지 않게 하는 규칙(9.6)을 빈 식사 시간에도 지킨다.
+
 ### 9.4 `GET /places`
 
-장소 전체를 `id` 오름차순으로 돌려준다. 지도의 코스 밖 마커와 배포 연결 확인(US-13)에 쓴다. 문장 카드는 프리미엄 전용이라 여기에는 없다.
+장소 전체를 `id` 오름차순으로 돌려준다. 지도의 코스 밖 마커와 배포 연결 확인(US-13)에 쓴다. 문장 카드는 프리미엄 전용이라 여기에는 없다. 선택 인자 `area_id`(예: `GET /places?area_id=aewol`)를 주면 그 지역의 장소만 돌려준다. 지도 화면은 코스의 `area_id`를 주어 부른다. `Place`에는 `area_id` 필드가 있다 (8.2).
 
 응답 200
 
@@ -1030,6 +1128,7 @@ type Course = {
       "address_ko": "제주특별자치도 제주시 용두암길 15",
       "image_url": "https://<project-ref>.supabase.co/storage/v1/object/public/place-images/7.jpg",
       "image_source": "Korea Tourism Organization (TourAPI)",
+      "place_type": "nature",
       "avg_stay_min": 30,
       "opening_hours": null,
       "closed_days": [],
@@ -1061,6 +1160,7 @@ type Course = {
       "address_ko": "제주특별자치도 제주시 예시로 12",
       "image_url": "https://<project-ref>.supabase.co/storage/v1/object/public/place-images/21.jpg",
       "image_source": "Korea Tourism Organization (TourAPI)",
+      "place_type": "restaurant",
       "avg_stay_min": 60,
       "opening_hours": null,
       "closed_days": ["mon"],
@@ -1092,14 +1192,50 @@ type Course = {
 }
 ```
 
+### 9.4.1 `GET /areas`
+
+14개 지역을 항상 모두 `sort_order` 순으로 돌려준다. 온보딩 5단계와 결과 페이지의 지역 이름에 쓴다.
+
+응답 200
+
+```json
+{
+  "areas": [
+    {
+      "id": "aewol",
+      "group": "jeju",
+      "name_en": "Aewol",
+      "name_ko": "애월읍",
+      "description_en": "Coastal cafés and sea views",
+      "center_lat": 33.463,
+      "center_lng": 126.331,
+      "place_count": 100,
+      "selectable": false
+    }
+  ]
+}
+```
+
+`selectable`은 그 지역의 장소가 아래를 모두 채울 때만 `true`다. 숫자는 `backend/app/config.py`의 `AREA_MIN_*`에 있다.
+
+- 장소 10곳 이상 (`REQUIRE_VERIFIED`가 `true`면 사진과 확인일이 있는 장소만 센다)
+- 식당(`food`) 3곳 이상, 그중 `solo_ok`가 `false`가 아닌 곳(`true` 또는 `null`) 2곳 이상
+- 카페(`cafe`) 1곳 이상
+- `walking_level`이 1이고 `terrain`이 `flat`인 장소 4곳 이상
+- 실내 장소 3곳 이상
+
 ### 9.5 `POST /courses`
 
 온보딩 입력으로 코스를 만든다. 처리 순서는 10장이다.
 
 | 요청 필드 | 필수 | 값 |
 |---|---|---|
-| `user_profile` | 예 | 8.9의 키 7개. `conditions`는 보내지 않는다 |
-| `start_time` | 아니오 | `"HH:MM"`. 없으면 `"10:00"` [제안] (Q-06) |
+| `user_profile` | 예 | 8.9의 키 6개 (`interests`~`diet`). `conditions`, `area_id`, `start_time`, `end_time`은 넣지 않는다. `duration`을 넣으면 422다 |
+| `area_id` | 예 | `GET /areas`의 `id` 중 `selectable`이 `true`인 지역 |
+| `start_time` | 예 | `"HH:MM"`. `08:00` 이상 `16:00` 이하, 분은 `00` 또는 `30` |
+| `end_time` | 예 | `"HH:MM"`. 분은 `00` 또는 `30`, `22:00` 이하, `start_time`보다 120분 이상 600분 이하 뒤 |
+
+두 시각이 위 범위를 벗어나면 422 `INVALID_TIME_WINDOW`다. `area_id`가 없는 지역이거나 고를 수 없는 지역이면 422 `INVALID_AREA`다. 서버는 세 값(`area_id`, `start_time`, `end_time`)을 저장하는 `user_profile`에 넣는다. 코스의 모든 정차는 `area_id`의 지역에 속한다. 후보가 모자라도 다른 지역의 장소를 넣지 않고 409 `NO_CANDIDATES`를 돌려준다.
 
 요청
 
@@ -1111,10 +1247,11 @@ type Course = {
     "max_walk_min": 20,
     "avoid_slopes": false,
     "condition_today": "normal",
-    "diet": "vegan",
-    "duration": "full_day"
+    "diet": "vegan"
   },
-  "start_time": "10:00"
+  "area_id": "jeju-city",
+  "start_time": "10:00",
+  "end_time": "18:00"
 }
 ```
 
@@ -1132,8 +1269,9 @@ type Course = {
     "avoid_slopes": false,
     "condition_today": "normal",
     "diet": "vegan",
-    "duration": "full_day",
-    "conditions": { "indoor_only": false, "low_walking": false }
+    "conditions": { "indoor_only": false, "low_walking": false },
+    "start_time": "10:00",
+    "end_time": "18:00"
   },
   "total_items": 6,
   "locked_count": 3,
@@ -1177,9 +1315,12 @@ type Course = {
       "place": { /* Place (id 21, food_options 포함) */ },
       "phrase_cards": []
     }
-  ]
+  ],
+  "meal_gaps": []
 }
 ```
+
+`meal_gaps`는 빈 식사 시간이다 (9.3). 위 예시는 점심을 식당(21번)으로 채웠으므로 비어 있다. 서버는 코스마다 새 seed를 만들어 `user_profile._seed`에 저장한다 (8.9). 요청으로는 seed를 받지 않는다.
 
 오류: 409 `NO_CANDIDATES`, 502 `LLM_FAILED`, 422.
 
@@ -1195,6 +1336,7 @@ type Course = {
 | `total_items` | 전체 항목 수 | 전체 항목 수 |
 | `locked_count` | `total_items − 3` (0보다 작으면 0) | 0 |
 | `phrase_cards` | 항상 `[]` | 그 장소의 문장 카드 |
+| `meal_gaps` | 가려진 항목이 있으면, 보이는 마지막 정류장이 끝나기 전에 시작하는 것만. 없으면 전체 | 전체 |
 
 가려진 항목은 응답에 넣지 않는다. 프론트에서 숨기는 방식으로 만들지 않는다.
 
@@ -1223,6 +1365,21 @@ type Course = {
 
 오류: 404 `COURSE_NOT_FOUND`.
 
+### 9.6.1 `POST /courses/{id}/shuffle`
+
+같은 선택으로 다른 코스를 새로 만든다. 결과 페이지의 "Shuffle my day" 버튼(6.3)이 부른다 (`tasks/prd-recommendation-p1.md` US-P15, FR-20).
+
+- 요청 본문은 없다. 응답은 201과 새 코스의 `Course`다 (`POST /courses`와 같은 모양, 같은 무료 3곳 규칙).
+- 새 코스는 원래 코스의 온보딩 프로필(8.9의 키 6개), `area_id`, `start_time`, `end_time`을 그대로 쓴다. `conditions`와 `_excluded_place_ids`는 처음 상태로 돌린다. 새 코스의 `status`는 `POST /courses`와 같다 (1번이 `current`).
+- `tier`는 원래 코스를 따른다. 구매가 목업이라서다.
+- 원래 코스는 바꾸지 않는다. 새 코스는 새 `id`로 저장된다.
+- seed 고르기 (FR-20):
+  1. 새 seed를 `SHUFFLE_TRIES`(5)개 만든다.
+  2. seed마다 앵커와 후보만 계산하고(LLM을 부르지 않는다), 원래 코스의 정류장과 겹치는 후보 수가 가장 적은 seed부터 쓴다.
+  3. 그 seed로 코스를 만든다. 규칙 플래너일 때 정류장 묶음이 원래와 같으면 다음으로 덜 겹치는 seed로 다시 만든다 (5개를 다 쓸 때까지). LLM일 때는 한 번만 만든다 (호출 비용).
+
+오류: 404 `COURSE_NOT_FOUND`, 409 `CANNOT_SHUFFLE`(`user_profile`에 `start_time`이나 `end_time`이 없는 옛 코스), 409 `NO_CANDIDATES`, 502 `LLM_FAILED`.
+
 ### 9.7 `POST /courses/{id}/replan`
 
 남은 일정을 다시 만든다. 조건별 규칙은 10.7이다.
@@ -1238,6 +1395,9 @@ type Course = {
 2. `rain`, `hungry`, `tired`는 `current` 항목까지 그대로 두고 그 뒤를 다시 만든다. `closed`는 `current` 항목(닫힌 장소)부터 다시 만든다.
 3. 새 일정이 검증까지 끝난 뒤에만 DB를 바꾼다. 실패하면 기존 일정이 그대로 남는다.
 4. `closed`는 같은 요청 안에서 `place_reports`에 신고를 저장한다. 프론트가 `POST /places/{id}/report`를 따로 부르지 않는다.
+5. 식사 (`tasks/prd-recommendation-p1.md` US-P08): 남은 시간의 식사(`meals_needed`, 10.2) 중 이미 채운 식사를 뺀 것을 넣는다. 이미 채운 식사는 남기는 정류장 중 그 식사의 도착 시간대 안에 도착하는 식당이나, 남기는 빈 식사 시간이 있는 식사다 (FR-12).
+6. 빈 식사 시간: 재구성 시작 시각 이후에 시작하는 것은 지우고 다시 만든다. 그 전에 시작한 것은 남긴다. 응답의 `meal_gaps`는 둘을 합친 목록이다.
+7. `hungry`에서 지금 갈 수 있는 식당이 없으면 409 대신 지금부터 45분짜리 빈 식사 시간(`reason`은 `none_nearby`)을 넣고, 그 뒤 남은 시간이 30분 이상이면 나머지를 짠다. 이 빈 시간의 `meal`은 지금 시각이 든 식사의 도착 시간대(한 시간 일찍 연 것)이고, 없으면 시간대가 가장 가까운 식사다.
 
 요청 (비가 와요. 5번 항목에 있을 때)
 
@@ -1263,7 +1423,8 @@ type Course = {
     { "order": 5, "place_id": 11, "start_time": "13:55", "stay_min": 50, "move_method": "taxi", "move_min": 10, "status": "current" },
     { "order": 6, "place_id": 14, "start_time": "14:55", "stay_min": 60, "move_method": "walk", "move_min": 7, "status": "upcoming" },
     { "order": 7, "place_id": 12, "start_time": "16:10", "stay_min": 70, "move_method": "taxi", "move_min": 12, "status": "upcoming" }
-  ]
+  ],
+  "meal_gaps": []
 }
 ```
 
@@ -1342,17 +1503,23 @@ type Course = {
 
 ### 10.1 파이프라인
 
-팀이 정한 5단계다.
+팀이 정한 5단계(필터 → LLM → 검증 → 이동·시각 → 저장)에 P1에서 식사 보장, 동선 다듬기, 체류 시간 조정을 더했다 (`tasks/prd-recommendation-p1.md` 8장). 코드는 `backend/app/planner.py`의 `run_pipeline`이다.
 
 | 단계 | 하는 일 | 하는 주체 | 절 |
 |---|---|---|---|
-| 1 | 식단, 휴무일, 체력, 날씨(실내) 조건으로 1차 필터링 → 후보 15~20곳 | Python | 10.2 |
-| 2 | 후보 장소와 사용자 프로필을 LLM에 넘기고 장소 ID, 순서, 체류 시간, 추천 이유를 JSON으로만 받는다 | LLM | 10.3, 10.4 |
-| 3 | Pydantic으로 형식을 검증하고 DB에 없는 ID를 지운다 | Python | 10.5 |
-| 4 | 좌표로 거리를 계산해 도보·택시 시간을 추정한다 | Python | 10.6 |
-| 5 | Supabase에 저장하고 돌려준다 | Python | 9.5 |
+| 1 | 필터(F-0~F-6, F-8, F-10) → 식사 판단(`meals_needed`) → F-7 | Python | 10.2 |
+| 2 | 앵커(seed) → 후보(F-9. 식사마다 식당 할당량). 후보 20곳 이하 | Python | 10.2 |
+| 3 | 규칙 플래너(seed) 또는 LLM이 장소 ID, 순서, 체류 시간, 추천 이유를 고른다 → 검증 → 여행 시간에 맞추기(이동 30분을 넘는 정류장 빼기, 끝 시각을 넘으면 체류를 줄이고 마지막 정류장 빼기, 영업시간 밖 정류장 빼기) | LLM 또는 Python, 그 뒤 Python | 10.3~10.6 |
+| 4 | `improve_order`: 2-opt로 순서 다듬기 | Python | 10.6 |
+| 5 | `ensure_meals`: 필요한 식사마다 식당이나 빈 식사 시간을 넣는다 → 쉬는 정류장 보장 | Python | 10.2 |
+| 6 | 시각 계산 (`not_before`, 이동 30분, 영업시간) | Python | 10.6 |
+| 7 | `fit_stays`: 체류 시간 줄이기 → 늘리기 | Python | 10.6 |
+| 8 | Supabase에 저장하고 돌려준다. 빈 식사 시간은 `courses.meal_gaps`에 | Python | 8.6, 9.5 |
 
-재구성은 `status`가 `upcoming`인 항목만 지우고 조건을 바꿔 1~5를 다시 실행한다 (10.7).
+- 3단계 뒤, 이미 식사의 도착 시간대 안에 도착하는 식당은 그 식사를 채운 것으로 고정하고, 16:30 이후에 도착하는 저녁 명소는 16:30 전으로 옮기지 않는다. 4~7단계는 이것과 `tasks/prd-recommendation-p1.md` FR-10의 조건(영업시간, 이동 30분, 끝 시각, 정류장 수, 고정 첫 정차)을 지키는 변경만 한다. 10장에서 문서 이름 없이 "FR-10의 조건"이라고 쓴 것은 이것이다.
+- 무작위는 seed를 준 `random.Random` 하나만 쓴다. 쓰는 곳은 앵커와 규칙 플래너의 선택 두 곳이다 (10.2). 같은 seed와 같은 입력이면 같은 코스가 나온다.
+
+재구성은 `status`가 `upcoming`인 항목만 지우고 조건을 바꿔 1~8을 다시 실행한다 (10.7).
 
 역할을 나누는 원칙: LLM은 장소 고르기, 순서, 체류 시간, 추천 이유만 맡는다. ID 검증, 거리, 시각, 이동 방법은 Python이 계산한다.
 
@@ -1360,15 +1527,25 @@ type Course = {
 
 | 규칙 | 조건 | 메모 |
 |---|---|---|
+| F-0 지역 | `area_id`가 코스의 지역과 다른 장소를 뺀다. 재구성은 `user_profile.area_id`를 쓰고, 없으면 `jeju-city`다 | 맨 먼저 적용한다. 뒤의 규칙은 한 지역의 장소만 본다 |
 | F-1 검증된 장소 | 환경 변수 `REQUIRE_VERIFIED`가 `true`면 `image_url`이나 `last_verified_at`가 비어 있는 장소를 뺀다 [제안] | 차별점 1을 코드로 지킨다. 데이터를 채우는 동안에는 `false`로 둔다. 모든 장소에 사진과 확인일을 채운 뒤에만 `true`로 바꾼다. 비어 있는 상태에서 켜면 후보가 0곳이 되어 코스 생성과 재구성이 모두 409 `NO_CANDIDATES`로 실패한다 (2026-11-13 기준 `last_verified_at`가 19곳 모두 비어 있다) |
 | F-2 휴무일 | `closed_days`에 오늘 요일이 있으면 뺀다. 빈 배열이면 영업으로 본다 | 오늘은 한국 시간 기준이다. 서버 시간이 UTC일 수 있으니 변환한다 |
-| F-3 식단 | `food_options`가 있는 장소에만 적용한다. `solo_ok = true`여야 한다 [제안]. `diet`가 `vegan`이면 `vegan = true`, `vegetarian`이면 `vegetarian = true` 또는 `vegan = true`, `halal`이면 `halal = true` | `food_options`가 없는 장소는 식단과 상관없이 통과한다 |
+| F-3 식단 | `category`가 `food`인 장소에만 적용한다. `solo_ok`가 `false`면 뺀다(`true`, `null`은 통과). `diet`가 `vegan`이면 `vegan = true`, `vegetarian`이면 `vegetarian = true` 또는 `vegan = true`, `halal`이면 `halal = true`. 식단 칸이 `null`이면 만족하지 않는 것으로 본다 | 카페와 그 밖의 장소, `food_options`가 없는 장소는 통과한다. 식단은 확인된 곳만 추천한다 (`tasks/prd-recommendation-p0.md` FR-5) |
 | F-4 체력 | `walking_level`이 허용 단계 이하여야 한다. 허용 단계는 `fitness_level`이다. `condition_today`가 `tired`이거나 `conditions.low_walking`이 `true`면 허용 단계는 1이다 [제안] | 숫자가 클수록 힘들다고 가정 (Q-04) |
 | F-5 오르막 | `avoid_slopes`가 `true`면 `terrain = flat`만 남긴다 [제안] | |
 | F-6 날씨 | `conditions.indoor_only`가 `true`면 `indoor = true`만 남긴다 | "비가 와요"를 누르면 켜진다 |
-| F-7 점심 | `needs_lunch`가 `false`면 `category`가 `food`인 후보를 뺀다. 고정된 첫 정차는 예외다 [제안] | 식사가 두 번 들어가지 않게 한다 |
+| F-7 식사 | 필요한 식사(`meals`, 아래)가 하나도 없으면 `category`가 `food`인 후보를 뺀다. 고정된 첫 정차는 예외다 | 식사 시간이 아닐 때 식당이 들어가지 않게 한다. 식사가 있으면 식당은 남기고, 식사 시간 밖에서는 규칙 플래너가 식당을 고르지 않는다 (`tasks/prd-recommendation-p1.md` US-P03) |
 | F-8 재구성 때 제외 | `done`이나 `current`인 장소, 이번에 닫혔다고 신고한 장소를 뺀다 | |
-| F-9 개수 | 20곳이 넘으면 `interests`에 있는 `category`를 먼저 남기고 20곳에서 자른다. `needs_lunch`가 `true`면 `food` 후보를 3곳 이상 남긴다 [제안] | |
+| F-10 영업시간 | 장소의 영업시간(`open_time`~`close_time`)과 여행 시간(재구성은 남은 시간)이 겹치는 길이가 `avg_stay_min`보다 짧으면 뺀다. 둘 다 `null`인 장소는 항상 통과한다 | F-1~F-6, F-8 다음에 적용한다. 고정된 첫 정차는 출발 위치에서 `MAX_MOVE_MIN`(30분) 안에 갈 수 있고, 도착 시각부터 체류가 끝날 때까지 열려 있는 후보에서만 고른다 |
+| F-9 개수 | 앵커(아래)에서 직선거리 6km(`CANDIDATE_MAX_RADIUS_KM`) 안의 장소만 남긴다(남은 곳이 최소 후보 수보다 적으면 이 단계를 건너뛴다). 앵커에 가까운 순으로 먼저 `meals`의 식사마다 그 식사의 도착 시간대 중 어느 시각에 도착해도 체류 시간 동안 열려 있는 식당 4곳(`QUOTA_FOOD`)을 넣는다(두 식사에 같이 뽑힌 식당은 한 번만 센다). 그다음 카페 2곳(`QUOTA_CAFE`), 관심사 카테고리, 나머지 카테고리 순으로 20곳까지 넣는다. 한 카테고리는 8곳(`CATEGORY_CAP`)을 넘지 않는다. 재구성의 고정 첫 정차는 반경과 상관없이 남긴다. 결과는 앵커까지 거리순이다 | 후보가 20곳 이하여도 적용한다. 거리는 `haversine_m`(직선거리)이고 `DETOUR_FACTOR`를 곱하지 않는다 (`tasks/prd-recommendation-p0.md` FR-10, `tasks/prd-recommendation-p1.md` FR-7) |
+
+앵커 (`tasks/prd-recommendation-p0.md` FR-9)
+
+- 재구성: 여행자가 지금 있는 정류장(`origin`)이 앵커다.
+- 새 코스: F-1~F-8, F-10, F-7을 거친 장소(풀) 중 `category`가 `interests`에 있는 장소(없으면 풀 전체)마다, 직선거리 2.5km(`ANCHOR_RADIUS_KM`) 안에 있는 풀의 장소 수(자기 포함)를 센다. 가장 많은 곳이 앵커다. 같으면 반경 안 식당이 많은 곳(`meals`가 비어 있지 않을 때만), 그것도 같으면 id가 작은 곳이다.
+- 필요한 식사가 있으면, 반경 안에 식사마다 그 식사에 열린 식당이 있는 곳을 장소 수보다 먼저 고른다. 평가에서 넓은 지역의 코스가 모든 저녁 식당과 30분 넘게 떨어지는 일이 있어 더했다 (`pyoseon` 저녁 포함률 37% → 100%). P1 PRD에는 없는 규칙이다.
+- seed (`tasks/prd-recommendation-p1.md` FR-19): 위 순서로 상위 3곳(`ANCHOR_TOP_K`) 중, 식사 식당 조건이 1위와 같고 장소 수가 1위의 70%(`ANCHOR_MIN_SHARE`) 이상인 곳에서 균등하게 하나 고른다. seed가 없으면 1위다. 재구성은 지금처럼 `origin`이다.
+- 규칙 플래너는 첫 정차를 고를 때 앵커까지의 거리로 거리 감점을 한다. 첫 정차의 이동 방법과 이동 시간은 그대로 `null`이다.
 
 후보가 모자랄 때 [제안]
 
@@ -1376,11 +1553,42 @@ type Course = {
 - 그래도 2곳 미만이면 409 `NO_CANDIDATES`를 돌려준다.
 - 지금 데이터는 시드 20곳과 식당·카페 5곳 이상이다. 필터를 거치면 후보가 15곳보다 적은 경우가 많다. "15~20곳"은 위쪽 한도로 본다.
 
-`needs_lunch` 규칙 [제안] (Q-08)
+식사 판단 `meals` (Q-08, `tasks/prd-recommendation-p1.md` FR-3~FR-6)
 
-- 새 코스: 코스 시간대가 12:00~13:00을 포함하면 `true`.
-- 재구성: `done`과 `current` 항목에 `category`가 `food`인 장소가 없고, 남은 시간대가 12:00~13:00을 포함하면 `true`.
-- `hungry` 재구성: `false`. 대신 첫 정차를 식당으로 고정한다 (10.7).
+식사는 점심과 저녁 두 가지다. 아침과 간식은 다루지 않는다. 값은 `config.py`의 `MEALS`에 있다.
+
+| 식사 | 핵심 시간 | 도착 시간대 |
+|---|---|---|
+| `lunch` | 12:00–13:00 | 11:30–13:30 |
+| `dinner` | 18:00–19:00 | 17:30–19:30 |
+
+- 여행 시간 [시작, 끝]에 식사가 필요한 조건은 둘 다다 (`meals_needed`).
+  1. 여행 시간과 핵심 시간이 30분(`MEAL_MIN_OVERLAP`) 이상 겹친다.
+  2. `a = max(시작, 도착 시간대 시작)`이 도착 시간대 끝 이하이고, `a + 45분(MEAL_GAP_MIN)`이 끝 이하다. 남은 시간이 짧아 먹을 시간이 없는 경우를 거른다.
+- 예: 09:00–18:00 → 점심, 13:00–19:00 → 저녁, 11:00–20:00 → 점심과 저녁, 12:30–14:30 → 점심, 13:00–17:00 → 없음.
+- 결과는 시간순 목록이다 (`["lunch", "dinner"]`). LLM 입력의 `trip.meals`가 된다 (10.3).
+- 식사를 "식당으로 채웠다"는 것은 `category`가 `food`인 정류장이 그 식사의 도착 시간대 안에 도착한다는 뜻이다. 한 식당은 식사 하나만 채운다.
+- 재구성: 남은 시간의 식사 중 이미 채운 식사를 뺀다 (9.7).
+- `hungry` 재구성: 첫 정차를 식당으로 고정한다 (10.7). 이 식당은 도착 시각이 [도착 시간대 시작 − 60분, 도착 시간대 끝] 안에 드는 식사를 채운 것으로 본다. 남은 다른 식사는 그대로 넣는다.
+
+규칙 플래너의 식사와 seed (FR-8, FR-19)
+
+- 아직 채우지 않은 식사 중 가장 이른 것을 "다음 식사"로 본다. 다음 식사의 도착 시간대가 시작되기 전에는 그 시간대 끝 10분 전을 넘겨 끝나는 다른 정류장을 고르지 않는다.
+- 도착 시간대 안이면 식당에 +10점을 준다. 도착 시간대 밖에서는 식당을 고르지 않는다. 다음 식사를 채울 수 없게 되면(시간대가 지났거나 남은 식당이 없음) 그 식사를 건너뛴다. 건너뛴 식사는 식사 보장이 채운다.
+- 점수에는 같은 카테고리 연속 감점, 저녁 명소(16:30 이후) 가산점, 걷기 부담이 큰 여행자의 카페 가산점이 있다 (FR-14).
+- 각 단계에서 점수가 1위와 1.0(`PICK_MARGIN`) 이내인 선택지 중 상위 3개(`PICK_TOP_K`)에서 seed로 균등하게 하나 고른다. 식당의 +10점은 그대로라 식사 자리는 바뀌지 않는다. 2-opt, 식사 보장, 체류 시간 조정은 무작위를 쓰지 않는다.
+
+식사 보장 `ensure_meals` (FR-9~FR-11)
+
+규칙 플래너와 LLM 결과 모두에 적용한다. `meals`의 식사를 시간순으로 하나씩 처리하고, 이미 채운 식사는 건너뛴다.
+
+1. 코스에 이미 있는 식당이 도착 시간대보다 일찍 도착하면, 도착 시각을 시간대 시작으로 늦춰 그 식사에 쓴다 (`not_before`).
+2. 아니면 식당을 넣는다. 후보 중 코스에 없는 식당을 먼저 보고, 맞는 것이 없을 때만 지역 전체(F-1~F-6, F-8, F-10 통과)의 식당을 본다. 넣을 자리마다 앞 정류장(없으면 앵커나 출발 위치)에서 가까운 식당 10곳을 하나씩 넣어 본다. 들어간 식당의 체류 시간은 범위의 하한이다 (늘리기는 `fit_stays`가 한다).
+3. 끝 시각을 넘어 안 되면, 뺄 수 있는 정류장(고정 첫 정차, 식사 식당, 재구성의 `keep_if_possible`가 아닌 곳) 중 점수가 낮은 3곳에서 1곳이나 2곳을 빼 본다.
+4. FR-10의 조건을 지키는 안 중 (뺀 정류장 수, 택시 횟수, 이동 시간 합, 식당 id)가 가장 작은 안을 쓴다.
+5. 그래도 안 되면 빈 식사 시간(45분, 9.3의 `MealGap`)을 같은 방법으로 넣는다. 빈 식사 시간은 이동 없이 앞 정류장이 끝나는 시각(도착 시간대 시작보다 이르면 시간대 시작)에 시작한다. 마지막 수단으로 그 뒤 정류장을 잘라낸다.
+
+쉬는 정류장 보장 (US-P10): 걷기 부담이 큰 여행자(`condition_today`가 `tired`, `low_walking`, 체력 1)의 코스가 3곳 이상이고 카페가 없으면, 식사 보장과 같은 방법으로 가장 가까운 카페를 `is_rest_stop: true`로 넣는다. 못 넣으면 그대로 둔다 (빈 시간을 만들지 않는다).
 
 ### 10.3 LLM 입력
 
@@ -1400,13 +1608,17 @@ type Course = {
   },
   "trip": {
     "start_time": "10:00",
+    "end_time": "18:00",
     "time_budget_min": 480,
     "min_items": 5,
     "max_items": 7,
-    "needs_lunch": true,
+    "meals": [
+      { "meal": "lunch", "arrive_from": "11:30", "arrive_by": "13:30" }
+    ],
     "indoor_only": false,
     "low_walking": false,
-    "origin": null
+    "origin": null,
+    "anchor": { "lat": 33.5161, "lng": 126.5119 }
   },
   "replan": null,
   "candidates": [
@@ -1418,6 +1630,9 @@ type Course = {
       "lat": 33.5161,
       "lng": 126.5119,
       "avg_stay_min": 30,
+      "min_stay_min": 30,
+      "max_stay_min": 75,
+      "evening_spot": false,
       "walking_level": 1,
       "terrain": "flat",
       "indoor": false,
@@ -1432,6 +1647,9 @@ type Course = {
       "lat": 33.5128,
       "lng": 126.5241,
       "avg_stay_min": 60,
+      "min_stay_min": 40,
+      "max_stay_min": 60,
+      "evening_spot": false,
       "walking_level": 1,
       "terrain": "flat",
       "indoor": true,
@@ -1458,10 +1676,11 @@ type Course = {
     "time_budget_min": 195,
     "min_items": 1,
     "max_items": 2,
-    "needs_lunch": false,
+    "meals": [],
     "indoor_only": true,
     "low_walking": false,
-    "origin": { "name_en": "Samseonghyeol", "lat": 33.5044, "lng": 126.5292 }
+    "origin": { "name_en": "Samseonghyeol", "lat": 33.5044, "lng": 126.5292 },
+    "anchor": null
   },
   "replan": {
     "reason": "rain",
@@ -1475,22 +1694,26 @@ type Course = {
 
 | 필드 | 새 코스 | 재구성 |
 |---|---|---|
-| `trip.start_time` | 요청의 `start_time`. 없으면 `"10:00"` | 10.7의 시작 시각 |
-| `trip.time_budget_min` | `half_day`는 240, `full_day`는 480 [제안] (Q-06) | 코스 종료 시각 − `trip.start_time` |
-| `trip.min_items`, `trip.max_items` | `half_day`는 3~4, `full_day`는 5~7 [제안] | 1 ~ (남은 분 ÷ 70을 내림한 값, 최소 1) [제안] |
-| `trip.needs_lunch` | 10.2 | 10.2 |
+| `trip.start_time` | 요청의 `start_time` | 10.7의 시작 시각 |
+| `trip.end_time` | 요청의 `end_time` | 코스 종료 시각 |
+| `trip.time_budget_min` | `end_time` − `start_time` | 코스 종료 시각 − `trip.start_time` |
+| `trip.min_items`, `trip.max_items` | 여행 길이 `h`(시간)로 정한다. 최소 = `max(2, 반올림(h × 0.65))`, 최대 = `max(최소, 반올림(h × 0.9))`, `반올림(x) = floor(x + 0.5)`. 2시간 → 2~2, 4시간 → 3~4, 8시간 → 5~7, 10시간 → 7~9 | 1 ~ (남은 분 ÷ 70을 내림한 값, 최소 1) [제안] |
+| `trip.meals` | 10.2의 `meals`. 식사마다 `{"meal", "arrive_from", "arrive_by"}`이고 두 시각은 도착 시간대의 시작과 끝이다. 필요한 식사가 없으면 `[]` | 10.2 (남은 시간의 식사 중 이미 채운 것을 뺀다) |
 | `trip.indoor_only`, `trip.low_walking` | 둘 다 `false` | `user_profile.conditions`의 값 |
 | `trip.origin` | `null` | 10.7의 출발 위치 |
+| `trip.anchor` | 10.2의 앵커 좌표 `{"lat", "lng"}` | `null` (출발 위치가 대신한다) |
 | `replan` | `null` | `reason`, `fixed_first_place_id`, `keep_if_possible` (10.7) |
 | `candidates` | 10.2를 통과한 장소 | 10.2를 통과한 장소 |
 
-- 코스 종료 시각 = 1번 항목의 `start_time` + 240분 또는 480분.
+- 코스 종료 시각 = `user_profile.end_time`. 이 값이 없는 옛 코스(`duration`만 있음)는 1번 항목의 `start_time` + 240분(`half_day`) 또는 480분(`full_day`)이다.
+- 후보마다 `open_time`, `close_time`을 넣는다 (`avg_stay_min` 다음).
+- 후보마다 `min_stay_min`, `max_stay_min`(체류 시간 범위, 10.6)과 `evening_spot`을 넣는다 (`avg_stay_min` 다음). `evening_spot`은 이름이나 설명에 `sunset`, `night view`, `night market`, `at night`, `lit up`, `illuminat` 중 하나가 있으면(대소문자 무시) `true`다 (`tasks/prd-recommendation-p1.md` FR-14).
 - `min_items`와 `max_items`는 후보 수보다 클 수 없다.
 
 ### 10.4 시스템 프롬프트
 
 ```text
-You are a day-trip planner for solo foreign travelers in Jeju City, South Korea.
+You are a day-trip planner for solo foreign travelers in Jeju, South Korea.
 You receive one JSON object with "traveler", "trip", "replan" and "candidates".
 Plan the stops and return JSON only.
 
@@ -1499,19 +1722,23 @@ Hard rules
 2. Use each place at most once.
 3. Choose between trip.min_items and trip.max_items places.
 4. The total of stay_min plus rough travel time between stops must fit within trip.time_budget_min.
-5. If trip.needs_lunch is true, include exactly one place whose category is "food", placed so that it starts between 11:30 and 13:30.
+   The whole stay at a place must be inside its opening hours: between the candidate's open_time and close_time (both null means always open).
+5. For each item in trip.meals, include exactly one place whose category is "food", arriving between its arrive_from and arrive_by. Use a different food place for each meal. Do not add food places at other times.
 6. If replan.fixed_first_place_id is set, that place must be the first item.
 7. If replan.keep_if_possible is not empty, keep those places in that order unless another hard rule forbids it.
 
 Preferences
-8. Prefer categories listed in traveler.interests.
-9. Order the stops so the route does not zigzag. Use lat and lng. If trip.origin is given, start near it.
+8. Prefer categories listed in traveler.interests. Prefer food places where food.solo_ok is true.
+   Avoid two stops of the same category in a row when there is another choice.
+   Visit places with "evening_spot": true at 16:30 or later when the trip allows it.
+9. Order the stops so the route does not zigzag. Use lat and lng. If trip.origin is given, start near it. Otherwise start near trip.anchor.
 10. If traveler.fitness_level is 1, traveler.condition_today is "tired", or trip.low_walking is true: prefer lower walking_level and fatigue_score, choose fewer stops, and include a rest stop (a cafe or a place to sit) with "is_rest_stop": true.
-11. Keep stay_min close to the candidate's avg_stay_min.
+11. Choose stay_min between the candidate's min_stay_min and max_stay_min. Use avg_stay_min unless the trip has spare time or is short.
 
 Writing reason_en
 12. One or two short sentences, at most 200 characters, in plain English, addressed to the traveler as "you".
 13. Use only facts that appear in the input. Do not mention opening hours, prices, history, transport, travel time, or anything else that is not in the candidate data.
+14. In "food", null means not known. Mention an option only when it is true.
 
 Output
 Return only one JSON object in exactly this shape. No markdown, no code fence, no extra text.
@@ -1584,7 +1811,7 @@ class LLMCourse(BaseModel):
 | V-2 | `place_id`가 후보 목록에 없는 항목을 버린다. 후보는 DB에서 뽑았으므로 DB에 없는 ID도 여기서 걸러진다 |
 | V-3 | 같은 `place_id`가 두 번 나오면 첫 번째만 남긴다 |
 | V-4 | 고정된 첫 정차가 있으면 그 항목을 맨 앞에 둔다. LLM이 빠뜨렸으면 백엔드가 넣는다 (`stay_min`은 `avg_stay_min`, `reason_en`은 정해 둔 문장) |
-| V-5 | `stay_min`이 10 미만이거나 240을 넘으면 그 장소의 `avg_stay_min`으로 바꾼다 [제안] |
+| V-5 | `stay_min`이 10 미만이거나 240을 넘으면 그 장소의 `avg_stay_min`으로 바꾼다 [제안]. 그 뒤 장소의 체류 시간 범위(10.6)로 자른다 |
 | V-6 | `order` 순으로 정렬하고 번호를 다시 매긴다. 새 코스는 1부터, 재구성은 남겨 둔 마지막 항목의 다음 번호부터 |
 | V-7 | 남은 항목이 0개면 실패로 본다. 10.8 |
 
@@ -1598,8 +1825,16 @@ class LLMCourse(BaseModel):
 | `WALK_M_PER_MIN` | 67 | 도보 속도 (약 4km/h) |
 | `TAXI_M_PER_MIN` | 333 | 택시 속도 (약 20km/h) |
 | `TAXI_EXTRA_MIN` | 5 | 택시를 잡고 타고 내리는 시간 |
-| `HALF_DAY_MIN`, `FULL_DAY_MIN` | 240, 480 | 반나절과 하루의 길이(분) (Q-06) |
-| `DEFAULT_START` | "10:00" | 코스 시작 시각 기본값 (Q-06) |
+| `MIN_START`, `MAX_START` | "08:00", "16:00" | 시작 시각의 범위 (9.5) |
+| `MAX_END` | "22:00" | 가장 늦은 종료 시각 |
+| `MIN_TRIP_MIN`, `MAX_TRIP_MIN` | 120, 600 | 여행 길이(분)의 범위 |
+| `TIME_STEP_MIN` | 30 | 시작·종료 시각의 단위(분) |
+| `HALF_DAY_MIN`, `FULL_DAY_MIN` | 240, 480 | 옛 코스(`duration`만 있음)를 재구성할 때만 쓰는 길이(분) |
+| `MAX_MOVE_MIN` | 30 | 한 번의 이동에 쓸 수 있는 가장 긴 시간(분). 넘는 정차는 코스에 넣지 않는다 |
+| `MEAL_MIN_OVERLAP`, `MEAL_GAP_MIN` | 30, 45 | 식사 판단 (10.2). `MEAL_GAP_MIN`은 빈 식사 시간의 길이이기도 하다 |
+| `STAY_BY_TYPE` | 8.2의 유형별 (기본값, 하한, 상한) | 체류 시간 범위 (아래) |
+| `STAY_STEP_MIN` | 5 | 체류 시간을 늘리고 줄이는 단위(분) |
+| `MAX_2OPT_ROUNDS` | 50 | 2-opt를 되풀이하는 최대 횟수 |
 
 계산 규칙
 
@@ -1607,9 +1842,14 @@ class LLMCourse(BaseModel):
 2. 도보(분) = 올림(거리 ÷ 67). 택시(분) = 올림(거리 ÷ 333) + 5.
 3. 도보(분)가 `max_walk_min` 이하면 `walk`, 넘으면 `taxi`다.
 4. 코스의 1번 항목은 `move_method`와 `move_min`이 `null`이고 `start_time`은 코스 시작 시각이다.
-5. 그 뒤 항목의 `start_time` = 앞 항목의 `start_time` + 앞 항목의 `stay_min` + 이 항목의 `move_min`. 5분 단위로 올린다.
+5. 그 뒤 항목의 `start_time` = `max(올림5(앞 항목이 끝나는 시각 + 이 항목의 move_min), not_before)`. `올림5`는 5분 단위로 올리는 것이다. `not_before`는 그보다 일찍 시작하면 안 되는 시각으로, 식사 식당은 도착 시간대 시작(예: 11:30), 16:30 이후로 잡힌 저녁 명소는 16:30이다. 그 사이는 기다리는 시간이다. 빈 식사 시간은 이동 없이 앞 항목이 끝나는 시각(`not_before`보다 이르면 `not_before`)에 시작하고 45분이다. 그 뒤 정류장의 이동은 빈 식사 시간 앞의 정류장에서 잰다.
 6. 재구성으로 새로 만든 첫 항목은 출발 위치(10.7)에서 오는 이동으로 계산한다.
-7. 끝나는 시각이 코스 종료 시각을 넘는 항목은 뒤에서부터 뺀다. 1개는 남긴다.
+7. 끝나는 시각이 코스 종료 시각을 넘으면, 먼저 식당이 아닌 정류장의 체류 시간을 뒤에서부터 5분씩 하한까지 줄인다. 그래도 넘는 항목은 뒤에서부터 뺀다. 1개는 남긴다.
+8. 영업시간 밖인 항목(`start_time`이 `open_time`보다 이르거나, `start_time` + `stay_min`이 `close_time`보다 늦음)은 코스에서 빼고 남은 항목의 시각을 1번부터 다시 계산한다. 그런 항목이 없을 때까지 반복한다. `open_time`이 `null`인 장소는 항상 통과한다. 다 빼서 항목이 없으면 409 `NO_CANDIDATES`다. 규칙 플래너는 처음부터 이런 장소를 고르지 않는다.
+
+9. 한 번의 이동(`move_min`)이 `MAX_MOVE_MIN`을 넘는 항목은 코스에서 빼고 남은 항목의 시각을 1번부터 다시 계산한다. 규칙 7, 8보다 먼저 확인하고, 그런 항목이 없을 때까지 반복한다. 다 빼서 항목이 없으면 409 `NO_CANDIDATES`다. 규칙 플래너는 처음부터 이런 장소를 고르지 않는다. 지역이 넓어(읍은 10km, 두 도심 지역은 20km를 넘는다) 긴 택시 이동이 생기는 것을 막는다.
+
+이동 시간 가정(`DETOUR_FACTOR`, `TAXI_M_PER_MIN`, `TAXI_EXTRA_MIN`)은 원도심 기준으로 정한 값이다. 읍·면 지역의 실제 택시 시간과는 아직 비교하지 않았다 (`tasks/prd-start-area.md` 8장).
 
 검산. 9.6 예시 코스의 값이다 (`max_walk_min`은 20).
 
@@ -1621,6 +1861,28 @@ class LLMCourse(BaseModel):
 | 4 → 5 | 1,601m | 24분 | 10분 | taxi 10 | 13:45 + 10 = 13:55 | 13:55 |
 | 5 → 6 | 2,723m | 41분 | 14분 | taxi 14 | 14:45 + 14 = 14:59 | 15:00 |
 
+체류 시간 범위 (`tasks/prd-recommendation-p1.md` FR-17b)
+
+- 장소마다 체류 시간의 하한과 상한이 있다: `(min(유형 하한, avg_stay_min), max(유형 상한, avg_stay_min))`. 유형별 값은 `STAY_BY_TYPE`이다 (예: 오름 60–90, 포구 20–45, 카페 30–60, 식당 40–60). 원본에 적힌 체류 시간이 유형 범위 밖이면 범위가 그 값까지 넓어진다.
+- `place_type`이 없는 옛 데이터는 `avg_stay_min`의 0.75배(최소 20)부터 2배(최대 180)까지를 5분 단위로 반올림해 쓴다. 상한은 어느 경우든 240 이하다 (V-5).
+
+동선 다듬기 `improve_order` (FR-16)
+
+- 2-opt다. 고정 첫 정차를 뺀 구간에서 i < j인 (i, j)마다 i~j 정류장의 순서를 뒤집어 본다. 더 짧아지고 FR-10의 조건(영업시간, 이동 30분, 끝 시각, 채운 식사의 도착 시간대, 16:30 이후 저녁 명소, 고정 첫 정차)을 지키면 그 순서로 바꾼다. 더 짧아지지 않을 때까지(최대 50번) 되풀이한다.
+- "짧다"는 (택시 횟수, 이동 시간 합)을 이 순서로 비교한 것이다. 이동은 재구성의 출발 위치, 새 코스는 앵커에서부터 잰다. FR-16은 이동 시간만 비교하라고 했지만, 택시는 20분 걷기보다 빨라서 이동 시간만 보면 걷던 구간이 택시로 바뀐다. 평가에서 택시 횟수가 1.71에서 2.50으로 늘었고, 택시 횟수를 먼저 보면 1.43이다 (`backend/eval/p1-rules.json`).
+
+체류 시간 조정 `fit_stays` (FR-18). 파이프라인의 마지막 단계다.
+
+1. 줄이기: 마지막 항목이 끝 시각을 넘으면 식당이 아닌 정류장을 뒤에서부터 5분씩 하한까지 줄인다. 그래도 넘으면 마지막 정류장을 빼고 처음부터 다시 한다.
+2. 늘리기: 남는 시간(여행 시간 − 체류 합 − 이동 합 − 빈 식사 시간 합. 기다리는 시간과 끝난 뒤 남는 시간을 모두 센다)이 5분 이상이면, 아래 순위에서 처음으로 늘릴 수 있는 정류장을 5분 늘린다. 남는 시간이 5분 미만이 되거나 늘릴 수 있는 정류장이 없을 때까지 되풀이한다.
+   1. 기다리는 시간(`not_before`) 바로 앞의 정류장
+   2. 관심사 카테고리의 정류장
+   3. 걷기 부담이 큰 여행자의 카페
+   4. 그 밖의 정류장
+   5. 식당
+   - 같은 순위 안에서는 앞 정류장이 먼저다. "늘릴 수 있다"는 상한 아래이고, 늘린 뒤 FR-10의 조건을 지킨다는 뜻이다. 빈 식사 시간은 늘리거나 줄이지 않는다.
+3. 마무리: 시작 시각을 5분 단위로 올려서 생긴 5분 미만의 틈은 그 앞 정류장의 체류 시간에 더한다. 상한과 FR-10의 조건을 지킬 때만 더하고, 어느 항목의 시작 시각도 바뀌지 않는다.
+
 ### 10.7 재구성 조건표
 
 | | `rain` | `tired` | `hungry` | `closed` |
@@ -1628,15 +1890,16 @@ class LLMCourse(BaseModel):
 | 그대로 두는 항목 | `done`, `current` | `done`, `current` | `done`, `current` | `done` |
 | 다시 만드는 범위 | `current` 다음부터 | `current` 다음부터 | `current` 다음부터 | `current` 항목부터 (닫힌 장소를 지운다) |
 | 시작 시각 | `current`의 `start_time` + `stay_min` | 왼쪽과 같음 | 왼쪽과 같음 | `current`의 `start_time` |
+| 종료 시각 | `user_profile.end_time` (옛 코스는 10.3) | 왼쪽과 같음 | 왼쪽과 같음 | 왼쪽과 같음 |
 | 출발 위치 | `current` 장소 | `current` 장소 | `current` 장소 | 닫힌 장소 (사용자가 지금 서 있는 곳) |
 | 바뀌는 조건 | `conditions.indoor_only = true` | `conditions.low_walking = true` | 없음 | 닫힌 장소를 후보에서 뺀다 |
 | 조건이 이후에도 남는가 | 남는다 | 남는다 | 해당 없음 | 닫힌 장소는 이 코스에서 계속 빠진다 |
 | 고정된 첫 정차 | 없음 | 없음 | 출발 위치에서 가장 가까운 `food` 후보 | 출발 위치에서 가장 가까운, 닫힌 장소와 같은 `category`의 후보. 없으면 `category`와 상관없이 가장 가까운 후보 |
-| 추가로 하는 일 | 없음 | 없음 | 고정한 식당 외의 `food` 후보를 뺀다 | `place_reports`에 저장. 새 첫 항목의 `status`는 `current` |
+| 추가로 하는 일 | 없음 | 없음 | 고정한 식당이 채운 식사를 `meals`에서 뺀다 (10.2). 남은 식사가 없으면 F-7이 고정한 식당 외의 `food` 후보를 뺀다. 갈 수 있는 식당이 없으면 빈 식사 시간을 넣는다 (9.7) | `place_reports`에 저장. 새 첫 항목의 `status`는 `current` |
 
 - 이 표의 "남는다", 출발 위치, 고정된 첫 정차는 [제안]이다 (Q-09, Q-10, Q-17).
 - 조건이 남는 이유: "비가 와요" 다음에 "문 닫았어요"를 누르는 경우가 있다. 조건이 남지 않으면 비가 오는데 실외 장소가 대체 장소로 나올 수 있다.
-- 고정된 첫 정차는 Python이 거리로 고른다. F-7(점심)을 적용하기 전의 후보에서 고른다. 닫힌 곳이 식당이면 대체 장소도 식당이어야 하기 때문이다. LLM은 그 장소를 첫 항목에 두고 추천 이유를 쓴다. 고를 후보가 없으면 409 `NO_CANDIDATES`다.
+- 고정된 첫 정차는 Python이 거리로 고른다. F-7(식사)을 적용하기 전의 후보에서 고른다. 닫힌 곳이 식당이면 대체 장소도 식당이어야 하기 때문이다. LLM은 그 장소를 첫 항목에 두고 추천 이유를 쓴다. 고를 후보가 없으면 409 `NO_CANDIDATES`다. 다만 `hungry`는 409 대신 빈 식사 시간을 넣는다 (9.7).
 - `keep_if_possible`: 기존 `upcoming` 항목의 장소 중 새 필터를 통과한 것을 원래 순서대로 넣는다. 재구성 때마다 일정이 통째로 바뀌는 것을 줄인다.
 
 처리 순서
@@ -1750,13 +2013,13 @@ LLM 설정 [제안]: temperature를 낮게(예: 0.3) 두어 결과가 덜 흔들
 | ID | 질문 | 임시 기본값 | 영향 받는 곳 | 정할 사람 |
 |---|---|---|---|---|
 | Q-07 | "걷기 가능 시간"은 한 번에 이어서 걷는 시간인가, 하루에 걷는 시간의 합인가? | 한 번에 이어서 걷는 시간. 도보와 택시를 가르는 기준으로 쓴다 | 6.2, 8.9, 10.6 | C |
-| Q-08 | 코스에 점심 식당을 항상 넣나? | 코스 시간대가 12:00~13:00을 포함하면 1곳 넣는다 | 10.2 | C |
+| Q-08 | 코스에 점심 식당을 항상 넣나? | v0.13: 점심과 저녁 모두 판단한다. 여행 시간이 식사의 핵심 시간과 30분 이상 겹치고 먹을 시간(45분)이 남으면 그 식사에 식당을 1곳 넣는다. 맞는 식당이 없으면 빈 식사 시간을 넣는다 (`tasks/prd-recommendation-p1.md` FR-5) | 10.2 | C |
 | Q-09 | "문 닫았어요"는 현재 일정의 장소만 신고하나? 신고 저장은 재구성 요청 안에서 하나? | 둘 다 그렇다. 프론트는 재구성만 호출한다 | 6.4, 9.7, 9.8, 10.7 | A, B |
 | Q-10 | "비가 와요"와 "피곤해요"로 켜진 조건을 그 뒤 재구성에도 계속 적용하나? 끄는 방법이 필요한가? | 계속 적용한다. 끄는 버튼은 만들지 않는다 | 8.9, 10.7 | B |
 | Q-11 | 현재 일정은 어떻게 정하나? 사용자가 누르는 방식인가, 시계 기준인가? | 사용자가 "Done, next stop"을 누른다. 실제 시각과 일정이 어긋날 수 있어 시계 기준은 쓰지 않는다 | 6.4, 9.7 | A |
 | Q-12 | `is_rest_stop`은 누가 어떤 기준으로 채우나? | LLM 출력에 넣는다 | 8.7, 10.4, 10.5 | B |
 | Q-13 | 지도 범위 밖의 장소는 어떻게 하나? | DB에 넣지 않는다. 프론트는 범위 밖 좌표를 그리지 않는다 | 7.10, 8.10 | C, A |
-| Q-14 | `opening_hours`, `closed_days`, `price_level`, `allergens`의 형식은? | `closed_days`만 `mon`~`sun` 배열로 정해 필터에 쓴다. 나머지는 형식을 정할 때까지 화면에 쓰지 않는다 | 8.2, 8.4, 10.2 | C |
+| Q-14 | `opening_hours`, `closed_days`, `price_level`, `allergens`의 형식은? | `closed_days`는 `mon`~`sun` 배열로 정해 필터에 쓴다. 영업시간은 `open_time`·`close_time`(`"HH:MM"`)을 따로 두어 필터와 시각 계산에 쓰고(v0.10), `opening_hours` 문장은 그대로 둔다. 나머지는 형식을 정할 때까지 화면에 쓰지 않는다 | 8.2, 8.4, 10.2 | C |
 | Q-15 | "마지막 확인일"은 무엇을 어떻게 확인한 날인가? 영업 여부를 어디서 확인하면 확인한 것으로 보나? | 없음. 확인 방법을 설명할 수 있어야 한다 | 8.2 | C |
 | Q-16 | 사진 출처(`image_source`)를 어떤 형식으로 적나? 사진마다 이용 조건을 어떻게 확인하나? | 출처 기관 이름을 영어로 적는다. 이용 조건은 사진을 받을 때 확인한다 | 6.3, 8.2 | C |
 | Q-17 | "배고파요"와 "문 닫았어요"는 남은 일정 전체를 LLM으로 다시 만드나, 식당 하나 끼우기와 한 곳 바꾸기만 규칙으로 처리하나? | 팀이 정한 대로 LLM으로 다시 만들고 첫 정차만 Python이 고정한다. 규칙만으로 처리하면 더 빠르고 결과가 일정하다 | 10.7 | B |
@@ -1772,7 +2035,7 @@ LLM 설정 [제안]: temperature를 낮게(예: 0.3) 두어 결과가 덜 흔들
 | Q-22 | ~~지도 일러스트는 누가 어떤 방법으로 그리나?~~ | 결정(2026-11-12): 일러스트 대신 카카오맵을 쓴다. 2026-11-13: 대체 SVG는 명세에서 뺐다 (7.1) | 7장 | A |
 | Q-23 | 결과 지도에 코스에 없는 장소의 마커도 보여주나? | 작고 흐리게 보여준다 | 7.5 | A |
 | Q-24 | 기준 화면 크기는? | 모바일 폭 기준. 넓은 화면에서는 가운데에 같은 폭으로 | 6.0 | A |
-| Q-27 | 카카오맵은 범위 제한이 없다. 지도 범위(7.2) 밖이라 뺀 장소(함덕해수욕장, 4·3평화공원 등 8곳)를 다시 넣나? | 결정(2026-11-13): 지금은 넣지 않고 범위를 그대로 둔다. 나중에 사용자가 출발 위치나 여행할 지역을 입력하면 그 주변으로 코스를 짜는 기능을 만들 때 범위, 시드 데이터, 이동 시간 가정(10.6)을 함께 다시 정한다 (4.3) | 7.2, 7.10 | C, A |
+| Q-27 | 카카오맵은 범위 제한이 없다. 지도 범위(7.2) 밖이라 뺀 장소(함덕해수욕장, 4·3평화공원 등 8곳)를 다시 넣나? | 결정됨(2026-11-14): 넣는다. 범위를 제주도 전체로 넓히고 여행자가 14개 지역 중 하나를 고르게 했다. 지역, 범위, 시드 데이터, 이동 시간 상한은 `tasks/prd-start-area.md`가 정한다 | 4.3, 6.2, 7.2, 7.10, 8.2.1, 9.4.1, 10.6 | C, A, B |
 
 ### 13.4 담당자가 바꿔도 되는 것
 

@@ -4,7 +4,13 @@
 - terrain: free-text description -> flat / slope / steep
 - closed_days: free text -> ["mon".."sun"]
 - price_level: free/low/mid/high -> 0/1/2/3
+- open_time / close_time: "HH:MM" or both empty (always open). A badly formed value stops the build
 - places outside the map bounds (7.2) are skipped (Q-13 default)
+- place_type / avg_stay_min: the seed category, `nature` split into forest / waterfall / port by the English
+  name; an empty stay time gets the type's default (tasks/prd-recommendation-p1.md FR-17, FR-17a)
+- area_id: from the coordinates and the Jeju boundary file (app/areas.py area_of_point). When the point is
+  in no boundary, from address_ko (area_of_address). When neither says, the build stops
+  (tasks/prd-recommendation-p0.md US-R06). Places whose two answers differ are listed at the end
 
 Run:  backend/.venv/Scripts/python.exe backend/scripts/build_places.py
 """
@@ -17,11 +23,17 @@ import sys
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[2]
+sys.path.insert(0, str(ROOT / "backend"))
+
+from app.areas import area_of_address, area_of_point  # noqa: E402
+from app.config import STAY_BY_TYPE  # noqa: E402
+
 SEED = ROOT / "data" / "seed"
 OUT = ROOT / "backend" / "app" / "data"
 
-# Same values as frontend/config/map.ts (7.2)
-BOUNDS = {"lngMin": 126.44, "lngMax": 126.56, "latMin": 33.46, "latMax": 33.53}
+# All of Jeju: the main island, Udo and the Chuja Islands (start-area FR-10).
+# Must be the same as `bounds` in frontend/config/map.ts.
+BOUNDS = {"lngMin": 126.10, "lngMax": 127.00, "latMin": 33.10, "latMax": 34.00}
 
 CATEGORY_MAP = {
     "nature": "nature",
@@ -100,6 +112,44 @@ def image_source_of(raw: str) -> str | None:
     return s
 
 
+HHMM = re.compile(r"^([01]\d|2[0-3]):[0-5]\d$")
+
+
+def parse_open_close(pid: int, open_raw: str, close_raw: str) -> tuple[str | None, str | None]:
+    """Both empty -> (None, None) = always open. close_time may be "24:00" (open past midnight)."""
+    o, c = (open_raw or "").strip(), (close_raw or "").strip()
+    if not o and not c:
+        return None, None
+    if not o or not c:
+        raise ValueError(f"place {pid}: open_time and close_time must both be set or both be empty ({o!r}, {c!r})")
+    if not HHMM.match(o):
+        raise ValueError(f"place {pid}: open_time {o!r} is not HH:MM")
+    if c != "24:00" and not HHMM.match(c):
+        raise ValueError(f"place {pid}: close_time {c!r} is not HH:MM")
+    if o >= c:
+        raise ValueError(f"place {pid}: open_time {o} must be earlier than close_time {c}")
+    return o, c
+
+
+# tasks/prd-recommendation-p1.md FR-17a: a `nature` place becomes the first type its English name matches.
+NATURE_SPLIT = [
+    (re.compile(r"forest|gotjawal|arboretum"), "forest"),
+    (re.compile(r"falls|waterfall"), "waterfall"),
+    (re.compile(r"\bport\b|harbou?r"), "port"),
+]
+
+
+def place_type_of(pid: int, seed_category: str, name_en: str) -> str:
+    """FR-17a: the seed category, with `nature` split by name. A category FR-17 does not list stops the build."""
+    t = seed_category.strip()
+    if t not in STAY_BY_TYPE:
+        raise ValueError(f"place {pid}: category {t!r} has no stay time in config.STAY_BY_TYPE")
+    if t == "nature":
+        name = name_en.lower()
+        t = next((kind for rx, kind in NATURE_SPLIT if rx.search(name)), "nature")
+    return t
+
+
 def in_bounds(lat: float, lng: float) -> bool:
     return BOUNDS["latMin"] <= lat <= BOUNDS["latMax"] and BOUNDS["lngMin"] <= lng <= BOUNDS["lngMax"]
 
@@ -108,7 +158,7 @@ def main() -> int:
     acc = {int(r["place_id"]): r for r in read("place_accessibility.csv")}
     food = {int(r["place_id"]): r for r in read("food_options.csv")}
 
-    places, skipped = [], []
+    places, skipped, moved = [], [], []
     for r in read("places.csv"):
         pid = int(r["id"])
         if not r["lat"].strip() or not r["lng"].strip():
@@ -123,16 +173,26 @@ def main() -> int:
             skipped.append((pid, r["name_en"], "no accessibility row"))
             continue
 
+        by_address = area_of_address(r["address_ko"])
+        area_id = area_of_point(lat, lng) or by_address
+        if area_id is None:
+            raise ValueError(f"place {pid} ({r['name_en']}): cannot tell the area from its coordinates "
+                             f"or from address_ko {r['address_ko']!r}")
+        if by_address != area_id:
+            moved.append((pid, r["name_ko"].strip(), r["address_ko"].strip(), by_address, area_id))
+        open_time, close_time = parse_open_close(pid, r.get("open_time", ""), r.get("close_time", ""))
         category = CATEGORY_OVERRIDE.get(pid) or CATEGORY_MAP.get(r["category"].strip(), "culture")
+        place_type = place_type_of(pid, r["category"], r["name_en"])
         f = food.get(pid)
         food_options = None
         if f is not None:
+            # true / false / null: an empty cell is "not known", not "no" (prd-recommendation-p0 US-R03)
             food_options = {
-                "solo_ok": bool(to_bool(f["solo_ok"])),
-                "vegan": bool(to_bool(f["vegan"])),
-                "vegetarian": bool(to_bool(f["vegetarian"])),
-                "halal": bool(to_bool(f["halal"])),
-                "english_menu": bool(to_bool(f["english_menu"])),
+                "solo_ok": to_bool(f["solo_ok"]),
+                "vegan": to_bool(f["vegan"]),
+                "vegetarian": to_bool(f["vegetarian"]),
+                "halal": to_bool(f["halal"]),
+                "english_menu": to_bool(f["english_menu"]),
                 "signature_menu_en": (f["signature_menu_en"].split(" (")[0].split(" - ")[0].strip() or None),
                 "allergens": f["allergens"].strip() or None,
             }
@@ -143,14 +203,19 @@ def main() -> int:
             "name_en": r["name_en"].strip(),
             "name_ko": r["name_ko"].strip(),
             "category": category,
+            "place_type": place_type,
             "description_en": r["description_en"].strip(),
             "lat": lat,
             "lng": lng,
             "address_ko": r["address_ko"].strip(),
+            "area_id": area_id,
             "image_url": r["image_url"].strip() or None,
             "image_source": image_source_of(r["image_source"]) if r["image_url"].strip() else None,
-            "avg_stay_min": to_int(r["avg_stay_min"]) or 45,
+            # FR-17: the seed value when there is one (28 places), otherwise the default of the type
+            "avg_stay_min": to_int(r["avg_stay_min"]) or STAY_BY_TYPE[place_type][0],
             "opening_hours": r["opening_hours"].strip() or None,
+            "open_time": open_time,
+            "close_time": close_time,
             "closed_days": parse_closed_days(r["closed_days"]),
             "price_level": PRICE_MAP.get(r["price_level"].strip().lower()),
             "last_verified_at": r["last_verified_at"].strip() or None,
@@ -190,8 +255,23 @@ def main() -> int:
     print(f"places: {len(places)} kept, {len(skipped)} skipped; phrase cards: {len(cards)}")
     for pid, name, why in skipped:
         print(f"  skipped {pid:>2} {name} ({why})")
+    print("place types (FR-17): places, mean avg_stay_min (all / without a seed stay time)")
+    seeded = {int(r["id"]) for r in read("places.csv") if r["avg_stay_min"].strip()}
+    for t in STAY_BY_TYPE:
+        mine = [p for p in places if p["place_type"] == t]
+        plain = [p["avg_stay_min"] for p in mine if p["id"] not in seeded]
+        if mine:
+            print(f"  {t:16} {len(mine):>4}  {sum(p['avg_stay_min'] for p in mine) / len(mine):6.1f}"
+                  f"  {sum(plain) / len(plain) if plain else 0:6.1f}")
+    print(f"area from coordinates differs from the address rule: {len(moved)} places")
+    for pid, name, address, by_address, area_id in moved:
+        print(f"  {pid:>4} {name} | {address} | {by_address} -> {area_id}")
     return 0
 
 
 if __name__ == "__main__":
-    sys.exit(main())
+    try:
+        sys.exit(main())
+    except ValueError as e:
+        print(f"ERROR: {e}")
+        sys.exit(1)

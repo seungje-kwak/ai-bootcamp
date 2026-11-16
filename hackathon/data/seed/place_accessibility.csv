@@ -73,3 +73,995 @@
 72,,,,,true,,true,,"VisitJeju convenience: 현금결제, 카드결제, 화장실, 음료대"
 73,,,,,true,,true,,"VisitJeju convenience: 공용주차장, 화장실, 무료 WIFI"
 74,,,,,true,,true,,"VisitJeju convenience: 공용주차장, 현금결제, 카드결제, 화장실"
+75,,,,,,,,,KTO bulk import - accessibility not surveyed; parking=가능
+76,,,,,,,false,,KTO bulk import - accessibility not surveyed; parking=불가능
+77,,,,,,,true,,KTO bulk import - accessibility not surveyed; parking=가능 (약 소형 123대 / 대형 16대)
+78,,,,,false,,,,KTO bulk import - accessibility not surveyed; parking=불가능
+79,,,,,false,,,,KTO bulk import - accessibility not surveyed; parking=가능
+80,,,,,,,,,KTO bulk import - accessibility not surveyed; parking=가능
+81,,,,,false,,,,KTO bulk import - accessibility not surveyed; parking=가능
+82,,,,,,,true,,KTO bulk import - accessibility not surveyed; parking=가능
+83,,,,,,,,,KTO bulk import - accessibility not surveyed; parking=가능
+84,,,,,,,,,KTO bulk import - accessibility not surveyed; parking=불가
+85,,,,,false,,false,,KTO bulk import - accessibility not surveyed; parking=불가능
+86,,,,,,,,,KTO bulk import - accessibility not surveyed; parking=불가능
+87,,,,,,,true,,KTO bulk import - accessibility not surveyed; parking=가능
+88,,,,,false,,,,KTO bulk import - accessibility not surveyed; parking=가능
+89,,,,,false,,,,KTO bulk import - accessibility not surveyed; parking=불가능
+90,,,,,,,true,,KTO bulk import - accessibility not surveyed; parking=가능
+91,,,,,,,,,KTO bulk import - accessibility not surveyed; parking=가능
+92,,,,,false,,,,KTO bulk import - accessibility not surveyed; parking=가능
+93,,,,,false,,,,KTO bulk import - accessibility not surveyed; parking=불가능
+94,,,,,false,,true,,KTO bulk import - accessibility not surveyed; parking=가능
+95,,,,,false,,false,,KTO bulk import - accessibility not surveyed
+96,,,,,false,,true,,KTO bulk import - accessibility not surveyed; parking=가능
+97,,,,,,,,,KTO bulk import - accessibility not surveyed; parking=불가능
+98,,,,,,,,,KTO bulk import - accessibility not surveyed; parking=불가능
+99,,,,,,,,,KTO bulk import - accessibility not surveyed; parking=가능
+100,,,,,false,,,,KTO bulk import - accessibility not surveyed; parking=가능요금 (무료)
+101,,,,,false,,,,KTO bulk import - accessibility not surveyed; parking=가능
+102,,,,,,,false,,KTO bulk import - accessibility not surveyed; parking=가능
+103,,,,,false,,true,,KTO bulk import - accessibility not surveyed; parking=가능 (군산오름주차장)
+104,,,,,,,,,KTO bulk import - accessibility not surveyed; parking=불가능
+105,,,,,,,true,,KTO bulk import - accessibility not surveyed; parking=가능
+106,,,,,,,,,KTO bulk import - accessibility not surveyed; parking=가능
+107,,,,,,,true,,KTO bulk import - accessibility not surveyed; parking=가능
+108,,,,,,,true,,KTO bulk import - accessibility not surveyed; parking=가능
+109,,,,,,,true,,KTO bulk import - accessibility not surveyed; parking=가능
+110,,,,,,,,,KTO bulk import - accessibility not surveyed; parking=불가능
+111,,,,,false,,true,,KTO bulk import - accessibility not surveyed; parking=가능
+112,,,,,,,,,KTO bulk import - accessibility not surveyed; parking=가능
+113,,,,,,,,,KTO bulk import - accessibility not surveyed; parking=가능
+114,,,,,false,,,,KTO bulk import - accessibility not surveyed; parking=가능
+115,,,,,false,,true,,KTO bulk import - accessibility not surveyed; parking=가능
+116,,,,,,,true,,KTO bulk import - accessibility not surveyed; parking=가능
+117,,,,,,,true,,KTO bulk import - accessibility not surveyed; parking=가능
+118,,,,,,,true,,KTO bulk import - accessibility not surveyed; parking=가능
+119,,,,,,,,,KTO bulk import - accessibility not surveyed; parking=가능요금 (무료)
+120,,,,,,,,,KTO bulk import - accessibility not surveyed; parking=가능
+121,,,,,,,true,,"KTO bulk import - accessibility not surveyed; parking=가능요금 (경차 1,000원 / 승용 2,000원 / "
+122,,,,,false,,,,KTO bulk import - accessibility not surveyed
+123,,,,,,,true,,KTO bulk import - accessibility not surveyed; parking=가능
+124,,,,,,,,,KTO bulk import - accessibility not surveyed; parking=가능
+125,,,,,,,true,,KTO bulk import - accessibility not surveyed; parking=가능
+126,,,,,,,,,KTO bulk import - accessibility not surveyed; parking=가능
+127,,,,,,,true,,KTO bulk import - accessibility not surveyed; parking=가능
+128,,,,,,,,,KTO bulk import - accessibility not surveyed; parking=불가능
+129,,,,,false,,true,,KTO bulk import - accessibility not surveyed; parking=가능
+130,,,,,false,,,,KTO bulk import - accessibility not surveyed; parking=가능
+131,,,,,,,true,,KTO bulk import - accessibility not surveyed; parking=가능
+132,,,,,,,,,KTO bulk import - accessibility not surveyed; parking=가능
+133,,,,,,,,,KTO bulk import - accessibility not surveyed; parking=불가능
+134,,,,,,,true,,KTO bulk import - accessibility not surveyed; parking=가능
+135,,,,,,,true,,KTO bulk import - accessibility not surveyed; parking=가능
+136,,,,,false,,true,,KTO bulk import - accessibility not surveyed; parking=가능
+137,,,,,false,,,,KTO bulk import - accessibility not surveyed; parking=가능
+138,,,,,false,,true,,KTO bulk import - accessibility not surveyed; parking=가능
+139,,,,,,,true,,KTO bulk import - accessibility not surveyed; parking=가능
+140,,,,,,,,,KTO bulk import - accessibility not surveyed; parking=불가능
+141,,,,,,,true,,KTO bulk import - accessibility not surveyed; parking=불가능
+142,,,,,,,true,,KTO bulk import - accessibility not surveyed; parking=가능 (14인승 이상 주차 불가)
+143,,,,,false,,,,KTO bulk import - accessibility not surveyed; parking=가능
+144,,,,,,,true,,KTO bulk import - accessibility not surveyed; parking=가능
+145,,,,,,,,,KTO bulk import - accessibility not surveyed; parking=가능
+146,,,,,false,,,,KTO bulk import - accessibility not surveyed; parking=가능
+147,,,,,,,,,KTO bulk import - accessibility not surveyed; parking=가능
+148,,,,,,,true,,KTO bulk import - accessibility not surveyed; parking=불가능
+149,,,,,,,,,KTO bulk import - accessibility not surveyed; parking=가능
+150,,,,,,,true,,KTO bulk import - accessibility not surveyed; parking=가능
+151,,,,,,,true,,KTO bulk import - accessibility not surveyed; parking=가능
+152,,,,,,,,,KTO bulk import - accessibility not surveyed; parking=가능
+153,,,,,,,false,,KTO bulk import - accessibility not surveyed; parking=불가능
+154,,,,,false,,,,KTO bulk import - accessibility not surveyed; parking=가능
+155,,,,,false,,true,,KTO bulk import - accessibility not surveyed; parking=가능
+156,,,,,,,true,,KTO bulk import - accessibility not surveyed; parking=가능
+157,,,,,,,true,,KTO bulk import - accessibility not surveyed; parking=가능
+158,,,,,false,,true,,KTO bulk import - accessibility not surveyed; parking=가능요금 (무료)
+159,,,,,,,true,,KTO bulk import - accessibility not surveyed; parking=가능
+160,,,,,,,,,KTO bulk import - accessibility not surveyed; parking=가능
+161,,,,,,,true,,KTO bulk import - accessibility not surveyed; parking=가능 (소형 82대 / 대형 18대)
+162,,,,,,,true,,KTO bulk import - accessibility not surveyed; parking=가능
+163,,,,,,,true,,KTO bulk import - accessibility not surveyed; parking=가능
+164,,,,,,,,,KTO bulk import - accessibility not surveyed
+165,,,,,,,true,,KTO bulk import - accessibility not surveyed; parking=가능
+166,,,,,,,,,KTO bulk import - accessibility not surveyed; parking=가능
+167,,,,,,,,,KTO bulk import - accessibility not surveyed; parking=불가능
+168,,,,,,,true,,KTO bulk import - accessibility not surveyed; parking=가능
+169,,,,,,,true,,KTO bulk import - accessibility not surveyed; parking=가능
+170,,,,,,,true,,KTO bulk import - accessibility not surveyed; parking=가능
+171,,,,,,,true,,KTO bulk import - accessibility not surveyed; parking=가능
+172,,,,,,,,,KTO bulk import - accessibility not surveyed; parking=가능 (66대)
+173,,,,,,,true,,KTO bulk import - accessibility not surveyed; parking=가능
+174,,,,,,,true,,KTO bulk import - accessibility not surveyed; parking=가능
+175,,,,,,,,,KTO bulk import - accessibility not surveyed; parking=가능
+176,,,,,,,true,,KTO bulk import - accessibility not surveyed; parking=가능
+177,,,,,,,true,,KTO bulk import - accessibility not surveyed; parking=가능
+178,,,,,,,true,,KTO bulk import - accessibility not surveyed; parking=가능
+179,,,,,,,true,,KTO bulk import - accessibility not surveyed; parking=가능
+180,,,,,,,false,,KTO bulk import - accessibility not surveyed; parking=가능
+181,,,,,,,true,,KTO bulk import - accessibility not surveyed; parking=가능
+182,,,,,false,,true,,KTO bulk import - accessibility not surveyed; parking=가능
+183,,,,,false,,true,,KTO bulk import - accessibility not surveyed; parking=가능
+184,,,,,,,true,,KTO bulk import - accessibility not surveyed; parking=가능
+185,,,,,,,,,KTO bulk import - accessibility not surveyed; parking=가능
+186,,,,,,,true,,KTO bulk import - accessibility not surveyed; parking=가능
+187,,,,,,,true,,KTO bulk import - accessibility not surveyed; parking=가능
+188,,,,,,,,,KTO bulk import - accessibility not surveyed; parking=가능
+189,,,,,false,,true,,KTO bulk import - accessibility not surveyed; parking=가능
+190,,,,,,,true,,KTO bulk import - accessibility not surveyed; parking=가능
+191,,,,,,,true,,KTO bulk import - accessibility not surveyed; parking=가능
+192,,,,,,,,,KTO bulk import - accessibility not surveyed; parking=가능
+193,,,,,,,false,,KTO bulk import - accessibility not surveyed; parking=가능
+194,,,,,,,,,KTO bulk import - accessibility not surveyed; parking=가능
+195,,,,,false,,true,,KTO bulk import - accessibility not surveyed; parking=가능
+196,,,,,false,,true,,KTO bulk import - accessibility not surveyed; parking=가능
+197,,,,,,,true,,KTO bulk import - accessibility not surveyed; parking=가능
+198,,,,,,,,,KTO bulk import - accessibility not surveyed; parking=가능요금 (무료)
+199,,,,,,,true,,KTO bulk import - accessibility not surveyed; parking=가능
+200,,,,,,,true,,KTO bulk import - accessibility not surveyed; parking=가능
+201,,,,,,,,,KTO bulk import - accessibility not surveyed; parking=가능
+202,,,,,,,true,,KTO bulk import - accessibility not surveyed; parking=가능
+203,,,,,,,,,KTO bulk import - accessibility not surveyed; parking=가능
+204,,,,,false,,,,KTO bulk import - accessibility not surveyed; parking=불가능
+205,,,,,,,true,,KTO bulk import - accessibility not surveyed; parking=가능
+206,,,,,,,,,KTO bulk import - accessibility not surveyed; parking=가능
+207,,,,,,,true,,KTO bulk import - accessibility not surveyed; parking=불가능
+208,,,,,,,,,KTO bulk import - accessibility not surveyed; parking=불가능
+209,,,,,false,,true,,KTO bulk import - accessibility not surveyed; parking=가능
+210,,,,,,,,,KTO bulk import - accessibility not surveyed; parking=불가능
+211,,,,,,,false,,KTO bulk import - accessibility not surveyed; parking=가능
+212,,,,,,,,,KTO bulk import - accessibility not surveyed; parking=불가능
+213,,,,,,,true,,KTO bulk import - accessibility not surveyed; parking=가능
+214,,,,,,,true,,KTO bulk import - accessibility not surveyed; parking=가능
+215,,,,,,,true,,KTO bulk import - accessibility not surveyed; parking=가능
+216,,,,,false,,,,KTO bulk import - accessibility not surveyed; parking=가능
+217,,,,,,,,,KTO bulk import - accessibility not surveyed; parking=불가능
+218,,,,,,,false,,KTO bulk import - accessibility not surveyed; parking=가능
+219,,,,,,,true,,KTO bulk import - accessibility not surveyed; parking=가능
+220,,,,,,,,,KTO bulk import - accessibility not surveyed; parking=불가능
+221,,,,,,,true,,KTO bulk import - accessibility not surveyed; parking=가능(무료)발렛가능(무료)
+222,,,,,,,,,KTO bulk import - accessibility not surveyed; parking=가능
+223,,,,,,,,,KTO bulk import - accessibility not surveyed; parking=가능
+224,,,,,,,true,,KTO bulk import - accessibility not surveyed; parking=가능
+225,,,,,,,,,KTO bulk import - accessibility not surveyed
+226,,,,,false,,,,KTO bulk import - accessibility not surveyed; parking=가능
+227,,,,,,,false,,KTO bulk import - accessibility not surveyed; parking=가능
+228,,,,,,,,,KTO bulk import - accessibility not surveyed; parking=가능
+229,,,,,false,,,,KTO bulk import - accessibility not surveyed; parking=불가능
+230,,,,,,,true,,KTO bulk import - accessibility not surveyed; parking=가능
+231,,,,,,,true,,KTO bulk import - accessibility not surveyed; parking=가능
+232,,,,,,,,,KTO bulk import - accessibility not surveyed; parking=불가능
+233,,,,,,,true,,KTO bulk import - accessibility not surveyed; parking=가능
+234,,,,,,,true,,KTO bulk import - accessibility not surveyed; parking=가능
+235,,,,,,,false,,KTO bulk import - accessibility not surveyed; parking=가능
+236,,,,,,,,,KTO bulk import - accessibility not surveyed; parking=가능
+237,,,,,,,true,,KTO bulk import - accessibility not surveyed; parking=가능
+238,,,,,,,false,,KTO bulk import - accessibility not surveyed
+239,,,,,,,,,KTO bulk import - accessibility not surveyed; parking=가능
+240,,,,,,,,,KTO bulk import - accessibility not surveyed; parking=가능
+241,,,,,,,true,,KTO bulk import - accessibility not surveyed; parking=가능
+242,,,,,,,true,,KTO bulk import - accessibility not surveyed; parking=가능
+243,,,,,,,true,,KTO bulk import - accessibility not surveyed; parking=가능
+244,,,,,false,,false,,KTO bulk import - accessibility not surveyed; parking=가능
+245,,,,,,,,,KTO bulk import - accessibility not surveyed; parking=가능
+246,,,,,,,,,KTO bulk import - accessibility not surveyed; parking=가능
+247,,,,,,,true,,KTO bulk import - accessibility not surveyed; parking=가능
+248,,,,,,,true,,KTO bulk import - accessibility not surveyed; parking=가능(무료)
+249,,,,,,,true,,KTO bulk import - accessibility not surveyed; parking=가능
+250,,,,,,,true,,KTO bulk import - accessibility not surveyed; parking=가능
+251,,,,,,,true,,KTO bulk import - accessibility not surveyed; parking=가능
+252,,,,,,,true,,KTO bulk import - accessibility not surveyed; parking=가능
+253,,,,,,,true,,KTO bulk import - accessibility not surveyed; parking=가능
+254,,,,,,,true,,KTO bulk import - accessibility not surveyed; parking=가능
+255,,,,,,,true,,"KTO bulk import - accessibility not surveyed; parking=가능요금 (최초 30분 무료 / 60분 1,500원 /"
+256,,,,,,,true,,KTO bulk import - accessibility not surveyed; parking=가능
+257,,,,,,,true,,KTO bulk import - accessibility not surveyed; parking=가능
+258,,,,,,,,,KTO bulk import - accessibility not surveyed; parking=가능
+259,,,,,,,,,KTO bulk import - accessibility not surveyed; parking=가능
+260,,,,,,,true,,KTO bulk import - accessibility not surveyed; parking=가능
+261,,,,,,,,,KTO bulk import - accessibility not surveyed; parking=가능
+262,,,,,,,,,KTO bulk import - accessibility not surveyed
+263,,,,,,,true,,KTO bulk import - accessibility not surveyed; parking=가능
+264,,,,,,,true,,KTO bulk import - accessibility not surveyed; parking=가능
+265,,,,,,,true,,KTO bulk import - accessibility not surveyed; parking=가능
+266,,,,,,,true,,KTO bulk import - accessibility not surveyed; parking=가능
+267,,,,,false,,,,KTO bulk import - accessibility not surveyed; parking=불가능
+268,,,,,,,true,,KTO bulk import - accessibility not surveyed; parking=가능
+269,,,,,,,true,,KTO bulk import - accessibility not surveyed; parking=가능
+270,,,,,,,true,,KTO bulk import - accessibility not surveyed; parking=가능
+271,,,,,false,,true,,KTO bulk import - accessibility not surveyed; parking=가능
+272,,,,,,,true,,KTO bulk import - accessibility not surveyed; parking=가능
+273,,,,,,,true,,KTO bulk import - accessibility not surveyed; parking=가능
+274,,,,,,,,,KTO bulk import - accessibility not surveyed; parking=가능
+275,,,,,,,true,,KTO bulk import - accessibility not surveyed; parking=가능
+276,,,,,,,,,KTO bulk import - accessibility not surveyed; parking=가능 (약 소형 14대)
+277,,,,,,,true,,KTO bulk import - accessibility not surveyed; parking=가능
+278,,,,,,,true,,KTO bulk import - accessibility not surveyed; parking=가능
+279,,,,,,,true,,KTO bulk import - accessibility not surveyed; parking=가능
+280,,,,,,,true,,KTO bulk import - accessibility not surveyed; parking=가능
+281,,,,,false,,true,,KTO bulk import - accessibility not surveyed; parking=불가능
+282,,,,,,,true,,KTO bulk import - accessibility not surveyed; parking=가능
+283,,,,,,,true,,KTO bulk import - accessibility not surveyed; parking=가능
+284,,,,,,,true,,KTO bulk import - accessibility not surveyed; parking=가능
+285,,,,,,,,,KTO bulk import - accessibility not surveyed; parking=가능
+286,,,,,false,,true,,KTO bulk import - accessibility not surveyed; parking=가능
+287,,,,,false,,,,KTO bulk import - accessibility not surveyed; parking=불가능
+288,,,,,,,true,,KTO bulk import - accessibility not surveyed; parking=가능
+289,,,,,,,,,KTO bulk import - accessibility not surveyed; parking=가능
+290,,,,,false,,true,,KTO bulk import - accessibility not surveyed; parking=가능 요금 (무료)
+291,,,,,false,,true,,KTO bulk import - accessibility not surveyed; parking=가능
+292,,,,,,,true,,KTO bulk import - accessibility not surveyed; parking=가능
+293,,,,,false,,true,,KTO bulk import - accessibility not surveyed; parking=가능
+294,,,,,,,,,KTO bulk import - accessibility not surveyed; parking=가능(무료)
+295,,,,,,,,,KTO bulk import - accessibility not surveyed; parking=가능
+296,,,,,,,,,KTO bulk import - accessibility not surveyed; parking=가능
+297,,,,,,,,,KTO bulk import - accessibility not surveyed; parking=불가능
+298,,,,,,,true,,KTO bulk import - accessibility not surveyed; parking=가능
+299,,,,,,,true,,KTO bulk import - accessibility not surveyed; parking=가능
+300,,,,,false,,true,,KTO bulk import - accessibility not surveyed; parking=가능
+301,,,,,,,,,KTO bulk import - accessibility not surveyed; parking=가능
+302,,,,,,,true,,KTO bulk import - accessibility not surveyed; parking=가능
+303,,,,,,,,,KTO bulk import - accessibility not surveyed; parking=가능
+304,,,,,,,true,,KTO bulk import - accessibility not surveyed; parking=가능
+305,,,,,,,,,KTO bulk import - accessibility not surveyed; parking=가능
+306,,,,,false,,false,,KTO bulk import - accessibility not surveyed; parking=불가능
+307,,,,,false,,,,KTO bulk import - accessibility not surveyed; parking=불가능
+308,,,,,,,false,,KTO bulk import - accessibility not surveyed; parking=불가능
+309,,,,,,,true,,KTO bulk import - accessibility not surveyed; parking=가능
+310,,,,,,,true,,KTO bulk import - accessibility not surveyed; parking=가능
+311,,,,,false,,false,,KTO bulk import - accessibility not surveyed; parking=불가능
+312,,,,,false,,true,,KTO bulk import - accessibility not surveyed; parking=가능
+313,,,,,false,,false,,KTO bulk import - accessibility not surveyed; parking=가능
+314,,,,,false,,true,,KTO bulk import - accessibility not surveyed; parking=가능
+315,,,,,false,,true,,KTO bulk import - accessibility not surveyed; parking=가능
+316,,,,,,,,,KTO bulk import - accessibility not surveyed; parking=가능요금 (무료)
+317,,,,,,,true,,KTO bulk import - accessibility not surveyed; parking=가능
+318,,,,,false,,true,,KTO bulk import - accessibility not surveyed; parking=가능
+319,,,,,,,true,,KTO bulk import - accessibility not surveyed; parking=가능
+320,,,,,,,true,,KTO bulk import - accessibility not surveyed; parking=가능
+321,,,,,false,,,,KTO bulk import - accessibility not surveyed; parking=불가능
+322,,,,,,,true,,KTO bulk import - accessibility not surveyed; parking=가능
+323,,,,,,,,,KTO bulk import - accessibility not surveyed
+324,,,,,,,,,KTO bulk import - accessibility not surveyed; parking=가능
+325,,,,,,,,,KTO bulk import - accessibility not surveyed; parking=가능
+326,,,,,,,true,,KTO bulk import - accessibility not surveyed; parking=불가능
+327,,,,,,,true,,KTO bulk import - accessibility not surveyed; parking=가능
+328,,,,,,,true,,KTO bulk import - accessibility not surveyed; parking=가능
+329,,,,,,,true,,KTO bulk import - accessibility not surveyed; parking=가능
+330,,,,,false,,true,,KTO bulk import - accessibility not surveyed; parking=가능
+331,,,,,,,,,KTO bulk import - accessibility not surveyed; parking=가능요금 (무료)
+332,,,,,,,true,,KTO bulk import - accessibility not surveyed; parking=불가능
+333,,,,,false,,,,KTO bulk import - accessibility not surveyed; parking=가능
+334,,,,,,,true,,KTO bulk import - accessibility not surveyed; parking=가능 요금 (무료)
+335,,,,,,,true,,KTO bulk import - accessibility not surveyed; parking=가능
+336,,,,,false,,true,,KTO bulk import - accessibility not surveyed; parking=가능
+337,,,,,,,true,,KTO bulk import - accessibility not surveyed; parking=가능
+339,,,,,false,,,,KTO bulk import - accessibility not surveyed; parking=불가능
+340,,,,,false,,true,,KTO bulk import - accessibility not surveyed; parking=가능
+341,,,,,false,,,,KTO bulk import - accessibility not surveyed; parking=불가능
+342,,,,,,,,,KTO bulk import - accessibility not surveyed; parking=가능
+343,,,,,,,true,,KTO bulk import - accessibility not surveyed; parking=가능
+344,,,,,,,true,,KTO bulk import - accessibility not surveyed; parking=가능
+345,,,,,,,,,KTO bulk import - accessibility not surveyed; parking=가능
+346,,,,,,,true,,KTO bulk import - accessibility not surveyed; parking=가능
+347,,,,,false,,,,KTO bulk import - accessibility not surveyed; parking=불가능
+348,,,,,,,,,KTO bulk import - accessibility not surveyed; parking=가능
+349,,,,,,,true,,KTO bulk import - accessibility not surveyed; parking=가능
+350,,,,,false,,,,KTO bulk import - accessibility not surveyed; parking=가능
+351,,,,,,,true,,KTO bulk import - accessibility not surveyed; parking=가능
+352,,,,,,,true,,KTO bulk import - accessibility not surveyed; parking=가능
+353,,,,,false,,,,KTO bulk import - accessibility not surveyed; parking=불가능
+354,,,,,false,,,,KTO bulk import - accessibility not surveyed; parking=가능
+355,,,,,,,true,,KTO bulk import - accessibility not surveyed; parking=가능
+356,,,,,,,true,,"KTO bulk import - accessibility not surveyed; parking=가능 (약 대형 60대, 소형 75대)"
+357,,,,,,,true,,KTO bulk import - accessibility not surveyed; parking=가능
+358,,,,,,,,,KTO bulk import - accessibility not surveyed; parking=가능
+359,,,,,,,true,,KTO bulk import - accessibility not surveyed; parking=가능
+360,,,,,,,,,KTO bulk import - accessibility not surveyed; parking=가능
+361,,,,,,,,,KTO bulk import - accessibility not surveyed; parking=가능
+363,,,,,,,true,,KTO bulk import - accessibility not surveyed; parking=가능
+364,,,,,,,true,,KTO bulk import - accessibility not surveyed; parking=가능
+365,,,,,,,,,KTO bulk import - accessibility not surveyed
+366,,,,,,,true,,KTO bulk import - accessibility not surveyed; parking=가능 (소형 5대)
+367,,,,,,,,,KTO bulk import - accessibility not surveyed; parking=가능
+368,,,,,,,true,,KTO bulk import - accessibility not surveyed; parking=가능
+369,,,,,false,,false,,KTO bulk import - accessibility not surveyed; parking=가능
+370,,,,,false,,true,,KTO bulk import - accessibility not surveyed; parking=가능
+371,,,,,,,true,,KTO bulk import - accessibility not surveyed; parking=가능(소형 30대)
+372,,,,,,,true,,KTO bulk import - accessibility not surveyed; parking=가능
+373,,,,,,,true,,KTO bulk import - accessibility not surveyed; parking=가능
+374,,,,,,,,,KTO bulk import - accessibility not surveyed; parking=가능 (무료)
+375,,,,,,,true,,KTO bulk import - accessibility not surveyed; parking=가능
+376,,,,,,,true,,KTO bulk import - accessibility not surveyed; parking=가능
+377,,,,,,,,,KTO bulk import - accessibility not surveyed; parking=가능
+378,,,,,,,true,,KTO bulk import - accessibility not surveyed; parking=가능
+379,,,,,,,true,,KTO bulk import - accessibility not surveyed; parking=가능
+380,,,,,,,true,,KTO bulk import - accessibility not surveyed; parking=가능
+381,,,,,,,true,,KTO bulk import - accessibility not surveyed; parking=가능
+382,,,,,,,true,,KTO bulk import - accessibility not surveyed; parking=가능
+383,,,,,false,,,,KTO bulk import - accessibility not surveyed; parking=가능
+384,,,,,,,true,,KTO bulk import - accessibility not surveyed; parking=가능
+385,,,,,,,,,KTO bulk import - accessibility not surveyed; parking=가능 (약 소형 50대 / 대형 8대)
+386,,,,,,,true,,KTO bulk import - accessibility not surveyed; parking=가능
+387,,,,,,,true,,KTO bulk import - accessibility not surveyed; parking=가능
+388,,,,,false,,true,,KTO bulk import - accessibility not surveyed; parking=가능
+389,,,,,,,,,KTO bulk import - accessibility not surveyed; parking=가능요금 (무료)
+390,,,,,,,true,,KTO bulk import - accessibility not surveyed; parking=가능
+391,,,,,,,true,,KTO bulk import - accessibility not surveyed; parking=가능
+392,,,,,,,true,,KTO bulk import - accessibility not surveyed; parking=불가능
+393,,,,,false,,true,,KTO bulk import - accessibility not surveyed; parking=가능
+394,,,,,,,true,,KTO bulk import - accessibility not surveyed; parking=가능
+395,,,,,false,,,,KTO bulk import - accessibility not surveyed; parking=가능
+396,,,,,,,,,KTO bulk import - accessibility not surveyed; parking=불가능
+398,,,,,,,true,,KTO bulk import - accessibility not surveyed; parking=가능
+399,,,,,false,,true,,KTO bulk import - accessibility not surveyed; parking=가능
+400,,,,,,,true,,KTO bulk import - accessibility not surveyed; parking=가능
+401,,,,,false,,false,,KTO bulk import - accessibility not surveyed; parking=불가능
+402,,,,,,,true,,KTO bulk import - accessibility not surveyed; parking=불가능
+403,,,,,,,true,,KTO bulk import - accessibility not surveyed; parking=가능 (약 소형 40대 / 대형 20대)
+404,,,,,,,,,KTO bulk import - accessibility not surveyed; parking=불가능
+405,,,,,,,true,,KTO bulk import - accessibility not surveyed; parking=가능(소형 40대 / 대형 6대)
+406,,,,,,,true,,KTO bulk import - accessibility not surveyed; parking=가능(무료)
+407,,,,,,,true,,KTO bulk import - accessibility not surveyed; parking=가능
+408,,,,,,,,,KTO bulk import - accessibility not surveyed; parking=가능
+409,,,,,false,,,,KTO bulk import - accessibility not surveyed; parking=불가능
+410,,,,,,,true,,KTO bulk import - accessibility not surveyed; parking=가능
+411,,,,,,,,,KTO bulk import - accessibility not surveyed; parking=가능
+412,,,,,false,,,,KTO bulk import - accessibility not surveyed; parking=가능
+413,,,,,,,,,KTO bulk import - accessibility not surveyed; parking=가능 (약 소형 30대 / 대형 5대)요금 (무료)
+414,,,,,false,,,,KTO bulk import - accessibility not surveyed; parking=가능
+415,,,,,false,,false,,KTO bulk import - accessibility not surveyed; parking=불가능
+416,,,,,,,false,,KTO bulk import - accessibility not surveyed; parking=불가능
+417,,,,,false,,false,,KTO bulk import - accessibility not surveyed; parking=불가능
+418,,,,,false,,true,,KTO bulk import - accessibility not surveyed; parking=가능
+419,,,,,false,,,,KTO bulk import - accessibility not surveyed; parking=불가능
+420,,,,,,,,,KTO bulk import - accessibility not surveyed; parking=가능
+421,,,,,,,,,KTO bulk import - accessibility not surveyed; parking=가능
+422,,,,,,,,,KTO bulk import - accessibility not surveyed; parking=가능
+423,,,,,,,,,KTO bulk import - accessibility not surveyed; parking=가능
+424,,,,,,,,,KTO bulk import - accessibility not surveyed
+425,,,,,,,,,KTO bulk import - accessibility not surveyed; parking=가능
+426,,,,,,,,,KTO bulk import - accessibility not surveyed; parking=가능요금 (무료)
+427,,,,,,,false,,KTO bulk import - accessibility not surveyed; parking=불가능
+428,,,,,,,true,,KTO bulk import - accessibility not surveyed; parking=가능
+429,,,,,,,,,KTO bulk import - accessibility not surveyed; parking=가능요금 (무료)
+430,,,,,false,,true,,KTO bulk import - accessibility not surveyed; parking=가능
+431,,,,,,,true,,KTO bulk import - accessibility not surveyed; parking=가능(무료)
+432,,,,,,,,,KTO bulk import - accessibility not surveyed; parking=가능
+433,,,,,,,,,KTO bulk import - accessibility not surveyed; parking=가능요금 (무료)
+434,,,,,,,,,KTO bulk import - accessibility not surveyed
+435,,,,,false,,true,,KTO bulk import - accessibility not surveyed; parking=가능
+436,,,,,,,,,KTO bulk import - accessibility not surveyed; parking=가능
+437,,,,,,,,,KTO bulk import - accessibility not surveyed; parking=가능
+438,,,,,false,,,,KTO bulk import - accessibility not surveyed; parking=가능
+439,,,,,,,,,KTO bulk import - accessibility not surveyed; parking=가능 (약 소형 10대 / 대형 2대)
+440,,,,,false,,,,KTO bulk import - accessibility not surveyed; parking=가능
+441,,,,,false,,,,KTO bulk import - accessibility not surveyed; parking=가능
+442,,,,,,,false,,KTO bulk import - accessibility not surveyed; parking=가능
+443,,,,,,,true,,KTO bulk import - accessibility not surveyed; parking=가능 (약 소형 40대 / 대형 3대)
+444,,,,,false,,,,KTO bulk import - accessibility not surveyed
+445,,,,,,,true,,KTO bulk import - accessibility not surveyed; parking=불가능
+446,,,,,,,false,,KTO bulk import - accessibility not surveyed; parking=가능
+447,,,,,,,true,,KTO bulk import - accessibility not surveyed; parking=가능
+448,,,,,,,true,,KTO bulk import - accessibility not surveyed; parking=가능
+449,,,,,,,,,KTO bulk import - accessibility not surveyed; parking=가능
+450,,,,,,,true,,KTO bulk import - accessibility not surveyed; parking=가능
+451,,,,,false,,,,KTO bulk import - accessibility not surveyed
+452,,,,,false,,false,,KTO bulk import - accessibility not surveyed; parking=불가능
+453,,,,,,,,,KTO bulk import - accessibility not surveyed; parking=가능
+454,,,,,,,true,,KTO bulk import - accessibility not surveyed; parking=가능
+455,,,,,,,true,,KTO bulk import - accessibility not surveyed; parking=가능
+456,,,,,false,,true,,KTO bulk import - accessibility not surveyed; parking=가능
+457,,,,,,,true,,KTO bulk import - accessibility not surveyed; parking=불가능
+458,,,,,,,true,,KTO bulk import - accessibility not surveyed; parking=가능
+459,,,,,,,true,,KTO bulk import - accessibility not surveyed; parking=가능
+460,,,,,,,true,,KTO bulk import - accessibility not surveyed; parking=가능 (소형 50대 / 대형 5대)
+461,,,,,false,,true,,KTO bulk import - accessibility not surveyed; parking=가능
+462,,,,,,,,,KTO bulk import - accessibility not surveyed; parking=가능
+463,,,,,,,,,KTO bulk import - accessibility not surveyed; parking=가능
+464,,,,,false,,,,KTO bulk import - accessibility not surveyed; parking=가능
+465,,,,,,,true,,KTO bulk import - accessibility not surveyed; parking=가능
+466,,,,,,,true,,KTO bulk import - accessibility not surveyed; parking=가능
+467,,,,,false,,true,,KTO bulk import - accessibility not surveyed; parking=가능
+468,,,,,,,true,,KTO bulk import - accessibility not surveyed; parking=가능
+469,,,,,,,true,,KTO bulk import - accessibility not surveyed; parking=가능
+470,,,,,false,,,,KTO bulk import - accessibility not surveyed; parking=가능
+471,,,,,,,true,,KTO bulk import - accessibility not surveyed; parking=가능
+472,,,,,,,true,,KTO bulk import - accessibility not surveyed; parking=가능
+473,,,,,false,,true,,KTO bulk import - accessibility not surveyed; parking=가능
+474,,,,,,,,,KTO bulk import - accessibility not surveyed; parking=가능
+475,,,,,,,true,,KTO bulk import - accessibility not surveyed; parking=불가능
+476,,,,,false,,,,KTO bulk import - accessibility not surveyed; parking=가능
+477,,,,,false,,,,KTO bulk import - accessibility not surveyed; parking=가능
+478,,,,,,,true,,KTO bulk import - accessibility not surveyed; parking=불가능
+479,,,,,,,,,KTO bulk import - accessibility not surveyed; parking=가능
+480,,,,,,,,,KTO bulk import - accessibility not surveyed; parking=가능
+481,,,,,,,,,KTO bulk import - accessibility not surveyed; parking=가능 요금 (무료)
+482,,,,,,,true,,KTO bulk import - accessibility not surveyed; parking=가능
+483,,,,,,,,,KTO bulk import - accessibility not surveyed; parking=불가능
+484,,,,,,,true,,KTO bulk import - accessibility not surveyed; parking=가능
+485,,,,,,,true,,KTO bulk import - accessibility not surveyed; parking=가능 (약 소형 150대 / 대형 10대)
+486,,,,,,,,,KTO bulk import - accessibility not surveyed; parking=가능
+487,,,,,,,true,,KTO bulk import - accessibility not surveyed; parking=가능
+488,,,,,,,true,,KTO bulk import - accessibility not surveyed; parking=가능
+489,,,,,,,true,,KTO bulk import - accessibility not surveyed; parking=가능
+490,,,,,,,false,,KTO bulk import - accessibility not surveyed; parking=불가능
+491,,,,,,,true,,KTO bulk import - accessibility not surveyed; parking=가능
+492,,,,,,,true,,KTO bulk import - accessibility not surveyed; parking=가능
+493,,,,,,,true,,KTO bulk import - accessibility not surveyed; parking=가능
+494,,,,,,,,,KTO bulk import - accessibility not surveyed; parking=가능
+495,,,,,,,,,KTO bulk import - accessibility not surveyed
+496,,,,,,,true,,KTO bulk import - accessibility not surveyed; parking=가능
+497,,,,,,,true,,KTO bulk import - accessibility not surveyed; parking=가능
+498,,,,,,,,,KTO bulk import - accessibility not surveyed; parking=가능
+499,,,,,,,true,,KTO bulk import - accessibility not surveyed; parking=가능
+500,,,,,,,true,,KTO bulk import - accessibility not surveyed; parking=가능(약 소형 100대 / 대형 10대)
+501,,,,,,,true,,KTO bulk import - accessibility not surveyed; parking=가능요금 (무료)
+502,,,,,,,,,KTO bulk import - accessibility not surveyed; parking=가능 요금 (무료)
+503,,,,,,,true,,KTO bulk import - accessibility not surveyed; parking=가능
+504,,,,,,,true,,KTO bulk import - accessibility not surveyed; parking=가능
+505,,,,,false,,true,,KTO bulk import - accessibility not surveyed; parking=가능
+506,,,,,,,true,,KTO bulk import - accessibility not surveyed; parking=가능
+507,,,,,,,true,,KTO bulk import - accessibility not surveyed; parking=가능
+508,,,,,false,,true,,KTO bulk import - accessibility not surveyed; parking=가능
+509,,,,,,,,,KTO bulk import - accessibility not surveyed; parking=가능 (소형 80대 / 대형 10대)
+510,,,,,,,true,,KTO bulk import - accessibility not surveyed; parking=가능
+511,,,,,,,true,,KTO bulk import - accessibility not surveyed; parking=가능
+512,,,,,,,true,,KTO bulk import - accessibility not surveyed; parking=가능
+513,,,,,,,true,,KTO bulk import - accessibility not surveyed; parking=가능
+514,,,,,,,,,KTO bulk import - accessibility not surveyed; parking=불가능
+515,,,,,false,,,,KTO bulk import - accessibility not surveyed; parking=가능
+516,,,,,,,,,KTO bulk import - accessibility not surveyed
+517,,,,,,,,,KTO bulk import - accessibility not surveyed; parking=불가능
+518,,,,,,,true,,KTO bulk import - accessibility not surveyed; parking=불가능
+519,,,,,false,,true,,KTO bulk import - accessibility not surveyed; parking=가능
+520,,,,,,,,,KTO bulk import - accessibility not surveyed
+521,,,,,,,true,,KTO bulk import - accessibility not surveyed; parking=가능
+522,,,,,,,,,KTO bulk import - accessibility not surveyed; parking=가능
+523,,,,,false,,,,KTO bulk import - accessibility not surveyed; parking=불가능
+524,,,,,,,true,,KTO bulk import - accessibility not surveyed; parking=가능
+525,,,,,,,,,KTO bulk import - accessibility not surveyed; parking=불가능
+526,,,,,,,,,KTO bulk import - accessibility not surveyed; parking=가능
+529,,,,,,,true,,KTO bulk import - accessibility not surveyed; parking=가능요금 (무료)
+530,,,,,false,,,,KTO bulk import - accessibility not surveyed; parking=가능
+531,,,,,false,,true,,KTO bulk import - accessibility not surveyed; parking=가능
+532,,,,,,,true,,KTO bulk import - accessibility not surveyed; parking=가능
+533,,,,,,,true,,KTO bulk import - accessibility not surveyed; parking=가능
+534,,,,,,,,,KTO bulk import - accessibility not surveyed; parking=가능
+535,,,,,false,,,,KTO bulk import - accessibility not surveyed; parking=가능
+536,,,,,,,true,,KTO bulk import - accessibility not surveyed; parking=가능 (소형 30대)
+537,,,,,,,true,,KTO bulk import - accessibility not surveyed; parking=가능
+538,,,,,false,,false,,KTO bulk import - accessibility not surveyed; parking=불가능
+539,,,,,false,,true,,KTO bulk import - accessibility not surveyed; parking=가능
+540,,,,,,,true,,KTO bulk import - accessibility not surveyed; parking=가능
+541,,,,,,,true,,KTO bulk import - accessibility not surveyed; parking=가능
+542,,,,,false,,true,,KTO bulk import - accessibility not surveyed; parking=가능
+543,,,,,,,true,,KTO bulk import - accessibility not surveyed; parking=가능
+544,,,,,,,true,,KTO bulk import - accessibility not surveyed; parking=가능요금 (무료)
+545,,,,,false,,,,KTO bulk import - accessibility not surveyed; parking=가능
+546,,,,,,,true,,KTO bulk import - accessibility not surveyed; parking=가능
+547,,,,,false,,true,,KTO bulk import - accessibility not surveyed; parking=가능
+548,,,,,,,true,,KTO bulk import - accessibility not surveyed; parking=가능
+549,,,,,,,true,,KTO bulk import - accessibility not surveyed; parking=가능요금 (무료)
+550,,,,,,,true,,KTO bulk import - accessibility not surveyed; parking=가능
+551,,,,,,,true,,KTO bulk import - accessibility not surveyed; parking=가능
+552,,,,,,,,,KTO bulk import - accessibility not surveyed
+553,,,,,,,false,,KTO bulk import - accessibility not surveyed; parking=불가능
+554,,,,,,,true,,KTO bulk import - accessibility not surveyed; parking=가능
+555,,,,,,,,,KTO bulk import - accessibility not surveyed; parking=가능
+556,,,,,false,,true,,KTO bulk import - accessibility not surveyed; parking=가능
+557,,,,,,,true,,KTO bulk import - accessibility not surveyed; parking=가능
+558,,,,,,,true,,KTO bulk import - accessibility not surveyed; parking=가능
+559,,,,,,,true,,KTO bulk import - accessibility not surveyed; parking=가능
+560,,,,,false,,,,KTO bulk import - accessibility not surveyed; parking=불가능
+561,,,,,,,true,,KTO bulk import - accessibility not surveyed; parking=가능
+562,,,,,,,true,,KTO bulk import - accessibility not surveyed; parking=가능
+563,,,,,,,true,,KTO bulk import - accessibility not surveyed; parking=가능
+564,,,,,,,,,KTO bulk import - accessibility not surveyed
+565,,,,,,,,,KTO bulk import - accessibility not surveyed
+566,,,,,,,,,KTO bulk import - accessibility not surveyed
+567,,,,,,,,,KTO bulk import - accessibility not surveyed; parking=가능
+568,,,,,,,,,KTO bulk import - accessibility not surveyed
+569,,,,,,,,,KTO bulk import - accessibility not surveyed
+570,,,,,,,,,KTO bulk import - accessibility not surveyed
+571,,,,,,,,,KTO bulk import - accessibility not surveyed
+572,,,,,,,,,KTO bulk import - accessibility not surveyed
+573,,,,,,,,,KTO bulk import - accessibility not surveyed
+574,,,,,,,,,KTO bulk import - accessibility not surveyed; parking=가능
+575,,,,,,,,,KTO bulk import - accessibility not surveyed
+576,,,,,,,,,KTO bulk import - accessibility not surveyed
+577,,,,,,,,,KTO bulk import - accessibility not surveyed
+578,,,,,,,,,KTO bulk import - accessibility not surveyed
+579,,,,,,,,,KTO bulk import - accessibility not surveyed
+580,,,,,,,,,KTO bulk import - accessibility not surveyed
+581,,,,,,,,,KTO bulk import - accessibility not surveyed; parking=가능
+582,,,,,,,,,KTO bulk import - accessibility not surveyed
+583,,,,,,,,,KTO bulk import - accessibility not surveyed
+584,,,,,,,,,KTO bulk import - accessibility not surveyed
+585,,,,,,,,,KTO bulk import - accessibility not surveyed
+586,,,,,,,,,KTO bulk import - accessibility not surveyed
+587,,,,,,,,,KTO bulk import - accessibility not surveyed
+588,,,,,,,,,KTO bulk import - accessibility not surveyed
+589,,,,,,,,,KTO bulk import - accessibility not surveyed
+590,,,,,,,,,KTO bulk import - accessibility not surveyed
+591,,,,,,,,,KTO bulk import - accessibility not surveyed
+592,,,,,,,,,KTO bulk import - accessibility not surveyed
+593,,,,,,,,,KTO bulk import - accessibility not surveyed
+594,,,,,,,,,KTO bulk import - accessibility not surveyed
+595,,,,,,,,,KTO bulk import - accessibility not surveyed
+596,,,,,,,,,KTO bulk import - accessibility not surveyed
+597,,,,,,,,,KTO bulk import - accessibility not surveyed
+598,,,,,,,,,KTO bulk import - accessibility not surveyed
+599,,,,,,,,,KTO bulk import - accessibility not surveyed
+600,,,,,,,,,KTO bulk import - accessibility not surveyed
+601,,,,,,,,,KTO bulk import - accessibility not surveyed
+602,,,,,,,,,KTO bulk import - accessibility not surveyed
+603,,,,,,,,,KTO bulk import - accessibility not surveyed
+604,,,,,,,,,KTO bulk import - accessibility not surveyed
+605,,,,,,,,,KTO bulk import - accessibility not surveyed
+606,,,,,,,,,KTO bulk import - accessibility not surveyed
+607,,,,,,,,,KTO bulk import - accessibility not surveyed
+608,,,,,,,,,KTO bulk import - accessibility not surveyed
+609,,,,,,,,,KTO bulk import - accessibility not surveyed
+610,,,,,,,,,KTO bulk import - accessibility not surveyed
+611,,,,,,,,,KTO bulk import - accessibility not surveyed
+612,,,,,,,,,KTO bulk import - accessibility not surveyed
+613,,,,,,,,,KTO bulk import - accessibility not surveyed
+614,,,,,,,,,KTO bulk import - accessibility not surveyed
+615,,,,,,,,,KTO bulk import - accessibility not surveyed
+616,,,,,,,,,KTO bulk import - accessibility not surveyed
+617,,,,,,,,,KTO bulk import - accessibility not surveyed; parking=가능
+618,,,,,,,,,KTO bulk import - accessibility not surveyed
+619,,,,,,,,,KTO bulk import - accessibility not surveyed
+620,,,,,,,,,KTO bulk import - accessibility not surveyed
+621,,,,,,,,,KTO bulk import - accessibility not surveyed
+622,,,,,,,,,KTO bulk import - accessibility not surveyed
+623,,,,,,,,,KTO bulk import - accessibility not surveyed
+624,,,,,,,,,KTO bulk import - accessibility not surveyed
+625,,,,,,,,,KTO bulk import - accessibility not surveyed
+626,,,,,,,,,KTO bulk import - accessibility not surveyed
+627,,,,,,,,,KTO bulk import - accessibility not surveyed
+628,,,,,,,,,KTO bulk import - accessibility not surveyed
+629,,,,,,,,,KTO bulk import - accessibility not surveyed; parking=가능
+630,,,,,,,,,KTO bulk import - accessibility not surveyed
+631,,,,,,,,,KTO bulk import - accessibility not surveyed
+632,,,,,,,,,KTO bulk import - accessibility not surveyed
+633,,,,,,,,,KTO bulk import - accessibility not surveyed
+634,,,,,,,,,KTO bulk import - accessibility not surveyed
+635,,,,,,,,,KTO bulk import - accessibility not surveyed
+636,,,,,,,,,KTO bulk import - accessibility not surveyed
+637,,,,,,,,,KTO bulk import - accessibility not surveyed
+638,,,,,,,,,KTO bulk import - accessibility not surveyed
+639,,,,,,,,,KTO bulk import - accessibility not surveyed
+640,,,,,,,,,KTO bulk import - accessibility not surveyed
+641,,,,,,,,,KTO bulk import - accessibility not surveyed
+642,,,,,,,,,KTO bulk import - accessibility not surveyed
+643,,,,,,,,,KTO bulk import - accessibility not surveyed
+644,,,,,,,,,KTO bulk import - accessibility not surveyed
+645,,,,,,,,,KTO bulk import - accessibility not surveyed
+646,,,,,,,,,KTO bulk import - accessibility not surveyed
+647,,,,,,,,,KTO bulk import - accessibility not surveyed
+648,,,,,,,,,KTO bulk import - accessibility not surveyed
+649,,,,,,,,,KTO bulk import - accessibility not surveyed
+650,,,,,,,,,KTO bulk import - accessibility not surveyed
+651,,,,,,,,,KTO bulk import - accessibility not surveyed
+652,,,,,,,,,KTO bulk import - accessibility not surveyed
+653,,,,,,,,,KTO bulk import - accessibility not surveyed
+654,,,,,,,,,KTO bulk import - accessibility not surveyed
+655,,,,,,,,,KTO bulk import - accessibility not surveyed
+656,,,,,,,,,KTO bulk import - accessibility not surveyed
+657,,,,,,,,,KTO bulk import - accessibility not surveyed
+658,,,,,,,,,KTO bulk import - accessibility not surveyed
+659,,,,,,,,,KTO bulk import - accessibility not surveyed
+660,,,,,,,,,KTO bulk import - accessibility not surveyed
+661,,,,,,,,,KTO bulk import - accessibility not surveyed
+662,,,,,,,,,KTO bulk import - accessibility not surveyed
+663,,,,,,,,,KTO bulk import - accessibility not surveyed
+664,,,,,,,,,KTO bulk import - accessibility not surveyed; parking=가능
+665,,,,,,,,,KTO bulk import - accessibility not surveyed
+666,,,,,,,,,KTO bulk import - accessibility not surveyed
+667,,,,,,,,,KTO bulk import - accessibility not surveyed
+668,,,,,,,,,KTO bulk import - accessibility not surveyed
+669,,,,,,,,,KTO bulk import - accessibility not surveyed
+670,,,,,,,,,KTO bulk import - accessibility not surveyed
+671,,,,,,,,,KTO bulk import - accessibility not surveyed; parking=가능
+672,,,,,,,,,KTO bulk import - accessibility not surveyed
+673,,,,,,,,,KTO bulk import - accessibility not surveyed
+674,,,,,,,,,KTO bulk import - accessibility not surveyed
+675,,,,,,,,,KTO bulk import - accessibility not surveyed
+676,,,,,,,,,KTO bulk import - accessibility not surveyed
+677,,,,,,,,,KTO bulk import - accessibility not surveyed
+678,,,,,,,,,KTO bulk import - accessibility not surveyed
+681,,,,,,,,,KTO bulk import - accessibility not surveyed
+682,,,,,,,,,KTO bulk import - accessibility not surveyed
+683,,,,,,,,,KTO bulk import - accessibility not surveyed; parking=가능
+684,,,,,,,,,KTO bulk import - accessibility not surveyed
+685,,,,,,,,,KTO bulk import - accessibility not surveyed
+686,,,,,,,,,KTO bulk import - accessibility not surveyed
+687,,,,,,,,,KTO bulk import - accessibility not surveyed
+688,,,,,,,,,KTO bulk import - accessibility not surveyed
+689,,,,,,,,,KTO bulk import - accessibility not surveyed; parking=가능
+690,,,,,,,,,KTO bulk import - accessibility not surveyed
+691,,,,,,,,,KTO bulk import - accessibility not surveyed
+692,,,,,,,,,KTO bulk import - accessibility not surveyed
+693,,,,,,,,,KTO bulk import - accessibility not surveyed
+694,,,,,,,,,KTO bulk import - accessibility not surveyed
+695,,,,,,,,,KTO bulk import - accessibility not surveyed
+696,,,,,,,,,KTO bulk import - accessibility not surveyed
+697,,,,,,,,,KTO bulk import - accessibility not surveyed
+698,,,,,,,,,KTO bulk import - accessibility not surveyed
+699,,,,,,,,,KTO bulk import - accessibility not surveyed; parking=가능
+700,,,,,,,,,KTO bulk import - accessibility not surveyed
+701,,,,,,,,,KTO bulk import - accessibility not surveyed
+702,,,,,,,,,KTO bulk import - accessibility not surveyed
+703,,,,,,,,,KTO bulk import - accessibility not surveyed
+704,,,,,,,,,KTO bulk import - accessibility not surveyed
+705,,,,,,,,,KTO bulk import - accessibility not surveyed
+706,,,,,,,,,KTO bulk import - accessibility not surveyed
+707,,,,,,,,,KTO bulk import - accessibility not surveyed
+708,,,,,,,,,KTO bulk import - accessibility not surveyed
+709,,,,,,,,,KTO bulk import - accessibility not surveyed
+710,,,,,,,,,KTO bulk import - accessibility not surveyed
+711,,,,,,,,,KTO bulk import - accessibility not surveyed
+712,,,,,,,,,KTO bulk import - accessibility not surveyed
+713,,,,,,,,,KTO bulk import - accessibility not surveyed
+714,,,,,,,,,KTO bulk import - accessibility not surveyed
+715,,,,,,,,,KTO bulk import - accessibility not surveyed
+716,,,,,,,,,KTO bulk import - accessibility not surveyed; parking=가능
+717,,,,,,,,,KTO bulk import - accessibility not surveyed
+718,,,,,,,,,KTO bulk import - accessibility not surveyed
+719,,,,,,,,,KTO bulk import - accessibility not surveyed
+720,,,,,,,,,KTO bulk import - accessibility not surveyed
+721,,,,,,,,,KTO bulk import - accessibility not surveyed; parking=가능
+722,,,,,,,,,KTO bulk import - accessibility not surveyed
+723,,,,,,,,,KTO bulk import - accessibility not surveyed
+724,,,,,,,,,KTO bulk import - accessibility not surveyed
+725,,,,,,,,,KTO bulk import - accessibility not surveyed
+726,,,,,,,,,KTO bulk import - accessibility not surveyed
+728,,,,,,,,,KTO bulk import - accessibility not surveyed
+729,,,,,,,,,KTO bulk import - accessibility not surveyed; parking=가능
+730,,,,,,,,,KTO bulk import - accessibility not surveyed
+731,,,,,,,,,KTO bulk import - accessibility not surveyed
+732,,,,,,,true,,KTO bulk import - accessibility not surveyed; parking=가능
+733,,,,,,,true,,KTO bulk import - accessibility not surveyed; parking=가능
+734,,,,,,,true,,KTO bulk import - accessibility not surveyed; parking=가능
+735,,,,,,,true,,KTO bulk import - accessibility not surveyed; parking=가능
+736,,,,,,,true,,"KTO bulk import - accessibility not surveyed; parking=가능요금 (30분 무료 / 1시간 1,500원)"
+737,,,,,,,true,,KTO bulk import - accessibility not surveyed; parking=가능
+738,,,,,,,true,,KTO bulk import - accessibility not surveyed; parking=가능
+739,,,,,,,true,,KTO bulk import - accessibility not surveyed; parking=가능요금 (최초 30분 무료 / 이후 15분당 추가 요
+740,,,,,,,true,,KTO bulk import - accessibility not surveyed; parking=불가능
+741,,,,,,,,,KTO bulk import - accessibility not surveyed; parking=가능
+742,,,,,,,true,,KTO bulk import - accessibility not surveyed; parking=가능
+743,,,,,,,,,KTO bulk import - accessibility not surveyed; parking=가능
+744,,,,,,,true,,KTO bulk import - accessibility not surveyed; parking=가능
+745,,,,,true,,true,,KTO bulk import - accessibility not surveyed; parking=가능
+746,,,,,true,,,,KTO bulk import - accessibility not surveyed; parking=가능
+747,,,,,true,,,,KTO bulk import - accessibility not surveyed; parking=가능
+748,,,,,true,,true,,KTO bulk import - accessibility not surveyed; parking=가능
+749,,,,,true,,,,KTO bulk import - accessibility not surveyed; parking=가능 요금 (무료)
+750,,,,,true,,,,KTO bulk import - accessibility not surveyed; parking=가능
+751,,,,,true,,true,,KTO bulk import - accessibility not surveyed; parking=가능
+752,,,,,true,,,,KTO bulk import - accessibility not surveyed; parking=가능
+753,,,,,true,,,,KTO bulk import - accessibility not surveyed; parking=가능
+754,,,,,true,,true,,KTO bulk import - accessibility not surveyed; parking=가능
+755,,,,,true,,true,,KTO bulk import - accessibility not surveyed; parking=가능
+756,,,,,true,,true,,KTO bulk import - accessibility not surveyed; parking=가능
+757,,,,,true,,true,,KTO bulk import - accessibility not surveyed; parking=가능
+758,,,,,true,,true,,KTO bulk import - accessibility not surveyed; parking=가능
+759,,,,,true,,,,KTO bulk import - accessibility not surveyed; parking=가능
+760,,,,,true,,true,,KTO bulk import - accessibility not surveyed; parking=가능
+761,,,,,true,,,,KTO bulk import - accessibility not surveyed; parking=가능
+762,,,,,true,,,,KTO bulk import - accessibility not surveyed; parking=가능
+763,,,,,true,,,,KTO bulk import - accessibility not surveyed; parking=가능
+764,,,,,true,,true,,KTO bulk import - accessibility not surveyed; parking=가능
+765,,,,,true,,,,KTO bulk import - accessibility not surveyed; parking=가능요금 (무료)
+766,,,,,true,,true,,KTO bulk import - accessibility not surveyed; parking=가능
+767,,,,,true,,,,KTO bulk import - accessibility not surveyed; parking=가능
+768,,,,,true,,true,,KTO bulk import - accessibility not surveyed; parking=가능
+769,,,,,true,,true,,KTO bulk import - accessibility not surveyed; parking=가능
+770,,,,,true,,true,,KTO bulk import - accessibility not surveyed; parking=가능
+771,,,,,true,,,,KTO bulk import - accessibility not surveyed; parking=가능
+772,,,,,true,,,,KTO bulk import - accessibility not surveyed; parking=가능
+773,,,,,true,,,,KTO bulk import - accessibility not surveyed; parking=가능
+774,,,,,true,,true,,KTO bulk import - accessibility not surveyed; parking=가능요금 (무료)
+775,,,,,true,,true,,KTO bulk import - accessibility not surveyed; parking=가능요금 (무료)
+776,,,,,true,,true,,KTO bulk import - accessibility not surveyed; parking=가능
+777,,,,,true,,,,KTO bulk import - accessibility not surveyed; parking=불가능
+778,,,,,true,,,,KTO bulk import - accessibility not surveyed; parking=가능
+779,,,,,true,,,,KTO bulk import - accessibility not surveyed; parking=가능
+780,,,,,true,,,,KTO bulk import - accessibility not surveyed; parking=가능
+781,,,,,true,,,,KTO bulk import - accessibility not surveyed; parking=가능요금 (무료)
+782,,,,,true,,true,,KTO bulk import - accessibility not surveyed; parking=가능
+783,,,,,true,,true,,KTO bulk import - accessibility not surveyed; parking=가능
+784,,,,,true,,true,,KTO bulk import - accessibility not surveyed; parking=가능
+785,,,,,true,,true,,KTO bulk import - accessibility not surveyed; parking=가능
+786,,,,,true,,,,KTO bulk import - accessibility not surveyed; parking=가능
+787,,,,,true,,,,KTO bulk import - accessibility not surveyed; parking=가능
+788,,,,,true,,,,KTO bulk import - accessibility not surveyed; parking=가능
+789,,,,,true,,,,KTO bulk import - accessibility not surveyed; parking=가능
+790,,,,,true,,,,KTO bulk import - accessibility not surveyed; parking=가능
+791,,,,,true,,,,KTO bulk import - accessibility not surveyed; parking=가능요금 (무료)
+792,,,,,true,,true,,KTO bulk import - accessibility not surveyed; parking=가능
+793,,,,,true,,true,,KTO bulk import - accessibility not surveyed; parking=가능
+794,,,,,true,,,,KTO bulk import - accessibility not surveyed; parking=가능
+795,,,,,true,,,,KTO bulk import - accessibility not surveyed; parking=가능
+796,,,,,true,,true,,KTO bulk import - accessibility not surveyed; parking=가능
+797,,,,,true,,,,KTO bulk import - accessibility not surveyed; parking=가능
+798,,,,,true,,,,KTO bulk import - accessibility not surveyed; parking=가능
+799,,,,,true,,true,,KTO bulk import - accessibility not surveyed; parking=가능요금 (무료)
+800,,,,,true,,true,,KTO bulk import - accessibility not surveyed; parking=가능
+801,,,,,true,,,,KTO bulk import - accessibility not surveyed; parking=가능
+802,,,,,true,,,,KTO bulk import - accessibility not surveyed; parking=가능
+803,,,,,true,,,,KTO bulk import - accessibility not surveyed; parking=주차 가능
+804,,,,,true,,,,KTO bulk import - accessibility not surveyed; parking=가능
+805,,,,,true,,true,,KTO bulk import - accessibility not surveyed; parking=가능
+806,,,,,true,,,,KTO bulk import - accessibility not surveyed; parking=가능
+807,,,,,true,,,,KTO bulk import - accessibility not surveyed; parking=주차 가능
+808,,,,,true,,true,,KTO bulk import - accessibility not surveyed; parking=불가능
+809,,,,,true,,true,,KTO bulk import - accessibility not surveyed; parking=가능
+810,,,,,true,,,,KTO bulk import - accessibility not surveyed; parking=가능
+811,,,,,true,,,,KTO bulk import - accessibility not surveyed; parking=가능
+812,,,,,true,,,,KTO bulk import - accessibility not surveyed; parking=가능
+813,,,,,true,,,,KTO bulk import - accessibility not surveyed; parking=가능
+814,,,,,true,,,,KTO bulk import - accessibility not surveyed; parking=가능
+815,,,,,true,,,,KTO bulk import - accessibility not surveyed; parking=가능
+816,,,,,true,,,,KTO bulk import - accessibility not surveyed; parking=불가능
+817,,,,,true,,true,,KTO bulk import - accessibility not surveyed; parking=가능
+818,,,,,true,,,,KTO bulk import - accessibility not surveyed; parking=가능
+819,,,,,true,,,,KTO bulk import - accessibility not surveyed; parking=불가능
+820,,,,,true,,,,KTO bulk import - accessibility not surveyed; parking=불가능
+821,,,,,true,,,,KTO bulk import - accessibility not surveyed; parking=가능
+822,,,,,true,,true,,KTO bulk import - accessibility not surveyed; parking=가능
+823,,,,,true,,true,,KTO bulk import - accessibility not surveyed; parking=가능
+824,,,,,true,,true,,KTO bulk import - accessibility not surveyed; parking=가능 요금 (무료)
+825,,,,,true,,,,KTO bulk import - accessibility not surveyed; parking=있음 (소형 약 20대)
+826,,,,,true,,true,,KTO bulk import - accessibility not surveyed; parking=가능
+827,,,,,true,,true,,KTO bulk import - accessibility not surveyed; parking=가능요금 (무료)
+828,,,,,true,,true,,KTO bulk import - accessibility not surveyed; parking=불가능
+829,,,,,true,,,,KTO bulk import - accessibility not surveyed; parking=가능
+830,,,,,true,,true,,KTO bulk import - accessibility not surveyed; parking=가능
+831,,,,,true,,true,,KTO bulk import - accessibility not surveyed; parking=가능
+832,,,,,true,,,,KTO bulk import - accessibility not surveyed; parking=가능
+833,,,,,true,,true,,KTO bulk import - accessibility not surveyed; parking=가능
+834,,,,,true,,,,KTO bulk import - accessibility not surveyed; parking=불가능
+835,,,,,true,,,,KTO bulk import - accessibility not surveyed; parking=가능
+836,,,,,true,,true,,KTO bulk import - accessibility not surveyed; parking=불가능
+837,,,,,true,,,,KTO bulk import - accessibility not surveyed; parking=가능 요금 (무료)
+838,,,,,true,,,,KTO bulk import - accessibility not surveyed; parking=가능
+839,,,,,true,,,,KTO bulk import - accessibility not surveyed; parking=가능
+840,,,,,true,,true,,KTO bulk import - accessibility not surveyed; parking=가능
+841,,,,,true,,true,,KTO bulk import - accessibility not surveyed; parking=가능
+842,,,,,true,,true,,KTO bulk import - accessibility not surveyed; parking=불가능
+843,,,,,true,,,,KTO bulk import - accessibility not surveyed; parking=가능
+844,,,,,true,,true,,KTO bulk import - accessibility not surveyed; parking=가능발렛가능
+845,,,,,true,,,,KTO bulk import - accessibility not surveyed; parking=가능
+846,,,,,true,,,,KTO bulk import - accessibility not surveyed; parking=가능
+847,,,,,true,,,,KTO bulk import - accessibility not surveyed; parking=가능
+848,,,,,true,,,,KTO bulk import - accessibility not surveyed
+849,,,,,true,,true,,KTO bulk import - accessibility not surveyed; parking=가능
+850,,,,,true,,true,,KTO bulk import - accessibility not surveyed; parking=가능
+851,,,,,true,,,,KTO bulk import - accessibility not surveyed; parking=가능
+852,,,,,true,,true,,KTO bulk import - accessibility not surveyed; parking=가능
+853,,,,,true,,,,KTO bulk import - accessibility not surveyed; parking=불가능
+854,,,,,true,,,,KTO bulk import - accessibility not surveyed; parking=가능
+855,,,,,true,,,,KTO bulk import - accessibility not surveyed; parking=가능요금 (무료)
+856,,,,,true,,true,,KTO bulk import - accessibility not surveyed; parking=가능 요금 (무료)
+857,,,,,true,,true,,KTO bulk import - accessibility not surveyed; parking=가능
+858,,,,,true,,,,KTO bulk import - accessibility not surveyed; parking=가능
+859,,,,,true,,,,KTO bulk import - accessibility not surveyed; parking=가능
+860,,,,,true,,true,,KTO bulk import - accessibility not surveyed; parking=가능
+861,,,,,true,,true,,KTO bulk import - accessibility not surveyed; parking=가능
+862,,,,,true,,true,,KTO bulk import - accessibility not surveyed; parking=가능
+863,,,,,true,,,,KTO bulk import - accessibility not surveyed; parking=가능 (카페 앞 공터)
+864,,,,,true,,true,,KTO bulk import - accessibility not surveyed; parking=가능
+865,,,,,true,,,,KTO bulk import - accessibility not surveyed; parking=가능
+866,,,,,true,,true,,KTO bulk import - accessibility not surveyed; parking=가능
+867,,,,,true,,true,,KTO bulk import - accessibility not surveyed; parking=가능
+868,,,,,true,,,,KTO bulk import - accessibility not surveyed; parking=가능
+869,,,,,true,,true,,KTO bulk import - accessibility not surveyed; parking=가능
+870,,,,,true,,,,KTO bulk import - accessibility not surveyed; parking=가능
+871,,,,,true,,,,KTO bulk import - accessibility not surveyed; parking=가능
+872,,,,,true,,,,KTO bulk import - accessibility not surveyed; parking=가능
+873,,,,,true,,true,,KTO bulk import - accessibility not surveyed; parking=가능
+874,,,,,true,,,,KTO bulk import - accessibility not surveyed; parking=가능
+875,,,,,true,,true,,KTO bulk import - accessibility not surveyed; parking=가능
+876,,,,,true,,true,,KTO bulk import - accessibility not surveyed; parking=가능
+877,,,,,true,,,,KTO bulk import - accessibility not surveyed; parking=가능
+878,,,,,true,,true,,KTO bulk import - accessibility not surveyed; parking=가능
+879,,,,,true,,true,,KTO bulk import - accessibility not surveyed; parking=가능요금 (무료)
+880,,,,,true,,true,,KTO bulk import - accessibility not surveyed; parking=가능 요금 (무료)
+881,,,,,true,,,,KTO bulk import - accessibility not surveyed; parking=가능
+882,,,,,true,,true,,KTO bulk import - accessibility not surveyed; parking=가능요금 (무료)
+883,,,,,true,,true,,KTO bulk import - accessibility not surveyed; parking=가능
+884,,,,,true,,,,KTO bulk import - accessibility not surveyed; parking=가능
+885,,,,,true,,,,KTO bulk import - accessibility not surveyed; parking=가능
+886,,,,,true,,,,KTO bulk import - accessibility not surveyed; parking=가능
+887,,,,,true,,,,KTO bulk import - accessibility not surveyed; parking=불가능
+888,,,,,true,,,,KTO bulk import - accessibility not surveyed; parking=불가능
+889,,,,,true,,,,KTO bulk import - accessibility not surveyed; parking=불가능
+890,,,,,true,,,,KTO bulk import - accessibility not surveyed; parking=가능
+891,,,,,true,,,,KTO bulk import - accessibility not surveyed; parking=가능요금 (무료)
+892,,,,,true,,true,,KTO bulk import - accessibility not surveyed; parking=불가능
+893,,,,,true,,,,KTO bulk import - accessibility not surveyed; parking=가능
+894,,,,,true,,,,KTO bulk import - accessibility not surveyed; parking=가능 (소길리종합복지회관) 요금 (무료)
+895,,,,,true,,true,,KTO bulk import - accessibility not surveyed; parking=가능 요금 (무료)
+896,,,,,true,,,,KTO bulk import - accessibility not surveyed; parking=가능
+897,,,,,true,,true,,KTO bulk import - accessibility not surveyed; parking=가능
+898,,,,,true,,,,KTO bulk import - accessibility not surveyed; parking=불가능
+899,,,,,true,,,,KTO bulk import - accessibility not surveyed; parking=가능
+900,,,,,true,,true,,KTO bulk import - accessibility not surveyed; parking=불가 (마을 공영주차장 이용 가능)
+901,,,,,true,,true,,KTO bulk import - accessibility not surveyed; parking=가능
+902,,,,,true,,,,KTO bulk import - accessibility not surveyed; parking=가능
+903,,,,,true,,true,,KTO bulk import - accessibility not surveyed; parking=가능
+904,,,,,true,,true,,KTO bulk import - accessibility not surveyed; parking=가능
+905,,,,,true,,,,KTO bulk import - accessibility not surveyed; parking=가능
+906,,,,,true,,,,KTO bulk import - accessibility not surveyed; parking=가능
+907,,,,,true,,,,KTO bulk import - accessibility not surveyed; parking=가능
+908,,,,,true,,true,,KTO bulk import - accessibility not surveyed; parking=불가능
+909,,,,,true,,true,,KTO bulk import - accessibility not surveyed; parking=불가능
+910,,,,,true,,true,,KTO bulk import - accessibility not surveyed; parking=가능
+911,,,,,true,,,,KTO bulk import - accessibility not surveyed; parking=가능
+912,,,,,true,,true,,KTO bulk import - accessibility not surveyed; parking=가능
+913,,,,,true,,,,KTO bulk import - accessibility not surveyed; parking=가능
+914,,,,,true,,,,KTO bulk import - accessibility not surveyed; parking=불가능
+915,,,,,true,,true,,KTO bulk import - accessibility not surveyed; parking=가능
+916,,,,,true,,true,,KTO bulk import - accessibility not surveyed; parking=가능
+917,,,,,true,,,,KTO bulk import - accessibility not surveyed; parking=불가능
+918,,,,,true,,,,KTO bulk import - accessibility not surveyed; parking=가능
+919,,,,,true,,true,,KTO bulk import - accessibility not surveyed; parking=가능
+920,,,,,true,,true,,KTO bulk import - accessibility not surveyed; parking=가능
+921,,,,,true,,true,,KTO bulk import - accessibility not surveyed; parking=가능
+922,,,,,true,,true,,KTO bulk import - accessibility not surveyed; parking=가능
+923,,,,,true,,,,KTO bulk import - accessibility not surveyed; parking=가능
+924,,,,,true,,true,,KTO bulk import - accessibility not surveyed; parking=가능
+925,,,,,true,,true,,KTO bulk import - accessibility not surveyed; parking=가능
+926,,,,,true,,,,KTO bulk import - accessibility not surveyed; parking=불가능
+927,,,,,true,,,,KTO bulk import - accessibility not surveyed; parking=가능
+928,,,,,true,,,,KTO bulk import - accessibility not surveyed; parking=가능요금 (무료)
+929,,,,,true,,,,KTO bulk import - accessibility not surveyed; parking=가능
+930,,,,,true,,,,KTO bulk import - accessibility not surveyed; parking=불가능
+931,,,,,true,,true,,KTO bulk import - accessibility not surveyed; parking=가능
+932,,,,,true,,,,KTO bulk import - accessibility not surveyed; parking=가능
+933,,,,,true,,true,,KTO bulk import - accessibility not surveyed; parking=가능
+934,,,,,true,,true,,KTO bulk import - accessibility not surveyed; parking=가능
+935,,,,,true,,true,,KTO bulk import - accessibility not surveyed; parking=가능
+936,,,,,true,,true,,KTO bulk import - accessibility not surveyed; parking=가능
+937,,,,,true,,,,KTO bulk import - accessibility not surveyed; parking=가능 (무료)
+938,,,,,true,,true,,KTO bulk import - accessibility not surveyed; parking=가능
+939,,,,,true,,true,,KTO bulk import - accessibility not surveyed; parking=가능요금 (무료)
+940,,,,,true,,,,KTO bulk import - accessibility not surveyed; parking=가능
+941,,,,,true,,,,KTO bulk import - accessibility not surveyed; parking=가능
+942,,,,,true,,,,KTO bulk import - accessibility not surveyed; parking=가능
+943,,,,,true,,,,KTO bulk import - accessibility not surveyed; parking=가능
+944,,,,,true,,,,KTO bulk import - accessibility not surveyed; parking=가능
+945,,,,,true,,true,,KTO bulk import - accessibility not surveyed; parking=가능
+946,,,,,true,,,,KTO bulk import - accessibility not surveyed; parking=가능
+947,,,,,true,,,,KTO bulk import - accessibility not surveyed; parking=불가능
+948,,,,,true,,,,KTO bulk import - accessibility not surveyed; parking=가능요금 (무료)
+949,,,,,true,,true,,KTO bulk import - accessibility not surveyed; parking=가능
+950,,,,,true,,true,,KTO bulk import - accessibility not surveyed; parking=가능
+951,,,,,true,,true,,KTO bulk import - accessibility not surveyed; parking=가능
+952,,,,,true,,true,,KTO bulk import - accessibility not surveyed; parking=가능
+953,,,,,true,,true,,KTO bulk import - accessibility not surveyed; parking=가능
+954,,,,,true,,true,,KTO bulk import - accessibility not surveyed; parking=가능
+955,,,,,true,,,,KTO bulk import - accessibility not surveyed; parking=가능
+956,,,,,true,,true,,KTO bulk import - accessibility not surveyed; parking=가능
+957,,,,,true,,true,,KTO bulk import - accessibility not surveyed; parking=가능
+958,,,,,true,,,,KTO bulk import - accessibility not surveyed; parking=불가능
+959,,,,,true,,true,,KTO bulk import - accessibility not surveyed; parking=가능
+960,,,,,true,,,,KTO bulk import - accessibility not surveyed; parking=가능 요금 (무료)
+961,,,,,true,,,,KTO bulk import - accessibility not surveyed; parking=가능
+962,,,,,true,,,,KTO bulk import - accessibility not surveyed; parking=가능 (무료)
+963,,,,,true,,,,KTO bulk import - accessibility not surveyed; parking=가능
+964,,,,,true,,true,,KTO bulk import - accessibility not surveyed; parking=가능
+965,,,,,true,,,,KTO bulk import - accessibility not surveyed; parking=가능
+966,,,,,true,,true,,KTO bulk import - accessibility not surveyed; parking=불가능
+967,,,,,true,,true,,KTO bulk import - accessibility not surveyed; parking=가능요금 (무료)
+968,,,,,true,,,,KTO bulk import - accessibility not surveyed; parking=가능
+969,,,,,true,,true,,KTO bulk import - accessibility not surveyed; parking=가능요금 (무료)
+970,,,,,true,,,,KTO bulk import - accessibility not surveyed
+971,,,,,true,,true,,KTO bulk import - accessibility not surveyed; parking=가능
+972,,,,,true,,true,,KTO bulk import - accessibility not surveyed; parking=가능
+973,,,,,true,,,,KTO bulk import - accessibility not surveyed; parking=가능
+974,,,,,true,,,,KTO bulk import - accessibility not surveyed; parking=가능
+975,,,,,true,,true,,KTO bulk import - accessibility not surveyed; parking=불가능
+976,,,,,true,,,,KTO bulk import - accessibility not surveyed; parking=불가능
+977,,,,,true,,,,KTO bulk import - accessibility not surveyed; parking=가능
+978,,,,,true,,true,,KTO bulk import - accessibility not surveyed; parking=가능
+979,,,,,true,,,,KTO bulk import - accessibility not surveyed; parking=가능
+980,,,,,true,,true,,KTO bulk import - accessibility not surveyed; parking=가능
+981,,,,,true,,true,,KTO bulk import - accessibility not surveyed; parking=가능
+982,,,,,true,,true,,KTO bulk import - accessibility not surveyed; parking=가능
+983,,,,,true,,,,KTO bulk import - accessibility not surveyed; parking=가능
+984,,,,,true,,,,KTO bulk import - accessibility not surveyed; parking=가능
+985,,,,,true,,,,KTO bulk import - accessibility not surveyed; parking=가능
+986,,,,,true,,true,,KTO bulk import - accessibility not surveyed; parking=가능
+987,,,,,true,,,,KTO bulk import - accessibility not surveyed; parking=가능
+988,,,,,true,,,,KTO bulk import - accessibility not surveyed; parking=가능
+989,,,,,true,,true,,KTO bulk import - accessibility not surveyed; parking=가능
+990,,,,,true,,true,,KTO bulk import - accessibility not surveyed; parking=가능
+991,,,,,true,,true,,KTO bulk import - accessibility not surveyed; parking=가능
+992,,,,,true,,,,KTO bulk import - accessibility not surveyed; parking=불가능
+993,,,,,true,,,,KTO bulk import - accessibility not surveyed; parking=가능
+994,,,,,true,,,,KTO bulk import - accessibility not surveyed; parking=불가능
+995,,,,,true,,,,KTO bulk import - accessibility not surveyed; parking=가능
+996,,,,,true,,,,KTO bulk import - accessibility not surveyed; parking=가능
+997,,,,,true,,,,KTO bulk import - accessibility not surveyed; parking=불가능
+998,,,,,true,,,,KTO bulk import - accessibility not surveyed; parking=가능
+999,,,,,true,,true,,KTO bulk import - accessibility not surveyed; parking=불가능
+1000,,,,,true,,,,KTO bulk import - accessibility not surveyed; parking=가능요금 (무료)
+1001,,,,,true,,,,KTO bulk import - accessibility not surveyed; parking=가능
+1002,,,,,true,,true,,KTO bulk import - accessibility not surveyed; parking=가능
+1003,,,,,true,,true,,KTO bulk import - accessibility not surveyed; parking=가능
+1004,,,,,true,,true,,KTO bulk import - accessibility not surveyed; parking=불가능
+1005,,,,,true,,true,,KTO bulk import - accessibility not surveyed; parking=가능
+1006,,,,,true,,true,,KTO bulk import - accessibility not surveyed; parking=가능
+1007,,,,,true,,true,,KTO bulk import - accessibility not surveyed; parking=불가능
+1008,,,,,true,,true,,KTO bulk import - accessibility not surveyed; parking=가능
+1009,,,,,true,,,,KTO bulk import - accessibility not surveyed; parking=가능
+1010,,,,,true,,true,,KTO bulk import - accessibility not surveyed; parking=가능
+1011,,,,,true,,true,,KTO bulk import - accessibility not surveyed; parking=가능
+1012,,,,,true,,true,,KTO bulk import - accessibility not surveyed; parking=가능
+1013,,,,,true,,true,,KTO bulk import - accessibility not surveyed
+1014,,,,,true,,,,KTO bulk import - accessibility not surveyed; parking=불가능
+1015,,,,,true,,true,,KTO bulk import - accessibility not surveyed; parking=가능
+1016,,,,,true,,true,,KTO bulk import - accessibility not surveyed; parking=가능요금 (무료)
+1017,,,,,true,,,,KTO bulk import - accessibility not surveyed; parking=가능 (협소 / 소형 2대)
+1018,,,,,true,,true,,KTO bulk import - accessibility not surveyed; parking=가능
+1019,,,,,true,,true,,KTO bulk import - accessibility not surveyed; parking=가능
+1020,,,,,true,,,,KTO bulk import - accessibility not surveyed; parking=가능
+1021,,,,,true,,,,KTO bulk import - accessibility not surveyed; parking=불가능
+1022,,,,,true,,true,,KTO bulk import - accessibility not surveyed; parking=가능
+1023,,,,,true,,,,KTO bulk import - accessibility not surveyed; parking=가능
+1024,,,,,true,,,,KTO bulk import - accessibility not surveyed; parking=가능
+1025,,,,,true,,true,,KTO bulk import - accessibility not surveyed; parking=가능
+1026,,,,,true,,true,,KTO bulk import - accessibility not surveyed; parking=가능
+1027,,,,,true,,true,,KTO bulk import - accessibility not surveyed; parking=가능
+1028,,,,,true,,,,KTO bulk import - accessibility not surveyed; parking=불가능
+1029,,,,,true,,true,,KTO bulk import - accessibility not surveyed; parking=가능
+1030,,,,,true,,true,,KTO bulk import - accessibility not surveyed; parking=가능
+1031,,,,,true,,true,,KTO bulk import - accessibility not surveyed
+1032,,,,,true,,,,KTO bulk import - accessibility not surveyed; parking=가능
+1033,,,,,true,,true,,KTO bulk import - accessibility not surveyed; parking=가능
+1034,,,,,true,,true,,KTO bulk import - accessibility not surveyed; parking=가능
+1035,,,,,true,,,,KTO bulk import - accessibility not surveyed; parking=가능
+1036,,,,,true,,true,,KTO bulk import - accessibility not surveyed; parking=불가능
+1037,,,,,true,,,,KTO bulk import - accessibility not surveyed; parking=가능 요금 (무료)
+1038,,,,,true,,,,KTO bulk import - accessibility not surveyed; parking=불가능
+1039,,,,,true,,true,,KTO bulk import - accessibility not surveyed; parking=가능
+1040,,,,,true,,,,KTO bulk import - accessibility not surveyed; parking=가능
+1041,,,,,true,,true,,KTO bulk import - accessibility not surveyed; parking=불가능
+1042,,,,,true,,,,KTO bulk import - accessibility not surveyed; parking=불가능
+1043,,,,,true,,true,,KTO bulk import - accessibility not surveyed; parking=가능
+1044,,,,,true,,,,KTO bulk import - accessibility not surveyed; parking=가능
+1045,,,,,true,,,,KTO bulk import - accessibility not surveyed; parking=무료 주차
+1046,,,,,true,,true,,KTO bulk import - accessibility not surveyed; parking=가능
+1047,,,,,true,,true,,KTO bulk import - accessibility not surveyed; parking=가능
+1048,,,,,true,,true,,KTO bulk import - accessibility not surveyed; parking=가능
+1049,,,,,true,,,,KTO bulk import - accessibility not surveyed; parking=가능
+1050,,,,,true,,,,KTO bulk import - accessibility not surveyed; parking=불가능
+1051,,,,,true,,,,KTO bulk import - accessibility not surveyed; parking=가능
+1052,,,,,true,,,,KTO bulk import - accessibility not surveyed; parking=가능
+1053,,,,,true,,,,KTO bulk import - accessibility not surveyed; parking=가능
+1054,,,,,true,,,,KTO bulk import - accessibility not surveyed; parking=가능
+1055,,,,,true,,,,KTO bulk import - accessibility not surveyed; parking=불가능
+1056,,,,,true,,,,KTO bulk import - accessibility not surveyed; parking=가능
+1057,,,,,true,,,,KTO bulk import - accessibility not surveyed; parking=가능
+1058,,,,,true,,true,,KTO bulk import - accessibility not surveyed; parking=가능
+1059,,,,,true,,true,,KTO bulk import - accessibility not surveyed; parking=가능
+1060,,,,,true,,,,KTO bulk import - accessibility not surveyed; parking=가능
+1061,,,,,true,,,,KTO bulk import - accessibility not surveyed; parking=가능
+1062,,,,,true,,true,,KTO bulk import - accessibility not surveyed; parking=가능
+1063,,,,,true,,true,,KTO bulk import - accessibility not surveyed; parking=가능
+1064,,,,,true,,,,KTO bulk import - accessibility not surveyed; parking=가능
+1065,,,,,true,,true,,KTO bulk import - accessibility not surveyed; parking=가능
+1066,,,,,true,,,,KTO bulk import - accessibility not surveyed; parking=가능
+1067,,,,,true,,,,KTO bulk import - accessibility not surveyed; parking=가능
+1068,,,,,true,,true,,KTO bulk import - accessibility not surveyed; parking=가능
+1069,,,,,true,,,,KTO bulk import - accessibility not surveyed; parking=가능
+1070,,,,,true,,,,KTO bulk import - accessibility not surveyed; parking=가능
+1071,,,,,true,,true,,KTO bulk import - accessibility not surveyed; parking=가능
+1072,,,,,true,,true,,KTO bulk import - accessibility not surveyed; parking=가능
+1073,,,,,true,,true,,KTO bulk import - accessibility not surveyed; parking=가능
+1074,,,,,true,,,,KTO bulk import - accessibility not surveyed; parking=가능

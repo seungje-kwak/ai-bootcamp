@@ -1,6 +1,7 @@
 // Clock helpers. Every "HH:MM" in the app is Jeju local time (KST, UTC+9, no daylight saving),
 // the same convention the planner uses for start_time.
-import type { CourseItem, UserProfileInput } from "./types";
+import { TRIP_TIME } from "./tripTime";
+import type { CourseItem, UserProfile } from "./types";
 
 export const toMinutes = (hhmm: string): number => {
   const [h, m] = hhmm.split(":").map(Number);
@@ -24,19 +25,28 @@ export function nowInJejuMinutes(now: Date = new Date()): number {
 
 export const ceilTo = (minutes: number, step: number): number => Math.ceil(minutes / step) * step;
 
-/** Plan lengths the course API can build today: `duration` is half_day or full_day only. */
-export const PLAN_MINUTES: Record<UserProfileInput["duration"], number> = { half_day: 240, full_day: 480 };
-export const SHORTEST_PLAN_MIN = PLAN_MINUTES.half_day;
-export const EARLIEST_START = 6 * 60;
-export const LATEST_END = 23 * 60 + 30;
+/** Why a start/end pair can't be sent: same rules as backend/app/planner.py check_time_window. */
+export type WindowError = "errOrder" | "errStart" | "errEnd" | "errShort" | "errLong";
+export function windowError(start: number, end: number): WindowError | null {
+  if (end <= start) return "errOrder";
+  if (start < TRIP_TIME.minStart || start > TRIP_TIME.maxStart) return "errStart";
+  if (end > TRIP_TIME.maxEnd) return "errEnd";
+  if (end - start < TRIP_TIME.minLength) return "errShort";
+  if (end - start > TRIP_TIME.maxLength) return "errLong";
+  return null;
+}
 
-export type PlanChoice = { duration: UserProfileInput["duration"]; planMin: number; spareMin: number };
+/** Plan lengths of courses saved before the trip-time change (they have `duration`, no times). */
+const LEGACY_PLAN_MINUTES = { half_day: 240, full_day: 480 } as const;
 
-/** The longest plan the server offers that still fits inside the traveler's window. */
-export function planForWindow(windowMin: number): PlanChoice | null {
-  if (windowMin < SHORTEST_PLAN_MIN) return null;
-  const duration = windowMin >= PLAN_MINUTES.full_day ? "full_day" : "half_day";
-  return { duration, planMin: PLAN_MINUTES[duration], spareMin: windowMin - PLAN_MINUTES[duration] };
+/** The day the traveler asked for. Older courses only know their length, so they start at the first stop. */
+export function courseWindow(
+  profile: Pick<UserProfile, "start_time" | "end_time" | "duration">,
+  firstStart: string | undefined,
+): { start: string; end: string } | null {
+  if (profile.start_time && profile.end_time) return { start: profile.start_time, end: profile.end_time };
+  if (profile.duration && firstStart) return { start: firstStart, end: addMinutes(firstStart, LEGACY_PLAN_MINUTES[profile.duration]) };
+  return null;
 }
 
 /** Start of the first stop and end of the last visible stop. */

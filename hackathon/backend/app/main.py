@@ -2,11 +2,12 @@
 from __future__ import annotations
 
 import logging
+from typing import Optional
 
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
-from . import config, planner
+from . import areas, config, planner
 from .course_view import build_course
 from .errors import ApiError
 from .schemas import CreateCourseRequest, PurchaseRequest, ReplanRequest, ReportRequest
@@ -46,15 +47,27 @@ def health() -> dict:
             "llm": f"{config.LLM_PROVIDER}:{config.LLM_MODEL}" if config.USE_LLM else False}
 
 
+@app.get("/areas")
+def list_areas() -> dict:
+    store = get_store()
+    return {"areas": areas.summaries(store.list_areas(), store.list_places())}
+
+
 @app.get("/places")
-def list_places() -> dict:
-    return {"places": get_store().list_places()}
+def list_places(area_id: Optional[str] = None) -> dict:
+    places = get_store().list_places()
+    if area_id is not None:
+        places = [p for p in places if p["area_id"] == area_id]
+    return {"places": places}
 
 
 @app.post("/courses", status_code=201)
 def create_course(req: CreateCourseRequest) -> dict:
     store = get_store()
-    course, items = planner.new_course(store.list_places(), req.user_profile.model_dump(), req.start_time)
+    places = store.list_places()
+    areas.check_area(req.area_id, store.list_areas(), places)
+    course, items = planner.new_course(places, req.user_profile.model_dump(), req.start_time, req.end_time,
+                                       req.area_id)
     store.create_course(course, items)
     return _course_response(course["id"])
 
@@ -74,8 +87,20 @@ def replan_course(course_id: str, req: ReplanRequest) -> dict:
     # Plan first; the DB changes only after the new items are ready (10.7 step 5).
     result = planner.replan(store.list_places(), course, items, req.reason, req.current_order)
     store.apply_replan(course_id, result.user_profile, result.statuses, result.delete_orders,
-                       result.new_items, result.report_place_id)
+                       result.new_items, result.report_place_id, result.meal_gaps)
     return _course_response(course_id)
+
+
+@app.post("/courses/{course_id}/shuffle", status_code=201)
+def shuffle_course(course_id: str) -> dict:
+    """P1 US-P15: a new course with the same choices and a different seed. The old course stays."""
+    store = get_store()
+    course = store.get_course(course_id)
+    if course is None:
+        raise ApiError(404, "COURSE_NOT_FOUND", "Course not found.")
+    new, items = planner.shuffle_course(store.list_places(), course, store.get_items(course_id))
+    store.create_course(new, items)
+    return _course_response(new["id"])
 
 
 @app.post("/places/{place_id}/report", status_code=201)

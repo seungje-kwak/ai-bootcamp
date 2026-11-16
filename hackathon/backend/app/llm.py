@@ -10,13 +10,14 @@ from __future__ import annotations
 
 import json
 import logging
+from typing import Optional
 
 from . import config
 from .schemas import LLMCourse
 
 log = logging.getLogger("mypace.llm")
 
-SYSTEM_PROMPT = """You are a day-trip planner for solo foreign travelers in Jeju City, South Korea.
+SYSTEM_PROMPT = """You are a day-trip planner for solo foreign travelers in Jeju, South Korea.
 You receive one JSON object with "traveler", "trip", "replan" and "candidates".
 Plan the stops and return JSON only.
 
@@ -25,19 +26,23 @@ Hard rules
 2. Use each place at most once.
 3. Choose between trip.min_items and trip.max_items places.
 4. The total of stay_min plus rough travel time between stops must fit within trip.time_budget_min.
-5. If trip.needs_lunch is true, include exactly one place whose category is "food", placed so that it starts between 11:30 and 13:30.
+   The whole stay at a place must be inside its opening hours: between the candidate's open_time and close_time (both null means always open).
+5. For each item in trip.meals, include exactly one place whose category is "food", arriving between its arrive_from and arrive_by. Use a different food place for each meal. Do not add food places at other times.
 6. If replan.fixed_first_place_id is set, that place must be the first item.
 7. If replan.keep_if_possible is not empty, keep those places in that order unless another hard rule forbids it.
 
 Preferences
-8. Prefer categories listed in traveler.interests.
-9. Order the stops so the route does not zigzag. Use lat and lng. If trip.origin is given, start near it.
+8. Prefer categories listed in traveler.interests. Prefer food places where food.solo_ok is true.
+   Avoid two stops of the same category in a row when there is another choice.
+   Visit places with "evening_spot": true at 16:30 or later when the trip allows it.
+9. Order the stops so the route does not zigzag. Use lat and lng. If trip.origin is given, start near it. Otherwise start near trip.anchor.
 10. If traveler.fitness_level is 1, traveler.condition_today is "tired", or trip.low_walking is true: prefer lower walking_level and fatigue_score, choose fewer stops, and include a rest stop (a cafe or a place to sit) with "is_rest_stop": true.
-11. Keep stay_min close to the candidate's avg_stay_min.
+11. Choose stay_min between the candidate's min_stay_min and max_stay_min. Use avg_stay_min unless the trip has spare time or is short.
 
 Writing reason_en
 12. One or two short sentences, at most 200 characters, in plain English, addressed to the traveler as "you".
 13. Use only facts that appear in the input. Do not mention opening hours, prices, history, transport, travel time, or anything else that is not in the candidate data.
+14. In "food", null means not known. Mention an option only when it is true.
 
 Output
 Return only one JSON object in exactly this shape. No markdown, no code fence, no extra text.
@@ -67,7 +72,14 @@ OUTPUT_SCHEMA = {
 }
 
 class LLMError(Exception):
-    pass
+    """`status`: HTTP status code when the API answered with an error. `quota`: the account is out of
+    quota or credit (Gemini RESOURCE_EXHAUSTED, Anthropic billing_error). The eval script reads these
+    two fields instead of the message (tasks/prd-recommendation-p0.md US-R02)."""
+
+    def __init__(self, message: str, status: Optional[int] = None, quota: bool = False):
+        super().__init__(message)
+        self.status = status
+        self.quota = quota
 
 
 def call_llm(llm_input: dict) -> LLMCourse:
@@ -127,11 +139,13 @@ def _call_gemini(llm_input: dict) -> LLMCourse:
             ),
         )
     except errors.ClientError as e:  # 4xx: bad key, unknown model, quota
-        raise LLMError(f"gemini client error {e.code}: {e.message}") from e
+        raise LLMError(f"gemini client error {e.code}: {e.message}", status=e.code,
+                       quota=e.status == "RESOURCE_EXHAUSTED") from e
     except errors.ServerError as e:  # 5xx
-        raise LLMError(f"gemini server error {e.code}") from e
+        raise LLMError(f"gemini server error {e.code}", status=e.code) from e
     except errors.APIError as e:
-        raise LLMError(f"gemini api error {e.code}") from e
+        raise LLMError(f"gemini api error {e.code}", status=e.code,
+                       quota=e.status == "RESOURCE_EXHAUSTED") from e
     except httpx.TimeoutException as e:
         raise LLMError("gemini timeout") from e
     except httpx.HTTPError as e:
@@ -178,7 +192,10 @@ def _call_claude(llm_input: dict) -> LLMCourse:
     except anthropic.APITimeoutError as e:
         raise LLMError(f"timeout: {e}") from e
     except anthropic.APIStatusError as e:
-        raise LLMError(f"api status {e.status_code}") from e
+        body = e.body if isinstance(e.body, dict) else {}
+        kind = (body.get("error") or {}).get("type") if isinstance(body.get("error"), dict) else None
+        raise LLMError(f"api status {e.status_code}", status=e.status_code,
+                       quota=e.status_code == 402 or kind == "billing_error") from e
     except anthropic.APIConnectionError as e:
         raise LLMError(f"connection: {e}") from e
 
