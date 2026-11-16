@@ -118,10 +118,13 @@ EVENING_FROM = "16:30"
 EVENING_WORDS = ("sunset", "night view", "night market", "at night", "lit up", "illuminat")
 REST_CAFE_BONUS = 2.5               # a café for a traveler who should not walk much
 
-# --- variety (FR-19, FR-20) ---
-ANCHOR_TOP_K = 3                    # the anchor is one of the 3 densest places ...
-ANCHOR_MIN_SHARE = 0.7              # ... that have at least 70% of the densest one's neighbours
-PICK_TOP_K = 3                      # each rule planner step picks one of the 3 best options ...
+# --- variety (FR-19, FR-20; tasks/prd-travel-range.md v0.3) ---
+# Hubs (prd-travel-range FR-1): a place with this many pool places within ANCHOR_RADIUS_KM, farther than
+# HUB_SEPARATION_KM from every hub picked before it. A course stays in one hub; its anchor is the hub's
+# centre. A shuffle skips hubs within HUB_SEPARATION_KM of a hub already shown (FR-5).
+HUB_MIN_PLACES = 8
+HUB_SEPARATION_KM = 3.0
+PICK_TOP_K = 3                     # each rule planner step picks one of the 3 best options ...
 PICK_MARGIN = 1.0                   # ... that score within this much of the best
 SHUFFLE_TRIES = 5
 MAX_2OPT_ROUNDS = 50                # FR-16

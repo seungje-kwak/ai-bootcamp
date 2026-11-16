@@ -1,11 +1,12 @@
 """Recommendation eval (tasks/prd-recommendation-p0.md US-R01, US-R02, FR-1 to FR-4a;
-tasks/prd-recommendation-p1.md US-P01, FR-1, FR-2).
+tasks/prd-recommendation-p1.md US-P01, FR-1, FR-2; tasks/prd-travel-range.md US-T01, FR-8).
 
 Builds the same courses every time with planner.new_course and prints quality metrics per area.
 Scenario i gets the seed `--seed` x 10000 + i, so the same --seed gives the same courses.
 
-Run (rule planner, all 1,200 scenarios, plus a second seed per scenario for seed_overlap):
-    backend/.venv/Scripts/python.exe backend/scripts/eval_planner.py --diversity
+Run (rule planner, all 1,200 scenarios, plus a second seed per scenario for seed_overlap and four shuffles
+in a row per scenario for the hub metrics):
+    backend/.venv/Scripts/python.exe backend/scripts/eval_planner.py --diversity --shuffle
 Run (LLM planner, 30 scenarios, 10 calls a minute):
     backend/.venv/Scripts/python.exe backend/scripts/eval_planner.py --llm --limit 30 --rpm 10
 
@@ -42,12 +43,15 @@ FIXED = {"fitness_level": 2, "max_walk_min": 20, "avoid_slopes": False}
 LLM_MAX_LIMIT = 200          # FR-4a
 LLM_DEFAULT_LIMIT = 30
 MAX_CONSECUTIVE_FAILURES = 3
+SHUFFLES = 4                 # travel-range FR-8: a course and four shuffles in a row
 
 METRIC_KEYS = ["success_rate", "lunch_rate", "dinner_rate", "meal_gap_rate", "meal_miss_rate", "diet_meal_rate",
                "cafe_rate", "interest_rate", "same_cat_adj", "taxi_legs", "move_min", "max_leg_min", "spread_km",
-               "idle_min", "stretched_min", "id_rank", "distinct_courses", "place_coverage", "seed_overlap"]
+               "idle_min", "stretched_min", "id_rank", "distinct_courses", "place_coverage", "seed_overlap",
+               "centre_shift_km", "seed_place_coverage", "shuffle_new_hub_rate", "shuffle_hub_variety"]
 RATE_KEYS = {"success_rate", "lunch_rate", "dinner_rate", "meal_gap_rate", "meal_miss_rate", "diet_meal_rate",
-             "cafe_rate", "interest_rate", "same_cat_adj", "place_coverage", "meal_repaired"}
+             "cafe_rate", "interest_rate", "same_cat_adj", "place_coverage", "meal_repaired", "seed_place_coverage",
+             "shuffle_new_hub_rate", "shuffle_hub_variety"}
 
 
 @dataclass
@@ -67,6 +71,8 @@ class Run:
     seed: Optional[int] = None
     alt_items: Optional[list[dict]] = None  # --diversity: the same scenario with seed + 1
     repaired: int = 0                      # --llm: meals ensure_meals had to fill (P1 FR-2 meal_repaired)
+    hub_count: int = 0                     # hubs find_hubs found for the first course (travel-range FR-8)
+    hub_chain: list[int] = field(default_factory=list)   # --shuffle: _hub_id of the course and each shuffle
 
 
 def scenarios(area_ids: list[str]) -> list[Scenario]:
@@ -157,11 +163,24 @@ def metrics(runs: list[Run], places_by_id: dict[int, dict], area_places: dict[st
         seen_courses.add((r.scenario.area_id, tuple(i["place_id"] for i in items)))
         seen_places.update(p["id"] for p in stops)
 
-    overlaps = []
+    overlaps, shifts, seed_places = [], [], set()
     for r in ok:
         if r.alt_items is not None:
             a, b = {i["place_id"] for i in r.items}, {i["place_id"] for i in r.alt_items}
             overlaps.append(len(a & b) / len(a | b) if a | b else 1.0)
+            shifts.append(centre_km(r.items, r.alt_items, places_by_id))
+            seed_places |= a | b
+
+    # travel-range FR-8: shuffles in a row. A move to a new hub = the hub centre is more than
+    # HUB_SEPARATION_KM from the last one. Scenarios with one hub do not count for the first metric.
+    new_hub, variety = [], []
+    for r in ok:
+        chain = [places_by_id[h] for h in r.hub_chain if h in places_by_id]
+        if len(chain) < 2:
+            continue
+        if r.hub_count >= 2:
+            new_hub += [float(planner.km_between(a, b) > config.HUB_SEPARATION_KM) for a, b in zip(chain, chain[1:])]
+        variety.append(min(1.0, len({p["id"] for p in chain}) / min(len(chain), max(r.hub_count, 1))))
 
     total_places = sum(len(ps) for ps in area_places.values())
     out = {
@@ -188,8 +207,21 @@ def metrics(runs: list[Run], places_by_id: dict[int, dict], area_places: dict[st
         "places_used": len(seen_places),
         "places_total": total_places,
         "seed_overlap": _mean(overlaps),
+        "centre_shift_km": _mean(shifts),
+        "seed_place_coverage": len(seed_places) / total_places if shifts and total_places else None,
+        "shuffle_new_hub_rate": _mean(new_hub),
+        "shuffle_hub_variety": _mean(variety),
     }
     return {k: _round(v) for k, v in out.items()}
+
+
+def centre_km(a: list[dict], b: list[dict], places_by_id: dict[int, dict]) -> float:
+    """travel-range FR-8 centre_shift_km of one scenario: straight-line km between the mean points of two
+    courses."""
+    def centre(items: list[dict]) -> dict:
+        stops = [places_by_id[i["place_id"]] for i in items]
+        return {"lat": sum(p["lat"] for p in stops) / len(stops), "lng": sum(p["lng"] for p in stops) / len(stops)}
+    return planner.km_between(centre(a), centre(b))
 
 
 def summarize(runs: list[Run], places: list[dict], area_ids: list[str]) -> dict:
@@ -290,6 +322,8 @@ def parse_args(argv: Optional[list[str]]) -> argparse.Namespace:
     ap.add_argument("--seed", type=int, default=1, help="scenario i gets the seed SEED x 10000 + i (default 1)")
     ap.add_argument("--diversity", action="store_true",
                     help="also build every scenario with seed + 1 and report seed_overlap (twice the runs)")
+    ap.add_argument("--shuffle", action="store_true",
+                    help=f"also shuffle every course {SHUFFLES} times in a row and report the hub metrics (rules only)")
     return ap.parse_args(argv)
 
 
@@ -311,6 +345,9 @@ def main(argv: Optional[list[str]] = None, *, clock: Callable[[], float] = time.
     if limit is not None and limit <= 0:
         print("ERROR: --limit must be 1 or more")
         return 2
+    if args.llm and args.shuffle:
+        print("ERROR: --shuffle runs the rule planner only. No LLM call was made.")
+        return 2
 
     label = args.label or (f"llm-{config.LLM_MODEL}" if args.llm else "rules")
     out_path = Path(args.out) if args.out else BACKEND / "eval" / f"{label}.json"
@@ -320,7 +357,7 @@ def main(argv: Optional[list[str]] = None, *, clock: Callable[[], float] = time.
     all_scenarios = scenarios(area_ids)
     todo = pick(list(range(len(all_scenarios))), limit)     # scenario indexes: the seed follows the index
 
-    saved = (config.USE_LLM, config.LLM_FALLBACK_RULES, planner.today_kst_dow, planner.call_llm)
+    saved = (config.USE_LLM, config.LLM_FALLBACK_RULES, planner.today_kst_dow, planner.call_llm, planner.new_seed)
     guard = None
     config.USE_LLM = args.llm
     planner.today_kst_dow = lambda: args.weekday
@@ -334,6 +371,20 @@ def main(argv: Optional[list[str]] = None, *, clock: Callable[[], float] = time.
         return planner.new_course(places, sc.profile, sc.start_time, sc.end_time, area_id=sc.area_id,
                                   seed=seed, stats=stats)
 
+    def hub_chain(course: dict, items: list[dict], seed: int) -> list[int]:
+        """travel-range FR-8: the course's _hub_id, then the _hub_id of each of SHUFFLES shuffles in a row.
+        new_seed gives seed x 100 + 1, 2, ... so the same --seed gives the same shuffles."""
+        counter = iter(range(seed * 100 + 1, seed * 100 + 100))
+        planner.new_seed = lambda: next(counter)
+        chain = [course["user_profile"].get("_hub_id")]
+        for _ in range(SHUFFLES):
+            try:
+                course, items = planner.shuffle_course(places, course, items)
+            except ApiError:
+                break
+            chain.append(course["user_profile"].get("_hub_id"))
+        return chain
+
     runs: list[Run] = []
     abort_reason = None
     try:
@@ -343,7 +394,7 @@ def main(argv: Optional[list[str]] = None, *, clock: Callable[[], float] = time.
             try:
                 course, items = build(sc, seed, stats)
                 run = Run(sc, items=items, meal_gaps=course.get("meal_gaps") or [], seed=seed,
-                          repaired=stats.get("meal_repaired", 0))
+                          repaired=stats.get("meal_repaired", 0), hub_count=stats.get("hub_count", 0))
             except ApiError as e:
                 run = Run(sc, error=e.detail["code"], seed=seed)
             if args.diversity and run.items is not None:
@@ -351,11 +402,14 @@ def main(argv: Optional[list[str]] = None, *, clock: Callable[[], float] = time.
                     run.alt_items = build(sc, seed + 1)[1]
                 except ApiError:
                     pass
+            if args.shuffle and run.items is not None:
+                run.hub_chain = hub_chain(course, items, seed)
             runs.append(run)
     except EvalAborted as e:
         abort_reason = e.reason
     finally:
-        config.USE_LLM, config.LLM_FALLBACK_RULES, planner.today_kst_dow, planner.call_llm = saved
+        (config.USE_LLM, config.LLM_FALLBACK_RULES, planner.today_kst_dow, planner.call_llm,
+         planner.new_seed) = saved
 
     summary = summarize(runs, places, area_ids)
     result = {
@@ -368,6 +422,7 @@ def main(argv: Optional[list[str]] = None, *, clock: Callable[[], float] = time.
         "scenarios": len(todo),
         "seed": args.seed,
         "diversity": args.diversity,
+        "shuffle": args.shuffle,
         "areas": area_ids,
         **summary,
     }
