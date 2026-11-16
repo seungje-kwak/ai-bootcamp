@@ -27,6 +27,8 @@ class UserProfileIn(BaseModel):
     avoid_slopes: bool
     condition_today: Literal["great", "normal", "tired"]
     diet: Literal["none", "vegan", "vegetarian", "halal"]
+    # tasks/prd-travel-range.md FR-7: v0.2 apps send it. Taken and dropped (not in model_dump, not stored).
+    travel_range: Optional[str] = Field(default=None, exclude=True)
 
 
 class UserProfile(UserProfileIn):
