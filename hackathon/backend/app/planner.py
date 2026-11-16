@@ -237,6 +237,9 @@ class TripCtx:
     rng: Optional[random.Random] = None          # P1 FR-19: the only randomness. None: always the best option
     stats: dict = field(default_factory=dict)    # what ensure_meals did (the eval reads meal_repaired)
     fixed_first_id: Optional[int] = None         # run_pipeline sets it
+    # tasks/prd-travel-range.md FR-5: a shuffle's lists of hub centres to stay away from, tried in order
+    # (the first that leaves a hub is used; when none does, no hub is avoided). A new course has none.
+    avoid: list[list[dict]] = field(default_factory=list)
     _moves: dict = field(default_factory=dict, repr=False)
 
     def move(self, a: dict, b: dict) -> tuple[str, int]:
@@ -315,16 +318,35 @@ def _within(center: dict, radius_m: float):
     return inside
 
 
-def pick_anchor(pool: list[dict], ctx: TripCtx) -> Optional[dict]:
-    """FR-9. Replanning: the stop the traveler is at. New course: of the places in `interests` (or of the
-    whole pool when there are none), rank by the number of pool places within ANCHOR_RADIUS_KM (itself
-    included); ties: more food within the radius (only when a meal is needed), then the smaller id.
-    P1 FR-19: with ctx.rng, one of the top ANCHOR_TOP_K that have at least ANCHOR_MIN_SHARE of the
-    first one's count, picked evenly. Without it, the first."""
-    if ctx.origin is not None:
-        return ctx.origin
+def km_between(a: dict, b: dict) -> float:
+    """Straight-line km. `b` may be a bare {"lat", "lng"} point (an old course's centre, FR-6)."""
+    return haversine_m(a["lat"], a["lng"], b["lat"], b["lng"]) / 1000
+
+
+# --------------------------------------------------------------------------- hubs (tasks/prd-travel-range.md v0.3)
+@dataclass
+class Hub:
+    """A neighbourhood: its centre place, its density (pool places within ANCHOR_RADIUS_KM, itself
+    included) and the restaurants within that radius."""
+    place: dict
+    density: int
+    food: list[dict] = field(default_factory=list)
+
+    def fed(self, meals: list[str]) -> bool:
+        """FR-1 step 5: every meal has a restaurant open for it in the hub."""
+        return all(any(open_for_meal(p, m) for p in self.food) for m in meals)
+
+
+def find_hubs(pool: list[dict], ctx: TripCtx) -> list[Hub]:
+    """FR-1. Hub candidates are the pool places in `interests` (the whole pool when there are none). Each
+    gets its density over the whole pool. Densest first (then the smaller id), a place becomes a hub when
+    its density is HUB_MIN_PLACES or more and it is more than HUB_SEPARATION_KM from every hub before it.
+    No hub at all: the densest place alone, ranked as P0 FR-9 did (a place with a restaurant open for every
+    needed meal first, then density, then more food when a meal is needed, then the smaller id). Without
+    that first rule a big area's course can end up more than MAX_MOVE_MIN from every dinner place
+    (pyoseon dinner 37% in the P1 eval). No randomness."""
     if not pool:
-        return None
+        return []
     interests = set(ctx.profile["interests"])
     choices = [p for p in pool if p["category"] in interests] or pool
     radius = config.ANCHOR_RADIUS_KM * 1000
@@ -332,22 +354,66 @@ def pick_anchor(pool: list[dict], ctx: TripCtx) -> Optional[dict]:
     by_lat = sorted(pool, key=lambda p: p["lat"])
     lats = [p["lat"] for p in by_lat]
     band = math.degrees(radius / 6371000.0)
-
-    def key(c: dict) -> tuple:
+    rows = []
+    for c in choices:
         inside = _within(c, radius)
         lo, hi = bisect.bisect_left(lats, c["lat"] - band), bisect.bisect_right(lats, c["lat"] + band)
         near = [p for p in by_lat[lo:hi] if inside(p)]
-        food = [p for p in near if p["category"] == "food"] if ctx.meals else []
-        # P1: an anchor with a restaurant open for every needed meal comes first. Without this, a course in
-        # a big area can end up more than MAX_MOVE_MIN from every dinner place (pyoseon dinner 37% -> see eval)
-        fed = all(any(open_for_meal(p, m) for p in food) for m in ctx.meals)
-        return not fed, -len(near), -len(food), c["id"]
-    if ctx.rng is None:
-        return min(choices, key=key)
-    ranked = sorted(((key(c), c) for c in choices), key=lambda kc: kc[0])[:config.ANCHOR_TOP_K]
-    best = ranked[0][0]
-    top = [c for k, c in ranked if k[0] == best[0] and -k[1] >= -best[1] * config.ANCHOR_MIN_SHARE]
-    return ctx.rng.choice(top)
+        rows.append(Hub(c, len(near), [p for p in near if p["category"] == "food"]))
+    rows.sort(key=lambda h: (-h.density, h.place["id"]))
+    hubs: list[Hub] = []
+    for h in rows:
+        if h.density < config.HUB_MIN_PLACES:
+            break
+        if all(km_between(h.place, o.place) > config.HUB_SEPARATION_KM for o in hubs):
+            hubs.append(h)
+    if hubs:
+        return hubs
+    food_first = bool(ctx.meals)
+    return [min(rows, key=lambda h: (not h.fed(ctx.meals), -h.density, -len(h.food) if food_first else 0,
+                                     h.place["id"]))]
+
+
+def _weighted(options: list, weights: list[float], rng: Optional[random.Random]):
+    """One option with probability proportional to its weight. Without rng: the heaviest (the first on a tie)."""
+    if rng is None:
+        return options[max(range(len(options)), key=lambda i: (weights[i], -i))]
+    return rng.choices(options, weights=weights)[0]
+
+
+def pick_hub(hubs: list[Hub], ctx: TripCtx, avoid: list[dict] = ()) -> Optional[Hub]:
+    """FR-2: drop the hubs within HUB_SEPARATION_KM of a point in `avoid`; of the rest, the ones that can
+    serve every needed meal (all of the rest when none can); one of them with a probability proportional to
+    its density. Without ctx.rng: the densest. None when `avoid` leaves no hub."""
+    left = [h for h in hubs if not any(km_between(h.place, a) <= config.HUB_SEPARATION_KM for a in avoid)]
+    if not left:
+        return None
+    fed = [h for h in left if h.fed(ctx.meals)] or left
+    return _weighted(fed, [h.density for h in fed], ctx.rng)
+
+
+def course_hub(hubs: list[Hub], ctx: TripCtx) -> tuple[Optional[Hub], int]:
+    """FR-2 with FR-5 step 3: (the hub, how many of ctx.avoid's lists were given up). Each list of ctx.avoid
+    is tried in order; when none leaves a hub, no hub is avoided."""
+    for level, avoid in enumerate(ctx.avoid):
+        hub = pick_hub(hubs, ctx, avoid)
+        if hub is not None:
+            return hub, level
+    return pick_hub(hubs, ctx), len(ctx.avoid)
+
+
+def pick_anchor(pool: list[dict], ctx: TripCtx) -> Optional[dict]:
+    """P0 FR-9 as tasks/prd-travel-range.md FR-2 changed it. Replanning: the stop the traveler is at. New
+    course: the centre of the hub course_hub picks. Without ctx.rng: the densest hub (P1 FR-19's "one of
+    the top 3, evenly" is gone). Records the hub count (eval) and how many avoid lists were given up."""
+    if ctx.origin is not None:
+        return ctx.origin
+    if not pool:
+        return None
+    hubs = find_hubs(pool, ctx)
+    hub, level = course_hub(hubs, ctx)
+    ctx.stats["hub_count"], ctx.stats["avoid_level"] = len(hubs), level
+    return hub.place
 
 
 def limit_candidates(cands: list[dict], interests: list[str], meals: list[str], anchor: Optional[dict],
@@ -1063,6 +1129,9 @@ def prepare(places: list[dict], ctx: TripCtx, min_candidates: int) -> Prepared:
     if not ctx.meals:                                                                 # F-7
         cands = [p for p in cands if p["category"] != "food" or (fixed_first and p["id"] == fixed_first["id"])]
     ctx.anchor = pick_anchor(cands, ctx)                                              # FR-9
+    if ctx.origin is None and ctx.anchor is not None:          # tasks/prd-travel-range.md FR-4
+        ctx.profile["_hub_id"] = ctx.anchor["id"]
+        ctx.profile["_seen_hubs"] = [ctx.anchor["id"]]       # shuffle_course replaces it (FR-5 step 5)
     cands = limit_candidates(cands, ctx.profile["interests"], ctx.meals, ctx.anchor,  # F-9
                              min_candidates, fixed_first)
     return Prepared(base, cands, fixed_first)
@@ -1121,7 +1190,7 @@ def in_area(places: list[dict], area_id: str) -> list[dict]:
 
 
 def _course_ctx(profile_in: dict, start: int, end: int, area_id: str, seed: int,
-                stats: Optional[dict] = None) -> TripCtx:
+                stats: Optional[dict] = None, avoid: Optional[list[list[dict]]] = None) -> TripCtx:
     profile = {k: profile_in[k] for k in ONBOARDING_KEYS}
     profile["conditions"] = {"indoor_only": False, "low_walking": False}
     profile["start_time"], profile["end_time"] = to_hhmm(start), to_hhmm(end)  # server-owned, like conditions
@@ -1130,18 +1199,19 @@ def _course_ctx(profile_in: dict, start: int, end: int, area_id: str, seed: int,
     min_items, max_items = item_bounds(end - start)
     return TripCtx(profile=profile, start_min=start, end_min=end, min_items=min_items, max_items=max_items,
                    meals=meals_needed(start, end), rng=random.Random(seed),
-                   stats=stats if stats is not None else {})
+                   stats=stats if stats is not None else {}, avoid=list(avoid or []))
 
 
 def new_course(places: list[dict], profile_in: dict, start_time: str, end_time: str,
                area_id: str = config.DEFAULT_AREA_ID, seed: Optional[int] = None,
-               stats: Optional[dict] = None) -> tuple[dict, list[dict]]:
+               stats: Optional[dict] = None, avoid: Optional[list[list[dict]]] = None) -> tuple[dict, list[dict]]:
     """`area_id` must already be checked (areas.check_area). The API always passes it. Without a seed a
-    random one is made (the API never takes one). `stats` gets meal_repaired (the eval reads it).
+    random one is made (the API never takes one). `stats` gets meal_repaired, hub_count and avoid_level
+    (the eval and shuffle_course read them). `avoid`: see TripCtx.avoid (shuffle only).
     The course carries `meal_gaps` (P1 FR-11), stored in courses.meal_gaps."""
     start, end = check_time_window(start_time, end_time)
     seed = new_seed() if seed is None else seed
-    ctx = _course_ctx(profile_in, start, end, area_id, seed, stats)
+    ctx = _course_ctx(profile_in, start, end, area_id, seed, stats, avoid)
     rows, gaps = run_pipeline(in_area(places, area_id), ctx, min_candidates=2)
     course_id = str(uuid.uuid4())
     from .store import now_iso
@@ -1152,22 +1222,49 @@ def new_course(places: list[dict], profile_in: dict, start_time: str, end_time: 
     return course, items
 
 
+def seen_hubs(profile: dict, items: list[dict], by_id: dict[int, dict]) -> tuple[list[int], Optional[int], list[dict], list[dict]]:
+    """tasks/prd-travel-range.md FR-5 step 1 and FR-6: (seen hub ids, the last course's hub id, the seen
+    hubs' points, the last hub's points). A course saved before `_seen_hubs`: a v0.2 course's `_hubs` (the
+    first is the last hub), else the mean point of its stops, which has no id."""
+    ids = [i for i in profile.get("_seen_hubs") or [] if i in by_id]
+    prev = profile.get("_hub_id") if profile.get("_hub_id") in by_id else (ids[-1] if ids else None)
+    if not ids:
+        ids = [h["place_id"] for h in profile.get("_hubs") or [] if h.get("place_id") in by_id]
+        prev = prev if prev is not None else (ids[0] if ids else None)
+    if not ids and prev is not None:
+        ids = [prev]
+    if ids:
+        return ids, prev, [by_id[i] for i in ids], [by_id[prev]]
+    stops = [by_id[i["place_id"]] for i in items if i["place_id"] in by_id]
+    if not stops:
+        return [], None, [], []
+    mid = {"lat": sum(p["lat"] for p in stops) / len(stops), "lng": sum(p["lng"] for p in stops) / len(stops)}
+    return [], None, [mid], [mid]
+
+
 def shuffle_course(places: list[dict], course: dict, items: list[dict]) -> tuple[dict, list[dict]]:
-    """US-P15, FR-20: a new course for the same onboarding, area and times. Of SHUFFLE_TRIES new seeds,
-    the one whose candidates share the fewest places with the old stops goes first. With the rule planner
-    a course with exactly the old stops is made again with the next seed (all tries at most)."""
+    """US-P15, tasks/prd-travel-range.md FR-5 (P1 FR-20 changed): a new course for the same onboarding,
+    area and times in a hub not shown yet. The hub is picked away from every seen hub; when that leaves none
+    (the area's hubs were all shown), away from the last course's hub only; when that leaves none either,
+    from all hubs. Of SHUFFLE_TRIES new seeds, the one whose candidates share the fewest places with the old
+    stops goes first. With the rule planner a course with exactly the old stops is made again with the next
+    seed (all tries at most). The new course's `_seen_hubs` carries the seen hubs on (FR-5 step 5)."""
     profile = course["user_profile"]
     if not profile.get("start_time") or not profile.get("end_time"):
         raise ApiError(409, "CANNOT_SHUFFLE", "This plan is too old to shuffle.")
     start, end = check_time_window(profile["start_time"], profile["end_time"])
     area_id = profile.get("area_id") or config.DEFAULT_AREA_ID
     area_places = in_area(places, area_id)
+    by_id = {p["id"]: p for p in places}
     old = {i["place_id"] for i in items}
+    seen_ids, prev_id, seen_points, prev_points = seen_hubs(profile, items, by_id)
+    avoid = [seen_points] + ([prev_points] if prev_points != seen_points else [])
+    avoid = [a for a in avoid if a]
     seeds = []
     for n in range(config.SHUFFLE_TRIES):
         seed = new_seed()
         try:
-            cands = prepare(area_places, _course_ctx(profile, start, end, area_id, seed), 2).cands
+            cands = prepare(area_places, _course_ctx(profile, start, end, area_id, seed, avoid=avoid), 2).cands
             overlap = sum(c["id"] in old for c in cands)
         except ApiError:
             overlap = len(old) + 1
@@ -1175,9 +1272,17 @@ def shuffle_course(places: list[dict], course: dict, items: list[dict]) -> tuple
     seeds.sort()
     tries = seeds[:1] if config.USE_LLM else seeds
     for n, (_, _, seed) in enumerate(tries):
-        new, new_items = new_course(places, profile, profile["start_time"], profile["end_time"], area_id, seed)
+        stats: dict = {}
+        new, new_items = new_course(places, profile, profile["start_time"], profile["end_time"], area_id, seed,
+                                    stats=stats, avoid=avoid)
         if {i["place_id"] for i in new_items} != old:
             break
+    hub = new["user_profile"].get("_hub_id")
+    if stats.get("avoid_level", 0) == 0:
+        chain = seen_ids + [hub]
+    else:                                         # FR-5 step 3: every hub was shown, start again
+        chain = ([prev_id] if prev_id is not None else []) + [hub]
+    new["user_profile"]["_seen_hubs"] = list(dict.fromkeys(i for i in chain if i is not None))
     new["tier"] = course["tier"]                  # the purchase is a mock (US-P15)
     return new, new_items
 
