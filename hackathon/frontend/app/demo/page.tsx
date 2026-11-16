@@ -15,7 +15,7 @@ const SAMPLE: Place[] = [
     lat: 33.505241, lng: 126.528438, address_ko: "제주특별자치도 제주시 삼성로 22", image_url: null, image_source: null,
     avg_stay_min: 40, opening_hours: null, closed_days: [], price_level: null, last_verified_at: null, source_date: null,
     accessibility: { walking_level: 1, terrain: "flat", has_stairs: null, wheelchair_ok: null, indoor: false, has_seating: null, restroom: null, nearest_public_restroom_m: null, fatigue_score: 1 },
-    food_options: null,
+    food_options: null, place_type: null, area_id: "jeju-city", open_time: null, close_time: null,
   },
   {
     id: 6, source_poi_id: null, name_en: "Dongmun Traditional Market", name_ko: "동문재래시장", category: "market",
@@ -23,7 +23,7 @@ const SAMPLE: Place[] = [
     lat: 33.512115, lng: 126.526638, address_ko: "제주특별자치도 제주시 관덕로14길 20", image_url: null, image_source: null,
     avg_stay_min: 75, opening_hours: null, closed_days: [], price_level: null, last_verified_at: null, source_date: null,
     accessibility: { walking_level: 2, terrain: "flat", has_stairs: null, wheelchair_ok: null, indoor: false, has_seating: null, restroom: null, nearest_public_restroom_m: null, fatigue_score: 2 },
-    food_options: null,
+    food_options: null, place_type: null, area_id: "jeju-city", open_time: null, close_time: null,
   },
   {
     id: 12, source_poi_id: null, name_en: "Hamdeok Beach", name_ko: "함덕해수욕장", category: "photo",
@@ -31,7 +31,7 @@ const SAMPLE: Place[] = [
     lat: 33.543214, lng: 126.669512, address_ko: "정확한 도로명 주소 확인 필요", image_url: null, image_source: null,
     avg_stay_min: 90, opening_hours: null, closed_days: [], price_level: null, last_verified_at: null, source_date: null,
     accessibility: { walking_level: 2, terrain: "flat", has_stairs: null, wheelchair_ok: null, indoor: false, has_seating: null, restroom: null, nearest_public_restroom_m: null, fatigue_score: 2 },
-    food_options: null,
+    food_options: null, place_type: null, area_id: "jocheon", open_time: null, close_time: null,
   },
 ];
 const ITEMS: CourseItem[] = SAMPLE.slice(0, 2).map((place, index) => ({

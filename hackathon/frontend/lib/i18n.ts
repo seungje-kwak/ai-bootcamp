@@ -1,6 +1,10 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { en, type Messages } from "./messages/en";
+import { ja } from "./messages/ja";
+import { ko } from "./messages/ko";
+import { zh } from "./messages/zh";
 
 export type Locale = "en" | "zh" | "ja" | "ko";
 export const LOCALE_STORAGE_KEY = "mypace-jeju-language";
@@ -11,6 +15,10 @@ export const languageNames: Record<Locale, string> = {
   ja: "日本語",
   ko: "한국어",
 };
+
+// Detailed UI copy (states, onboarding area/time rules) kept from the earlier design.
+export type { Messages };
+export const MESSAGES: Record<Locale, Messages> = { en, zh, ja, ko };
 
 export const messages = {
   en: {
