@@ -1,5 +1,7 @@
 import type { Config } from "tailwindcss";
 
+// Design tokens live in app/globals.css (:root). Tailwind only maps names to them,
+// so a colour or radius is changed in one place.
 const config: Config = {
   content: [
     "./pages/**/*.{js,ts,jsx,tsx,mdx}",
@@ -9,17 +11,40 @@ const config: Config = {
   theme: {
     extend: {
       colors: {
-        ink: "var(--ink)",
+        ink: { DEFAULT: "var(--ink)", soft: "var(--ink-soft)" },
         muted: "var(--muted)",
-        line: "var(--line)",
-        paper: "var(--paper)",
+        line: { DEFAULT: "var(--line)", strong: "var(--line-strong)" },
+        paper: { DEFAULT: "var(--paper)", sunk: "var(--paper-sunk)" },
         sand: "var(--bg)",
-        sea: { DEFAULT: "var(--sea)", soft: "var(--sea-soft)" },
-        tangerine: { DEFAULT: "var(--tangerine)", soft: "var(--tangerine-soft)" },
-        leaf: "var(--leaf)",
+        sea: {
+          DEFAULT: "var(--sea)",
+          deep: "var(--sea-deep)",
+          mid: "var(--sea-mid)",
+          soft: "var(--sea-soft)",
+          line: "var(--sea-line)",
+        },
+        coral: {
+          DEFAULT: "var(--coral)",
+          deep: "var(--coral-deep)",
+          soft: "var(--coral-soft)",
+          line: "var(--coral-line)",
+        },
+        // Earlier class names kept as aliases of the accent.
+        tangerine: { DEFAULT: "var(--coral)", soft: "var(--coral-soft)" },
+        leaf: { DEFAULT: "var(--leaf)", soft: "var(--leaf-soft)" },
       },
       fontFamily: {
-        sans: ["var(--font-geist-sans)", "system-ui", "sans-serif"],
+        sans: ["var(--font-body)"],
+        display: ["var(--font-display)"],
+      },
+      boxShadow: {
+        card: "var(--shadow-card)",
+        lift: "var(--shadow-lift)",
+        float: "var(--shadow-float)",
+      },
+      borderRadius: {
+        card: "var(--radius-card)",
+        ctl: "var(--radius-ctl)",
       },
     },
   },

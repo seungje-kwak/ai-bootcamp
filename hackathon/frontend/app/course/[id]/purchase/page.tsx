@@ -3,33 +3,46 @@
 import Link from "next/link";
 import { useParams } from "next/navigation";
 import { useRef, useState } from "react";
+import { Brand } from "@/components/Brand";
+import { Icon } from "@/components/Icon";
+import { LanguageSelect } from "@/components/LanguageSelect";
 import { CourseSkeleton, MessageScreen, NewPlanLink, PrimaryButton } from "@/components/States";
-import { PREMIUM_PRICE_LABEL } from "@/config/pricing";
+import { PREMIUM_PRICE_AMOUNT } from "@/config/pricing";
 import { api } from "@/lib/api";
+import { useLocale } from "@/lib/i18n";
 import { useCourse } from "@/lib/useCourse";
 
-// 6.5 Purchase (mock). No payment fields, ever (11.2).
+// 6.5 Purchase (mock). No payment details are collected (11.2).
 export default function PurchasePage() {
   const { id } = useParams<{ id: string }>();
   const { course, setCourse, state, reload } = useCourse(id);
   const [pay, setPay] = useState<"idle" | "loading" | "done" | "error">("idle");
   const inFlight = useRef(false);
+  const { t } = useLocale();
+  const P = t.purchase;
 
   if (state.kind === "loading") return <CourseSkeleton />;
-  if (state.kind === "notfound")
-    return <MessageScreen title="We couldn't find this plan." action={<NewPlanLink />} />;
-  if (state.kind === "error" || !course)
+  if (state.kind === "notfound") {
+    return <MessageScreen icon="alert" title={t.states.notFound} body={t.states.notFoundBody} action={<NewPlanLink />} />;
+  }
+  if (state.kind === "error" || !course) {
     return (
-      <MessageScreen title="Something went wrong." action={<PrimaryButton onClick={reload}>Retry</PrimaryButton>} />
+      <MessageScreen
+        icon="alert"
+        title={t.states.error}
+        body={t.states.errorBody}
+        action={<PrimaryButton onClick={reload}>{t.common.retry}</PrimaryButton>}
+      />
     );
+  }
 
-  const seeDay = (
-    <Link href={`/course/${course.id}`} className="rounded-2xl bg-sea text-white font-semibold py-3.5 px-6">
-      See my full day
+  const seeFull = (
+    <Link href={`/course/${course.id}`} className="btn btn-primary">
+      {P.seeFull}
     </Link>
   );
-  if (pay === "done") return <MessageScreen title="You're all set." body="Your full day is unlocked." action={seeDay} />;
-  if (course.tier === "premium") return <MessageScreen title="This plan is already unlocked." action={seeDay} />;
+  if (pay === "done") return <MessageScreen icon="check" title={P.success} body={P.successBody} action={seeFull} />;
+  if (course.tier === "premium") return <MessageScreen icon="check" title={P.already} action={seeFull} />;
 
   async function onPay() {
     if (inFlight.current) return;
@@ -46,54 +59,75 @@ export default function PurchasePage() {
   }
 
   return (
-    <main className="px-5 pt-6 pb-10">
-      <Link href={`/course/${course.id}`} className="text-sm font-semibold text-sea">
-        ← Back to my plan
-      </Link>
-      <h1 className="mt-4 text-2xl font-bold">Unlock your full day</h1>
-      <p className="text-muted">
-        You&apos;re seeing {course.items.length} of {course.total_items} stops.
-      </p>
+    <main className="pb-14">
+      <header className="topbar page" style={{ maxWidth: 820 }}>
+        <Brand label={t.common.home} />
+        <LanguageSelect />
+      </header>
 
-      <div className="mt-6 space-y-4">
-        <div className="rounded-2xl border border-line p-5">
-          <div className="flex items-baseline justify-between">
-            <p className="text-lg font-bold">Free</p>
-            <p className="text-muted">Current</p>
-          </div>
-          <p className="text-sm text-muted">Course preview</p>
-          <ul className="mt-3 text-[15px]">
-            <li>✓ Up to 3 stops</li>
-          </ul>
+      <div className="page" style={{ maxWidth: 820 }}>
+        <Link href={`/course/${course.id}`} className="text-link inline-flex min-h-[44px] items-center gap-1.5 text-[15px]">
+          <Icon name="arrowLeft" size={17} />
+          {t.trip.backToPlan}
+        </Link>
+        <h1 className="display course__title">{P.title}</h1>
+        <p className="mt-3 text-muted">{P.seeing(course.items.length, course.total_items)}</p>
+
+        <div className="plans">
+          <section className="card plan" aria-label={P.free}>
+            <div className="plan__head">
+              <h2 className="plan__name">{P.free}</h2>
+              <span className="chip">{P.current}</span>
+            </div>
+            <p className="mt-1 text-[15px] text-muted">{P.freeDesc}</p>
+            <ul>
+              {P.freeItems.map((x) => (
+                <li key={x}>
+                  <Icon name="check" size={18} />
+                  {x}
+                </li>
+              ))}
+            </ul>
+          </section>
+
+          <section className="card plan plan--premium" aria-label={P.premium}>
+            <div className="plan__head">
+              <h2 className="plan__name">{P.premium}</h2>
+              <p className="plan__price">
+                {PREMIUM_PRICE_AMOUNT}
+                <small>{P.perPlan}</small>
+              </p>
+            </div>
+            <p className="mt-1 text-[15px] text-muted">{P.premiumDesc}</p>
+            <ul>
+              {P.premiumItems.map((x) => (
+                <li key={x}>
+                  <Icon name="check" size={18} />
+                  {x}
+                </li>
+              ))}
+              <li>
+                <Icon name="check" size={18} />
+                <span>
+                  {P.offline} <span className="chip ml-1">{P.comingSoon}</span>
+                </span>
+              </li>
+            </ul>
+          </section>
         </div>
 
-        <div className="rounded-2xl border-2 border-sea bg-sea-soft/40 p-5">
-          <div className="flex items-baseline justify-between gap-3">
-            <p className="text-lg font-bold">Premium</p>
-            <p className="font-bold text-sea text-right">{PREMIUM_PRICE_LABEL}</p>
-          </div>
-          <p className="text-sm text-muted">One-time payment for this plan</p>
-          <ul className="mt-3 space-y-1 text-[15px]">
-            <li>✓ Full course</li>
-            <li>✓ Unlimited re-planning</li>
-            <li>✓ Local phrase cards</li>
-            <li className="text-muted">
-              ✓ Offline PDF <span className="ml-1 rounded bg-sand px-1.5 py-0.5 text-xs">Coming soon</span>
-            </li>
-          </ul>
-        </div>
+        {pay === "error" && (
+          <p className="notice notice-error mt-6" role="alert">
+            <Icon name="alert" size={20} />
+            {P.failed}
+          </p>
+        )}
+        <PrimaryButton className="btn-block mt-7" onClick={onPay} disabled={pay === "loading"}>
+          {pay === "loading" && <span className="spinner spinner-sm" aria-hidden="true" />}
+          {pay === "loading" ? P.paying : pay === "error" ? t.common.retry : P.pay}
+        </PrimaryButton>
+        <p className="fine mt-3 text-center">{P.demoNote}</p>
       </div>
-
-      {pay === "error" && (
-        <p role="alert" className="mt-5 rounded-xl bg-tangerine-soft border border-[#f6c99a] p-3 font-medium">
-          Payment didn&apos;t go through. Nothing was charged.
-        </p>
-      )}
-
-      <PrimaryButton className="mt-6 w-full text-lg" onClick={onPay} disabled={pay === "loading"}>
-        {pay === "loading" ? "Processing…" : pay === "error" ? "Try again" : "Pay now"}
-      </PrimaryButton>
-      <p className="mt-2 text-center text-sm text-muted">Demo payment. No real charge.</p>
     </main>
   );
 }

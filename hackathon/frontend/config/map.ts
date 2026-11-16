@@ -16,7 +16,7 @@ export const MAP_CONFIG = {
   aspectRatio: 10 / 7,
   fallbackImage: "/map/jeju-city-fallback.svg",
   // Course line (7.6), shared by both maps.
-  routeColor: "#1f7a8c",
+  routeColor: "#0f5a5f",
 };
 
 export type Bounds = typeof MAP_CONFIG.bounds;
