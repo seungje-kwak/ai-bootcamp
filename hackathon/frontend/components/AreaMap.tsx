@@ -2,6 +2,8 @@
 
 import { MAP_CONFIG } from "@/config/map";
 import shapes from "@/data/area-shapes.json";
+import { AREA_SPOTS } from "@/lib/content/area-spots";
+import type { Locale } from "@/lib/locale";
 import type { Area } from "@/lib/types";
 
 // Onboarding step 5: every area (eup / myeon, or a city's downtown) is one clickable shape of an
@@ -40,9 +42,10 @@ type Props = {
   comingSoon: string;
   title: string;
   legend: string;
+  locale: Locale;
 };
 
-export function AreaMap({ areas, selectedId, onSelect, nameOf, label, comingSoon, title, legend }: Props) {
+export function AreaMap({ areas, selectedId, onSelect, nameOf, label, comingSoon, title, legend, locale }: Props) {
   const onMap = areas.filter((a) => a.id !== INSET_ID && PATHS[a.id]);
   // The picked shape is drawn last, so that its thicker border is not covered by a neighbour.
   const ordered = [...onMap].sort((a, b) => Number(a.id === selectedId) - Number(b.id === selectedId));
@@ -137,6 +140,24 @@ export function AreaMap({ areas, selectedId, onSelect, nameOf, label, comingSoon
           >
             {nameOf(a)}
           </span>
+        );
+      })}
+      {/* Well-known sights as small icons, each where it is. Tapping one picks the area it is in. */}
+      {AREA_SPOTS.map((s) => {
+        const area = areas.find((a) => a.id === s.areaId);
+        const [dx, dy] = s.shift ?? [0, 0];
+        return (
+          <button
+            key={s.id}
+            type="button"
+            className="v9-area-spot"
+            data-name={s.name[locale]}
+            aria-label={s.name[locale]}
+            style={{ left: `${((mercX(s.lng) - X0) / W) * 100 + dx}%`, top: `${((mercY(s.lat) - Y0) / H) * 100 + dy}%` }}
+            onClick={() => area?.selectable && onSelect(area.id)}
+          >
+            <span aria-hidden="true">{s.icon}</span>
+          </button>
         );
       })}
       {inset && (

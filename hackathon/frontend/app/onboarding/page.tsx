@@ -218,7 +218,7 @@ export default function Onboarding() {
 
   if (status === "loading") {
     return (
-      <main className="v9-site v9-onboarding">
+      <main className="v9-site v9-onboarding v9-dusk">
         <V9Header />
         <div className="v9-onboarding-loading" role="status" aria-live="polite">
           <div className="spinner" />
@@ -230,8 +230,11 @@ export default function Onboarding() {
   }
 
   return (
-    <main className="v9-site v9-onboarding">
+    <main className="v9-site v9-onboarding v9-dusk">
       <V9Header />
+      <div className="v9-dusk-stage">
+      {/* Decorative dusk photo. On wide screens the two panels sit over it. */}
+      <div className="v9-dusk-photo" aria-hidden="true" />
       <div className="v9-onboarding-inner">
         <div className="v9-step-head">
           <span>{c.personalize}</span>
@@ -333,7 +336,7 @@ export default function Onboarding() {
                 </p>
               )}
               {/* Travelers may not know the place names: the map shows where each area is. */}
-              <AreaMap areas={areas} selectedId={d.area_id} onSelect={pickArea} nameOf={areaName} label={O.area.mapLabel} comingSoon={O.area.comingSoon} title={O.area.mapTitle} legend={O.area.mapLegend} />
+              <AreaMap areas={areas} selectedId={d.area_id} onSelect={pickArea} nameOf={areaName} label={O.area.mapLabel} comingSoon={O.area.comingSoon} title={O.area.mapTitle} legend={O.area.mapLegend} locale={locale} />
               <div className="v9-area-picked" data-empty={!area} role="status" aria-live="polite">
                 {area ? (
                   <>
@@ -483,6 +486,21 @@ export default function Onboarding() {
           </dl>
         </details>
         <p className="v9-fineprint v9-onboard-footnote">{c.simulation}</p>
+      </div>
+      {/* The answers so far, as a side panel on wide screens (the <details> above is the narrow-screen form). */}
+      <aside className="v9-dusk-summary" aria-label={O.summaryTitle}>
+        <h2>{O.summaryTitle}</h2>
+        <ol>
+          {O.steps.map((s, i) => (
+            <li key={s.name} data-done={answers[i] !== null} data-current={i === step}>
+              <button type="button" disabled={i > step && !valid.slice(0, i).every(Boolean)} onClick={() => goTo(i)}>
+                {s.name}
+              </button>
+              <span>{answers[i] ?? O.notChosen}</span>
+            </li>
+          ))}
+        </ol>
+      </aside>
       </div>
     </main>
   );

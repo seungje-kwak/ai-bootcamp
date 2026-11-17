@@ -257,3 +257,82 @@ body{background:#ecf0e9;color:#203f37;font-family:'DM Sans','Noto Sans KR','Noto
 .v9-area-list{border:1px solid #e2e9df;border-radius:16px;padding:14px 16px;background:#fff}
 .v9-area-list>summary{cursor:pointer;font-size:14px;font-weight:800;color:#496e60}
 .v9-area-list[open]>summary{margin-bottom:14px}
+
+/* ---- Onboarding, dusk design: navy panels over the lighthouse photo ---- */
+.v9-dusk{background:#0b1430;color:#fff}
+.v9-dusk-stage{position:relative;container-type:inline-size;max-width:1774px;margin:0 auto;padding:16px 14px 40px}
+.v9-dusk-photo{height:44cqw;border-radius:18px;margin-bottom:14px;background:url(/images/onboarding-dusk.webp) no-repeat -246.6cqw -38cqw/483.4cqw 241.7cqw}
+.v9-dusk .v9-onboarding-inner{max-width:830px;margin:0 auto;padding:26px 20px 30px;background:#0e1a3c;border-radius:22px;box-shadow:0 18px 50px #060b1e80}
+.v9-dusk-summary{display:none}
+.v9-dusk .v9-step-head{color:#c9d2ee}
+.v9-dusk .v9-progress{background:#ffffff26}
+.v9-dusk .v9-progress span{background:#f3dfa6}
+.v9-dusk .v9-form-title{font-family:inherit;font-weight:700;color:#fff;letter-spacing:-.04em}
+.v9-dusk .v9-form-desc{color:#c9d2ee}
+.v9-dusk .v9-choice{background:transparent;border:2px solid #ffffff55;border-radius:999px;color:#fff;padding-left:26px;padding-right:22px}
+.v9-dusk .v9-choice:hover{background:#ffffff14;border-color:#fff}
+.v9-dusk .v9-choice.is-selected{background:#f3dfa6;border-color:#f3dfa6;color:#14213f;box-shadow:none}
+.v9-dusk .v9-choice-tick{border:2px solid #ffffff88;flex-basis:24px;height:24px}
+.v9-dusk .v9-choice.is-selected .v9-choice-tick{background:#14213f;border-color:#14213f;color:#f3dfa6}
+.v9-dusk .v9-choice small,.v9-dusk .v9-checkline small{color:inherit!important;opacity:.75}
+.v9-dusk .v9-choices.v9-single .v9-choice{border-radius:26px}
+.v9-dusk .v9-field-label{color:#fff}
+.v9-dusk .v9-pills button{background:transparent;border:2px solid #ffffff55;color:#fff}
+.v9-dusk .v9-pills button.is-selected{background:#f3dfa6;border-color:#f3dfa6;color:#14213f}
+.v9-dusk .v9-checkline{border-color:#ffffff33}
+.v9-dusk .v9-checkline input{accent-color:#f3dfa6}
+.v9-dusk .v9-time-presets button{background:#ffffff14;border-color:#ffffff33;color:#f3dfa6}
+.v9-dusk .v9-time-presets button:hover{background:#ffffff26}
+.v9-dusk .v9-time-cards label{background:#ffffff0f;border-color:#ffffff33}
+.v9-dusk .v9-time-cards label span{color:#c9d2ee}
+.v9-dusk .v9-time-summary{background:#f3dfa61f;border-color:#f3dfa655;color:#f3dfa6}
+.v9-dusk .v9-time-summary.is-warning{background:#fff3e9;border-color:#f0d3bb;color:#8f5d34}
+.v9-dusk .v9-policy,.v9-dusk .v9-fineprint{color:#9fb0dc}
+.v9-dusk .v9-step-actions{background:linear-gradient(0deg,#0e1a3c 86%,#0e1a3c00)}
+.v9-dusk .v9-outline{background:transparent;border:2px solid #ffffffcc;border-radius:14px;color:#fff}
+.v9-dusk .v9-primary{background:linear-gradient(#fff3cf,#efd79a);border-color:transparent;border-radius:14px;color:#14213f;box-shadow:none}
+.v9-dusk .v9-primary:hover{background:linear-gradient(#fff8e2,#f3dfa6)}
+.v9-dusk .v9-answers{background:#ffffff0f;border-color:#ffffff33}
+.v9-dusk .v9-answers dt{color:#9fb0dc}
+.v9-dusk .v9-answers dd{color:#fff}
+.v9-dusk .v9-answers dd[data-empty="true"]{color:#7f8fbb}
+.v9-dusk .v9-area-picked{background:#f3dfa61f;border-color:#f3dfa6;color:#fff}
+.v9-dusk .v9-area-picked[data-empty=true]{background:transparent;border-color:#ffffff55;color:#c9d2ee}
+.v9-dusk .v9-area-picked small{color:#c9d2ee}
+.v9-dusk .v9-area-about{color:#e8ecfa}
+.v9-dusk .v9-area-list{background:transparent;border-color:#ffffff33}
+.v9-dusk .v9-area-list>summary{color:#c9d2ee}
+.v9-dusk .v9-onboarding-loading h1{color:#fff}
+@media(min-width:1000px){
+ .v9-dusk-stage{padding:0 0 60px}
+ /* The panels sit exactly where the photo has its own lettering, at every width: all sizes follow the stage. */
+ .v9-dusk-photo{position:absolute;left:0;top:0;width:100%;height:auto;aspect-ratio:1774/887;margin:0;border-radius:0;background:url(/images/onboarding-dusk.webp) 0 0/100% 100% no-repeat}
+ .v9-dusk-photo::after{content:"";position:absolute;inset:0;background:linear-gradient(#0b143000 78%,#0b1430)}
+ .v9-dusk .v9-onboarding-inner{position:relative;max-width:none;width:50.7cqw;min-height:22cqw;margin:3.72cqw 0 0 3.16cqw;padding:2.6cqw 2.6cqw 1.6cqw}
+ .v9-dusk .v9-form-title{font-size:clamp(28px,3cqw,54px);line-height:1.3}
+ .v9-dusk .v9-form-desc{font-size:clamp(14px,1.07cqw,19px);margin-bottom:clamp(20px,1.6cqw,30px)}
+ .v9-dusk .v9-progress{margin-bottom:clamp(20px,1.8cqw,34px)}
+ .v9-dusk .v9-choice{min-height:clamp(62px,4.7cqw,84px);font-size:clamp(15px,1.3cqw,23px)}
+ .v9-dusk .v9-choice-symbol{font-size:clamp(22px,1.7cqw,30px)}
+ .v9-dusk .v9-primary,.v9-dusk .v9-outline{min-height:clamp(53px,4.2cqw,74px);font-size:clamp(16px,1.35cqw,24px)}
+ .v9-dusk .v9-outline{min-width:clamp(90px,7.3cqw,130px)}
+ .v9-dusk .v9-answers{display:none}
+ .v9-dusk-summary{display:block;position:absolute;left:72.04cqw;top:5.19cqw;width:24.8cqw;min-height:34.4cqw;padding:2cqw 1.9cqw;background:#0e1a3c;border-radius:22px;box-shadow:0 18px 50px #060b1e80;color:#fff}
+ .v9-dusk-summary h2{margin:0 0 0 .8cqw;font-size:clamp(18px,1.7cqw,30px);font-weight:700}
+ .v9-dusk-summary ol{position:relative;list-style:none;margin:1.4cqw 0 0;padding:0}
+ .v9-dusk-summary ol::before{content:"";position:absolute;left:8px;top:1.6cqw;bottom:1.6cqw;width:2px;background:#f4e3b488}
+ .v9-dusk-summary li{position:relative;display:flex;align-items:center;gap:10px;min-height:clamp(46px,4.2cqw,76px);padding-left:clamp(28px,2.3cqw,42px)}
+ .v9-dusk-summary li::before{content:"";position:absolute;left:0;top:50%;width:18px;height:18px;margin-top:-9px;border-radius:50%;border:2px solid #f6e6b5;background:#0e1a3c}
+ .v9-dusk-summary li[data-done=true]::before{background:#f6e6b5}
+ .v9-dusk-summary li button{flex:none;text-align:left;font-size:clamp(14px,1.2cqw,21px);font-weight:700;color:#fff}
+ .v9-dusk-summary li[data-current=true] button{color:#f3dfa6}
+ .v9-dusk-summary li button:not(:disabled):hover{text-decoration:underline;text-underline-offset:3px}
+ .v9-dusk-summary li span{margin-left:auto;text-align:right;font-size:clamp(12px,.9cqw,16px);line-height:1.4;color:#9fb0dc;word-break:keep-all}
+ .v9-dusk-summary li[data-done=true] span{color:#f3dfa6}
+}
+@media(max-width:640px){.v9-dusk .v9-choice{border-radius:22px;padding-left:13px;padding-right:11px}.v9-dusk .v9-choice-tick{flex-basis:21px;height:21px}}
+.v9-dusk .v9-choice{word-break:keep-all}
+/* Well-known sights on the area map: a small round icon, its name on hover / focus / tap */
+.v9-area-map .v9-area-spot{position:absolute;transform:translate(-50%,-50%);display:grid;place-items:center;width:1.75em;height:1.75em;padding:0;border:1.5px solid #0f4a40;border-radius:50%;background:#fffdf7;box-shadow:0 2px 6px #1d4f4440;font-size:clamp(9px,2.1cqw,17px);line-height:1;cursor:pointer;transition:transform .15s}
+.v9-area-map .v9-area-spot:hover,.v9-area-map .v9-area-spot:focus-visible{transform:translate(-50%,-50%) scale(1.35);z-index:3}
+.v9-area-map .v9-area-spot:hover::after,.v9-area-map .v9-area-spot:focus-visible::after{content:attr(data-name);position:absolute;left:50%;bottom:115%;transform:translateX(-50%);padding:.35em .7em;border-radius:.6em;background:#12332d;color:#fff;font-size:.62em;font-weight:700;line-height:1.3;white-space:nowrap;pointer-events:none}
