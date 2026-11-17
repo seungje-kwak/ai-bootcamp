@@ -2,6 +2,8 @@
 // Never modify or overwrite the original English text returned by the API.
 import type { Category, CourseItem, Place } from "@/lib/types";
 import type { Locale } from "@/lib/i18n";
+import { ALLERGENS, MENU, PHRASES } from "./content/phrases";
+import { textHash } from "./text-hash";
 
 const CATEGORY_NAMES: Record<Locale, Record<Category, string>> = {
   en: { nature: "Nature", market: "Market", cafe: "Café", food: "Food", culture: "Culture", photo: "Photo spot" },
@@ -231,4 +233,40 @@ export function localizedDescription(place: Place, locale: Locale): { text: stri
   const category = localizedCategory(place.category, locale);
   const text = locale === "zh" ? `这里是${category}类景点。可查看英文原文了解更多详情。` : `「${category}」に分類されるスポットです。詳しい説明は英語原文をご確認ください。`;
   return { text, hasTranslation: false, original };
+}
+
+// ---------------------------------------------------------------------------- reviewed short strings
+// Signature dishes, allergen notes and the English side of phrase cards (lib/content/phrases.ts).
+// `translated: false` means `text` is still the English original.
+
+type ReviewedTarget = Exclude<Locale, "en">;
+const REVIEWED_COLUMN: Record<ReviewedTarget, 0 | 1 | 2> = { zh: 0, ja: 1, ko: 2 };
+export type ReviewedText = { text: string; translated: boolean; original: string };
+
+function fromTable(table: Record<string, readonly [zh: string, ja: string, ko?: string]>, value: string | null | undefined, locale: Locale): ReviewedText {
+  const original = value?.trim() ?? "";
+  if (locale === "en" || !original) return { text: original, translated: true, original };
+  const found = table[original]?.[REVIEWED_COLUMN[locale]];
+  return found ? { text: found, translated: true, original } : { text: original, translated: false, original };
+}
+
+export const localizedMenu = (text: string | null, locale: Locale) => fromTable(MENU, text, locale);
+export const localizedAllergens = (text: string | null, locale: Locale) => fromTable(ALLERGENS, text, locale);
+export const localizedPhrase = (textEn: string, locale: Locale) => fromTable(PHRASES, textEn, locale);
+
+// ---------------------------------------------------------------------------- reviewed descriptions (loaded on demand)
+type DescriptionTable = Record<number, { src: string; text: string }>;
+const descriptionTables: Partial<Record<ReviewedTarget, Promise<DescriptionTable>>> = {};
+
+export function loadDescriptions(locale: ReviewedTarget): Promise<DescriptionTable> {
+  descriptionTables[locale] ??= (
+    locale === "zh" ? import("./content/descriptions.zh") : locale === "ja" ? import("./content/descriptions.ja") : import("./content/descriptions.ko")
+  ).then((m) => m.DESCRIPTIONS);
+  return descriptionTables[locale]!;
+}
+
+/** The reviewed description for a place, only if it was translated from this exact English text. */
+export function describeFrom(table: DescriptionTable, place: Pick<Place, "id" | "description_en">): string | null {
+  const entry = table[place.id];
+  return entry && entry.src === textHash((place.description_en ?? "").trim()) ? entry.text : null;
 }

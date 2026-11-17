@@ -3,23 +3,34 @@
 import { useEffect, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 import type { Place } from "@/lib/types";
-import { travelMessages, useLocale } from "@/lib/i18n";
+import { MESSAGES, travelMessages, useLocale } from "@/lib/i18n";
 
 export function DriverCard({ place, onClose }: { place: Place; onClose: () => void }) {
   const { locale } = useLocale();
   const tx = travelMessages[locale];
-  const [copied, setCopied] = useState(false);
+  const [copy, setCopy] = useState<"idle" | "done" | "failed">("idle");
+  const copied = copy === "done";
   const closeRef = useRef<HTMLButtonElement>(null);
+  const onCloseRef = useRef(onClose);
+  onCloseRef.current = onClose;
+  // US-07: closing returns to exactly where the traveler was (same scroll position, focus back on the button).
   useEffect(() => {
+    const opener = document.activeElement instanceof HTMLElement ? document.activeElement : null;
+    const scrollY = window.scrollY;
     const before = document.body.style.overflow;
     document.body.style.overflow = "hidden";
-    closeRef.current?.focus();
-    const onKey = (e: KeyboardEvent) => { if (e.key === "Escape") onClose(); };
+    closeRef.current?.focus({ preventScroll: true });
+    const onKey = (e: KeyboardEvent) => { if (e.key === "Escape") onCloseRef.current(); };
     window.addEventListener("keydown", onKey);
-    return () => { document.body.style.overflow = before; window.removeEventListener("keydown", onKey); };
-  }, [onClose]);
+    return () => {
+      document.body.style.overflow = before;
+      window.removeEventListener("keydown", onKey);
+      window.scrollTo({ top: scrollY, behavior: "instant" });
+      opener?.focus({ preventScroll: true });
+    };
+  }, []);
   async function copyAddress() {
-    try { await navigator.clipboard.writeText(place.address_ko); setCopied(true); } catch { /* clipboard may be unavailable */ }
+    try { await navigator.clipboard.writeText(place.address_ko); setCopy("done"); } catch { setCopy("failed"); /* e.g. http on a phone: the address stays selectable instead */ }
   }
   return createPortal(
     <div role="dialog" aria-modal="true" aria-label={tx.driverTitle} className="driver-modal">
@@ -43,6 +54,7 @@ export function DriverCard({ place, onClose }: { place: Place; onClose: () => vo
           <p className="driver-sheet__footer" lang="ko">목적지를 확인해 주셔서 감사합니다.</p>
           <button className="driver-copy" type="button" onClick={copyAddress}>{copied ? `✓ ${tx.copied}` : `▢ ${tx.copy}`}</button>
           <button className="driver-done" type="button" onClick={onClose}>{tx.close}</button>
+          <p className="driver-sheet__hint" role="status" aria-live="polite">{copy === "failed" ? MESSAGES[locale].driver.copyFailed : ""}</p>
         </div>
       </div>
     </div>,
