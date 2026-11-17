@@ -15,6 +15,9 @@ export const MAP_CONFIG = {
   // Map box width / height. Same as the fallback SVG (7.8: width/height ≈ (lng span × 0.837) / lat span).
   aspectRatio: 10 / 7,
   fallbackImage: "/map/jeju-city-fallback.svg",
+  // Onboarding area map (components/AreaMap.tsx): the part of Jeju it shows. The main island and Udo,
+  // with sea around them for the heading and the legend. The Chuja Islands are outside.
+  areaMap: { view: { lngMin: 126.06, lngMax: 127.04, latMin: 33.12, latMax: 33.68 } },
   // Course line (7.6), shared by both maps.
   routeColor: "#1f7a8c",
 };

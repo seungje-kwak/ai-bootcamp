@@ -2,8 +2,10 @@
 
 import { useRouter } from "next/navigation";
 import { useCallback, useEffect, useRef, useState } from "react";
+import { AreaMap } from "@/components/AreaMap";
 import { V9Header } from "@/components/V9Header";
 import { api, ApiError } from "@/lib/api";
+import { localizedAreaDescription, localizedAreaName } from "@/lib/content/area-names";
 import type { Area, Category, UserProfileInput } from "@/lib/types";
 import { MESSAGES, useLocale } from "@/lib/i18n";
 import { ceilTo, nowInJejuMinutes, windowError } from "@/lib/time";
@@ -123,7 +125,7 @@ export default function Onboarding() {
 
   const areas = areaList.kind === "ok" ? areaList.areas : [];
   const area = areas.find((a) => a.id === d.area_id);
-  const areaName = (a: Area) => (locale === "ko" ? a.name_ko : a.name_en);
+  const areaName = (a: Area) => localizedAreaName(a, locale);
   const startMin = toMin(d.startTime),
     endMin = toMin(d.endTime);
   const minutes = endMin - startMin;
@@ -145,6 +147,10 @@ export default function Onboarding() {
     window.scrollTo({ top: 0 });
     // move keyboard / screen-reader focus to the new question
     requestAnimationFrame(() => titleRef.current?.focus({ preventScroll: true }));
+  }
+  function pickArea(id: string) {
+    setD({ ...d, area_id: id });
+    if (status === "badarea") setStatus("idle");
   }
   function setTimes(start: number, end: number) {
     setD({ ...d, startTime: toHHMM(start), endTime: toHHMM(end) });
@@ -326,31 +332,47 @@ export default function Onboarding() {
                   {O.area.badArea}
                 </p>
               )}
-              {AREA_GROUPS.map((group) => (
-                <div key={group} role="group" aria-label={O.area.groups[group]} className="v9-fields-stack">
-                  <h2 className="v9-field-label">{O.area.groups[group]}</h2>
-                  <div className="v9-choices v9-single">
-                    {areas
-                      .filter((a) => a.group === group)
-                      .map((a) => (
-                        <Choice
-                          key={a.id}
-                          disabled={!a.selectable}
-                          selected={d.area_id === a.id}
-                          onClick={() => {
-                            setD({ ...d, area_id: a.id });
-                            if (status === "badarea") setStatus("idle");
-                          }}
-                        >
-                          <span className="min-w-0">
-                            <span className="block">{a.selectable ? areaName(a) : `${areaName(a)} · ${O.area.comingSoon}`}</span>
-                            {locale === "en" && a.description_en && <small className="block text-xs font-normal text-muted">{a.description_en}</small>}
-                          </span>
-                        </Choice>
-                      ))}
-                  </div>
+              {/* Travelers may not know the place names: the map shows where each area is. */}
+              <AreaMap areas={areas} selectedId={d.area_id} onSelect={pickArea} nameOf={areaName} label={O.area.mapLabel} comingSoon={O.area.comingSoon} title={O.area.mapTitle} legend={O.area.mapLegend} />
+              <div className="v9-area-picked" data-empty={!area} role="status" aria-live="polite">
+                {area ? (
+                  <>
+                    <span className="v9-choice-symbol" aria-hidden="true">
+                      📍
+                    </span>
+                    <span className="min-w-0">
+                      {areaName(area)}
+                      <small>{O.area.groups[area.group]}</small>
+                      <span className="v9-area-about">{localizedAreaDescription(area, locale)}</span>
+                    </span>
+                  </>
+                ) : (
+                  O.area.mapHint
+                )}
+              </div>
+              {/* The same choice as a list, for anyone who prefers reading names. */}
+              <details className="v9-area-list">
+                <summary>{O.area.listToggle}</summary>
+                <div className="v9-fields-stack">
+                  {AREA_GROUPS.map((group) => (
+                    <div key={group} role="group" aria-label={O.area.groups[group]} className="v9-fields-stack">
+                      <h2 className="v9-field-label">{O.area.groups[group]}</h2>
+                      <div className="v9-choices v9-single">
+                        {areas
+                          .filter((a) => a.group === group)
+                          .map((a) => (
+                            <Choice key={a.id} disabled={!a.selectable} selected={d.area_id === a.id} onClick={() => pickArea(a.id)}>
+                              <span className="min-w-0">
+                                <span className="block">{a.selectable ? areaName(a) : `${areaName(a)} · ${O.area.comingSoon}`}</span>
+                                <small className="block text-xs font-normal text-muted">{localizedAreaDescription(a, locale)}</small>
+                              </span>
+                            </Choice>
+                          ))}
+                      </div>
+                    </div>
+                  ))}
                 </div>
-              ))}
+              </details>
             </div>
           )}
           {step === TIME_STEP && (

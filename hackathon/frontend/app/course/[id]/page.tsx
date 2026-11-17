@@ -11,6 +11,7 @@ import { WindowSummary } from "@/components/WindowSummary";
 import { CourseSkeleton, MessageScreen, NewPlanLink, PrimaryButton } from "@/components/States";
 import { MoveInfo, StopCard } from "@/components/StopCard";
 import { api } from "@/lib/api";
+import { localizedAreaName } from "@/lib/content/area-names";
 import { MESSAGES, useLocale, travelMessages } from "@/lib/i18n";
 import { localizedPlaceName } from "@/lib/localized-place";
 import { scrollToId } from "@/lib/motion";
@@ -76,7 +77,7 @@ export default function CoursePage() {
   const items = course.items;
   const free = course.tier === "free";
   const span = courseSpan(items);
-  const areaName = area ? (locale === "ko" ? area.name_ko : area.name_en) : C.jeju;
+  const areaName = area ? localizedAreaName(area, locale) : C.jeju;
   // prd-recommendation-p1 US-P16: only before the day has started.
   const canShuffle = !items.some((i) => i.status === "done");
 
