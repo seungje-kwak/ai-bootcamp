@@ -1,13 +1,13 @@
 "use client";
 
 import { useState } from "react";
-import { kakaoDirectionsUrl } from "@/lib/directions";
+import { requestDirections } from "@/lib/directions";
 import { straightLineMeters } from "@/lib/geo";
 import { MESSAGES, useLocale, travelMessages } from "@/lib/i18n";
 import { localizedCategory, localizedPhrase, localizedPlaceName } from "@/lib/localized-place";
 import { useRouteEstimate } from "@/lib/route-estimate";
 import { addMinutes } from "@/lib/time";
-import type { CourseItem, ItemStatus, Tier, UserProfile } from "@/lib/types";
+import type { CourseItem, ItemStatus, Place, Tier, UserProfile } from "@/lib/types";
 import { CategoryIcon } from "./CategoryIcon";
 import { DriverCard } from "./DriverCard";
 import { FoodBadges } from "./FoodBadges";
@@ -85,10 +85,9 @@ export function MoveInfo({ item, from }: { item: CourseItem; from?: CourseItem }
           </span>
         )}
       </span>
-      <a className="move-strip__link" href={kakaoDirectionsUrl(item.place)} target="_blank" rel="noopener noreferrer" aria-label={`${M.move.directions}: ${toName}`}>
-        {tx.route}
-        <span aria-hidden="true"> ↗</span>
-      </a>
+      <button type="button" className="move-strip__link" onClick={() => requestDirections({ to: item.place, fallbackFrom: from?.place })} aria-label={`${M.map.route}: ${toName}`}>
+        {M.map.route}
+      </button>
     </div>
   );
 }
@@ -126,6 +125,7 @@ export function StopCard({
   status,
   selected = false,
   onShowOnMap,
+  directionsFrom,
   children,
 }: {
   item: CourseItem;
@@ -139,6 +139,8 @@ export function StopCard({
   selected?: boolean;
   /** Defaults to selecting the place on the page's map. */
   onShowOnMap?: () => void;
+  /** The stop before this one: where directions start when the traveler's position cannot be used. */
+  directionsFrom?: Place;
   children?: React.ReactNode;
 }) {
   const [driverOpen, setDriverOpen] = useState(false);
@@ -211,14 +213,9 @@ export function StopCard({
           <button type="button" className="stop-card__map-link" onClick={showOnMap}>
             <span aria-hidden="true">⌖</span> {S.showOnMap}
           </button>
-          <a
-            className="stop-card__map-link"
-            href={`https://map.kakao.com/link/map/${encodeURIComponent(p.name_ko)},${p.lat},${p.lng}`}
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            {MESSAGES[locale].map.openKakao} ↗
-          </a>
+          <button type="button" className="stop-card__map-link" onClick={() => requestDirections({ to: p, fallbackFrom: directionsFrom })}>
+            <span aria-hidden="true">➤</span> {MESSAGES[locale].map.route}
+          </button>
         </div>
         {children}
         <PhotoCredit place={p} />

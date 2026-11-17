@@ -38,6 +38,7 @@ export type KakaoMaps = {
     strokeColor?: string;
     strokeOpacity?: number;
     strokeStyle?: string;
+    zIndex?: number;
     map?: KMap;
   }) => KLayer;
 };

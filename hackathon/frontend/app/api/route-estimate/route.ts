@@ -1,6 +1,7 @@
 // Road distance and taxi fare for one leg. The Kakao REST key stays on the server.
 // GET /api/route-estimate                              -> { configured }
 // GET /api/route-estimate?from=lat,lng&to=lat,lng      -> RouteEstimate
+// GET /api/route-estimate?from=..&to=..&path=1         -> RouteEstimate with the road line (in-app directions)
 import { NextResponse } from "next/server";
 import { estimateRoute, routeApiKey, type LatLng } from "@/lib/server/route-estimate";
 
@@ -36,7 +37,7 @@ export async function GET(req: Request) {
   if (!from || !to) return error(400, "BAD_REQUEST", "from and to must be lat,lng pairs on Jeju Island.");
 
   try {
-    return NextResponse.json(await estimateRoute(key, from, to), { headers: noStore });
+    return NextResponse.json(await estimateRoute(key, from, to, params.get("path") === "1"), { headers: noStore });
   } catch (e) {
     console.warn("route estimate failed:", e instanceof Error ? e.message : e);
     return error(502, "ROUTE_API_FAILED", "The route service did not answer.");

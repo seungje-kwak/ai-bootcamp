@@ -3,12 +3,32 @@
 import { useEffect, useRef, useState } from "react";
 import { MAP_CONFIG, toPercent } from "@/config/map";
 import { JEJU_LANDMARKS, ISLAND_MAP_BOUNDS } from "@/lib/landmarks";
-import { useLocale } from "@/lib/i18n";
+import { type DirectionsRequest, type LatLng, type RoutePath, fetchRoutePath, kakaoDirectionsUrl, onJeju } from "@/lib/directions";
+import { MESSAGES, useLocale } from "@/lib/i18n";
+import { localizedPlaceName } from "@/lib/localized-place";
 import { type KakaoMaps, type KLayer, type KMap, loadKakaoMaps } from "@/lib/kakao";
 import type { Category, CourseItem, Place } from "@/lib/types";
 import type { MapSelect } from "./JejuMap";
 
 const MARKER_PX = 28;
+
+type RouteState =
+  | { status: "loading" }
+  // `why`: the reason the route does not start where the traveler is.
+  | { status: "ok"; route: RoutePath; from: "me" | "previous" | "airport"; why?: "noLocation" | "outside" }
+  | { status: "failed" };
+
+/** Where the traveler is, or null (no permission, no GPS fix, not supported). */
+function currentPosition(): Promise<LatLng | null> {
+  return new Promise((resolve) => {
+    if (!navigator.geolocation) return resolve(null);
+    navigator.geolocation.getCurrentPosition(
+      ({ coords }) => resolve({ lat: coords.latitude, lng: coords.longitude }),
+      () => resolve(null),
+      { enableHighAccuracy: true, timeout: 10000, maximumAge: 60000 },
+    );
+  });
+}
 
 // HTML markers (7.5) built by hand: CustomOverlay takes a DOM element, not React.
 function courseMarker(it: CourseItem, tripMode: boolean, onClick: () => void) {
@@ -65,6 +85,8 @@ export function KakaoMap({
   activeCategories,
   focusPlace,
   center,
+  directions,
+  onCloseDirections,
   onSelect,
   onError,
 }: {
@@ -75,16 +97,22 @@ export function KakaoMap({
   focusPlace: Place | null;
   /** The chosen area's centre (GET /areas), used when the course has no stops (PRD 7.6). */
   center?: { lat: number; lng: number };
+  /** Directions asked for from a stop card: the road route is drawn here. A new object asks again. */
+  directions: DirectionsRequest | null;
+  onCloseDirections: () => void;
   onSelect: MapSelect;
   onError: (e: unknown) => void;
 }) {
   const boxRef = useRef<HTMLDivElement>(null);
   const {locale} = useLocale();
+  const M = MESSAGES[locale];
   const [viewMode, setViewMode] = useState<"island" | "course" | "focus">("course");
   const kakaoRef = useRef<KakaoMaps | null>(null);
   const mapRef = useRef<KMap | null>(null);
   const layersRef = useRef<KLayer[]>([]);
   const locationOverlayRef = useRef<KLayer | null>(null);
+  const routeLayersRef = useRef<KLayer[]>([]);
+  const [route, setRoute] = useState<RouteState | null>(null);
   const fitRef = useRef<() => void>(() => {});
   const islandFitRef = useRef<() => void>(() => {});
   const onFocusRef = useRef<((place: Place) => void) | null>(null);
@@ -154,6 +182,8 @@ export function KakaoMap({
       layersRef.current = [];
       locationOverlayRef.current?.setMap(null);
       locationOverlayRef.current = null;
+      routeLayersRef.current.forEach((l) => l.setMap(null));
+      routeLayersRef.current = [];
     };
   }, []);
 
@@ -287,6 +317,55 @@ export function KakaoMap({
     }
   }, [focusPlace, ready]);
 
+  // In-app directions: from where the traveler is (or, when that cannot be used, from the previous
+  // stop) to the place, along the roads. Car route only; the line and the numbers are Kakao Mobility's.
+  useEffect(() => {
+    const maps = kakaoRef.current;
+    const map = mapRef.current;
+    routeLayersRef.current.forEach((l) => l.setMap(null));
+    routeLayersRef.current = [];
+    if (!directions || !ready || !maps || !map) {
+      setRoute(null);
+      return;
+    }
+    let cancelled = false;
+    setRoute({ status: "loading" });
+    (async () => {
+      const me = await currentPosition();
+      if (cancelled) return;
+      const useMe = me !== null && onJeju(me); // the route service only knows Jeju
+      // No usable position (no permission, a PC without GPS, or the traveler is not on Jeju yet):
+      // the route starts from the stop before this one, or from the airport for the first stop.
+      const airport = JEJU_LANDMARKS.find((l) => l.id === "airport");
+      const kind = useMe ? "me" : directions.fallbackFrom ? "previous" : "airport";
+      const from = useMe ? me : (directions.fallbackFrom ?? airport);
+      if (!from) return setRoute({ status: "failed" });
+      const found = await fetchRoutePath(from, directions.to);
+      if (cancelled) return;
+      if (!found) return setRoute({ status: "failed" });
+
+      const path = found.path.map(([lat, lng]) => new maps.LatLng(lat, lng));
+      const start = document.createElement("div");
+      start.className = useMe ? "map-user-location" : "map-route-start";
+      start.textContent = useMe ? "●" : "";
+      routeLayersRef.current = [
+        // white casing under the blue line, so it reads on any map colour
+        new maps.Polyline({ map, path, strokeWeight: 10, strokeColor: "#ffffff", strokeOpacity: 0.95, strokeStyle: "solid", zIndex: 5 }),
+        new maps.Polyline({ map, path, strokeWeight: 6, strokeColor: "#2f6fed", strokeOpacity: 1, strokeStyle: "solid", zIndex: 6 }),
+        new maps.CustomOverlay({ map, position: path[0], content: start, xAnchor: 0.5, yAnchor: 0.5, zIndex: 8 }),
+      ];
+      const b = new maps.LatLngBounds();
+      path.forEach((p) => b.extend(p));
+      setViewMode("focus"); // keep this view: do not snap back to the course
+      map.setBounds(b, 70, 50, 130, 50); // room at the bottom for the route panel
+      setCurrentLevel(map.getLevel?.() ?? MAP_CONFIG.level);
+      setRoute({ status: "ok", route: found, from: kind, why: useMe ? undefined : me === null ? "noLocation" : "outside" });
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, [directions, ready]);
+
   // Keep the map sized to its box (7.4).
   useEffect(() => {
     const el = boxRef.current;
@@ -314,6 +393,37 @@ export function KakaoMap({
         ⌖ {locationStatus==="loading"?(locale==="ko"?"찾는 중...":"Locating..."):(locale==="ko"?"내 위치":locale==="en"?"My location":locale==="zh"?"我的位置":"現在地")}
       </button>
       {(locationStatus==="denied"||locationStatus==="unsupported") && <p className="map-location-error" role="status">{locale==="ko"?"위치 확인 불가 · 휴대폰 위치 권한과 HTTPS를 확인하세요":locale==="zh"?"无法定位 · 请检查权限与 HTTPS":locale==="ja"?"位置取得不可 · 権限とHTTPSを確認":"Location unavailable · check permissions and HTTPS"}</p>}
+      {route && directions && (
+        <div className="map-route-panel" role="status" aria-live="polite">
+          {route.status === "loading" && <p>{M.map.routeLoading}</p>}
+          {route.status === "ok" && (
+            <>
+              <strong>
+                {route.from === "me" ? M.map.routeFromMe : route.from === "previous" ? M.map.routeFromPrevious : M.map.routeFromAirport} → {localizedPlaceName(directions.to, locale)}
+              </strong>
+              <p className="map-route-panel__numbers">
+                {M.map.routeLine(M.common.distance(route.route.distanceM), route.route.durationMin)}
+                {route.route.taxiFareKrw > 0 && ` · ${M.map.routeTaxi(M.common.won(route.route.taxiFareKrw))}`}
+              </p>
+              {route.why && (
+                <p className="map-route-panel__why">
+                  {route.why === "outside" ? M.map.routeOutside : M.map.routeNoLocation} {route.from === "previous" ? M.map.routeStartPrevious : M.map.routeStartAirport}
+                </p>
+              )}
+              <p>{M.map.routeCarOnly}</p>
+            </>
+          )}
+          {route.status === "failed" && <p>{M.map.routeFailed}</p>}
+          {route.status !== "loading" && (
+            <a href={kakaoDirectionsUrl(directions.to)} target="_blank" rel="noopener noreferrer">
+              {M.map.openKakao} ↗
+            </a>
+          )}
+          <button type="button" onClick={onCloseDirections} aria-label={M.map.routeClose}>
+            ×
+          </button>
+        </div>
+      )}
       {!ready && <div className="skeleton absolute inset-0" aria-label="Loading map" />}
       <div className="map-surface__zoom map-surface__zoom--sdk" role="group" aria-label="Zoom map">
         <button type="button" disabled={!ready || currentLevel<=1} onClick={()=>changeZoom(-1)} aria-label="Zoom in">+</button>

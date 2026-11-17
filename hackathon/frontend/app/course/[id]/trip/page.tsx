@@ -266,6 +266,7 @@ export default function TripPage() {
             diet={course.user_profile.diet}
             size="large"
             status="current"
+            directionsFrom={previous?.place}
             isNew={newKeys.has(`${current.order}:${current.place_id}`)}
           >
             <PrimaryButton className="mt-3 w-full" onClick={next} disabled={busy}>

@@ -190,6 +190,7 @@ export default function CoursePage() {
                       diet={course.user_profile.diet}
                       selected={selected === it.order}
                       onShowOnMap={() => showOnMap(it.order, it.place_id)}
+                      directionsFrom={i > 0 ? items[i - 1].place : undefined}
                     />
                   </li>
                 );

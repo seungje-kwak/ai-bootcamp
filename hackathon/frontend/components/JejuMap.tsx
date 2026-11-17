@@ -4,6 +4,7 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import { MESSAGES, useLocale, travelMessages } from "@/lib/i18n";
 import { contentHelp, localizedDescription, localizedPlaceName } from "@/lib/localized-place";
 import { MAP_CONFIG } from "@/config/map";
+import { DIRECTIONS_EVENT, type DirectionsRequest } from "@/lib/directions";
 import type { Category, CourseItem, Place } from "@/lib/types";
 import { MapCategoryLegend, CATEGORY_OPTIONS } from "./MapCategoryLegend";
 import { KakaoMap } from "./KakaoMap";
@@ -48,6 +49,21 @@ export function JejuMap({
   const [activeCategories, setActiveCategories] = useState<Set<Category>>(() => new Set(CATEGORY_OPTIONS.map(c => c.id)));
   const toggleCategory = (cat: Category) => setActiveCategories(prev => { const next = new Set(prev); if (next.has(cat)) next.delete(cat); else next.add(cat); return next; });
   const useKakao = Boolean(MAP_CONFIG.kakaoKey) && !mapFailure;
+  const [directions, setDirections] = useState<DirectionsRequest | null>(null);
+
+  // "Directions" on a stop card: the Kakao map draws the route. The drawn fallback map cannot, so the
+  // request is left alone there and Kakao Map opens instead (lib/directions.ts requestDirections).
+  useEffect(() => {
+    if (!useKakao) return;
+    function handleDirections(e: Event) {
+      e.preventDefault();
+      setSelected(null);
+      setDirections({ ...(e as CustomEvent<DirectionsRequest>).detail }); // a new object: asking twice draws twice
+      document.getElementById("course-map")?.scrollIntoView({ behavior: "smooth", block: "center" });
+    }
+    window.addEventListener(DIRECTIONS_EVENT, handleDirections);
+    return () => window.removeEventListener(DIRECTIONS_EVENT, handleDirections);
+  }, [useKakao, setSelected]);
 
   useEffect(() => {
     function handleSelection(e: Event) {
@@ -73,6 +89,8 @@ export function JejuMap({
           activeCategories={activeCategories}
           focusPlace={selected?.place ?? null}
           center={center}
+          directions={directions}
+          onCloseDirections={() => setDirections(null)}
           onSelect={setSelected}
           onError={(e) => {
             console.warn("Kakao Maps SDK could not load:", e);
