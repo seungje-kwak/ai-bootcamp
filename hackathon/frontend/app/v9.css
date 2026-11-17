@@ -185,3 +185,49 @@ body{background:#ecf0e9;color:#203f37;font-family:'DM Sans','Noto Sans KR','Noto
  .v9-route-actions .v9-primary,.v9-route-actions .v9-outline{padding:12px 13px}
 }
 @media(prefers-reduced-motion:reduce){.v9-site *{scroll-behavior:auto!important;transition:none!important}}
+/* Restored PRD features on the V9 layout: tier tag, shuffle, meal gaps, overview, trip guide, answers summary. */
+.v9-route-tags span.is-preview{background:#fff3e6;border-color:#f0d3bb;color:#94603a}
+.v9-route-tags span.is-premium{background:#176d62;border-color:#176d62;color:#fff}
+.v9-shuffle{margin:14px 0 4px;display:grid;gap:8px;justify-items:start}
+.v9-shuffle .v9-outline{min-height:44px;padding:9px 18px;font-size:14px}
+.v9-shuffle .v9-form-error{margin-top:0}
+.v9-timeline{list-style:none;margin:0;padding:0}
+.v9-empty{margin-top:20px;border:1px dashed #cfdccf;border-radius:18px;padding:28px;text-align:center;display:grid;gap:14px;justify-items:center;font-weight:700}
+.v9-upgrade__text{display:grid;gap:4px;min-width:0}
+.v9-upgrade__text strong{color:#6b513c;font-size:14px}
+.v9-upgrade__text small{color:#8a6d55;font-size:12px;font-weight:500;line-height:1.6}
+.v9-upgrade>span:last-child{white-space:nowrap}
+.meal-gap{border:2px dashed #cfdccf;border-radius:21px;background:#f6f8f3;padding:18px 20px}
+.meal-gap__head{display:flex;align-items:center;gap:12px}
+.meal-gap h3{font-size:17px;font-weight:800;line-height:1.4;margin:0}
+.meal-gap__time{font-size:13px;font-weight:700;color:#69817a;font-variant-numeric:tabular-nums}
+.meal-gap__body{margin-top:11px;font-size:14px;line-height:1.8;color:#526b60}
+.stop-card.is-selected{box-shadow:0 0 0 2px #176d62,0 7px 28px #28524818}
+.stop-card.is-current{box-shadow:0 0 0 2px #ce8a5a,0 7px 28px #28524818}
+.stop-card__hours{margin-top:14px;border-top:1px solid #e9eee7;padding-top:12px;font-size:13px;color:#465c5d;line-height:1.6}
+.stop-card__hours small{display:block;color:#8b9d99;font-size:10px;letter-spacing:.04em;margin-bottom:2px}
+.move-strip__route{font-size:11px;color:#526b60;overflow-wrap:anywhere}
+.move-strip__meta{font-size:10px;color:#8b9d99;line-height:1.5}
+.move-strip__fare-line{font-size:12px;font-weight:750;color:#176d62}
+.tr-note{margin-top:6px;font-size:11px;color:#8b9d99}
+.v9-overview{margin-top:16px;border:1px solid #dfe8de;border-radius:21px;background:#fff;padding:16px}
+.v9-overview h2{font-size:12px;font-weight:850;letter-spacing:.14em;text-transform:uppercase;color:#69817a;margin:0 0 8px}
+.v9-overview ol{list-style:none;margin:0;padding:0;display:grid;gap:2px}
+.v9-overview button{width:100%;display:flex;align-items:center;gap:11px;padding:9px 8px;border-radius:12px;text-align:left;font-size:14px}
+.v9-overview button:hover,.v9-overview button[aria-current="true"]{background:#edf6ef}
+.v9-overview__no{display:grid;place-items:center;flex:0 0 26px;height:26px;border-radius:50%;background:#176d62;color:#fff;font-size:12px;font-weight:800}
+.v9-overview time{font-weight:800;font-variant-numeric:tabular-nums;color:#203f37}
+.v9-overview__name{min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.trip-meter{display:flex;gap:4px;margin-top:9px}
+.trip-meter span{flex:1;height:4px;border-radius:4px;background:#e0e9df}
+.trip-meter span[data-state="done"]{background:#9cc7bb}
+.trip-meter span[data-state="current"]{background:#176d62}
+.trip-guide{margin-bottom:12px;border-radius:16px;background:#edf5ed;border:1px solid #d6e7d6;padding:14px 16px;color:#336d57;font-size:14px;line-height:1.75;font-weight:650}
+.v9-trip{padding-bottom:150px}
+.v9-answers{margin-top:20px;border:1px solid #e2e9df;border-radius:16px;padding:14px 16px;background:#fff}
+.v9-answers summary{cursor:pointer;font-weight:800;font-size:14px}
+.v9-answers dl{display:grid;gap:8px;margin:12px 0 0}
+.v9-answers dl>div{display:grid;grid-template-columns:minmax(90px,30%) 1fr;gap:10px;font-size:13px;line-height:1.6}
+.v9-answers dt{color:#69817a;font-weight:750}
+.v9-answers dd{margin:0;color:#203f37}
+.v9-answers dd[data-empty="true"]{color:#9aaba5}

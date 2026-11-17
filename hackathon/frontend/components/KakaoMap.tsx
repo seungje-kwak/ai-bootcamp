@@ -64,6 +64,7 @@ export function KakaoMap({
   tripMode,
   activeCategories,
   focusPlace,
+  center,
   onSelect,
   onError,
 }: {
@@ -72,12 +73,14 @@ export function KakaoMap({
   tripMode: boolean;
   activeCategories: Set<Category>;
   focusPlace: Place | null;
+  /** The chosen area's centre (GET /areas), used when the course has no stops (PRD 7.6). */
+  center?: { lat: number; lng: number };
   onSelect: MapSelect;
   onError: (e: unknown) => void;
 }) {
   const boxRef = useRef<HTMLDivElement>(null);
   const {locale} = useLocale();
-  const [viewMode, setViewMode] = useState<"island" | "course" | "focus">("island");
+  const [viewMode, setViewMode] = useState<"island" | "course" | "focus">("course");
   const kakaoRef = useRef<KakaoMaps | null>(null);
   const mapRef = useRef<KMap | null>(null);
   const layersRef = useRef<KLayer[]>([]);
@@ -246,8 +249,9 @@ export function KakaoMap({
     };
     fitRef.current = () => {
       if (stops.length === 0) {
+        const c = center ?? MAP_CONFIG.center;
         map.setLevel(MAP_CONFIG.level);
-        map.setCenter(new maps.LatLng(MAP_CONFIG.center.lat, MAP_CONFIG.center.lng));
+        map.setCenter(new maps.LatLng(c.lat, c.lng));
       } else if (stops.length === 1) {
         map.setLevel(MAP_CONFIG.singleStopLevel);
         map.setCenter(ll(stops[0].place));
@@ -261,7 +265,14 @@ export function KakaoMap({
     };
     // Do NOT automatically reset the user's zoom when categories or language change.
     // Fitting the view happens in a separate effect below.
-  }, [ready, items, places, tripMode, activeCategories, locale, focusPlace, viewMode]);
+  }, [ready, items, places, tripMode, activeCategories, locale, focusPlace, viewMode, center]);
+
+  const lastSignature = useRef(stopSignature);
+  useEffect(() => {
+    if (lastSignature.current === stopSignature) return;
+    lastSignature.current = stopSignature;
+    setViewMode("course");
+  }, [stopSignature]);
 
   useEffect(() => {
     if (!ready) return;

@@ -4,6 +4,7 @@ import { useLocale } from "@/lib/i18n";
 import { localizedDescription } from "@/lib/localized-place";
 import type { Place } from "@/lib/types";
 import type { Locale } from "@/lib/i18n";
+import { PlaceDescription } from "./LocalizedText";
 
 type Copy = {
   about: string;
@@ -93,17 +94,11 @@ export function PlaceGuide({ place }: { place: Place }) {
   const c = COPY[locale];
   const description = localizedDescription(place, locale);
   const knownSummary = locale === "en" ? null : knownIntroduction(place, locale);
-  const introduction = knownSummary ?? description.text;
-  const showOriginal = Boolean(description.original && locale !== "en" && !description.hasTranslation);
   const tips = visitValues(place, c);
   return <div className="place-guide">
     <section className="place-guide__about" aria-label={c.about}>
       <h4 className="place-guide__title"><span className="place-guide__title-mark" aria-hidden="true">✦</span>{c.about}</h4>
-      <p className="place-guide__description">{introduction || c.unknown}</p>
-      {showOriginal && <details className="place-guide__original">
-        <summary>{c.english}<span aria-hidden="true">⌄</span></summary>
-        <p lang="en">{description.original}</p>
-      </details>}
+      {description.original || knownSummary ? <PlaceDescription place={place} className="place-guide__description" override={knownSummary} /> : <p className="place-guide__description">{c.unknown}</p>}
     </section>
     <section className="place-guide__visiting" aria-label={c.visit}>
       <h4 className="place-guide__title"><span className="place-guide__title-mark" aria-hidden="true">◌</span>{c.visit}</h4>

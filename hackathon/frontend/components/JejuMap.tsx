@@ -1,7 +1,7 @@
 "use client";
 
-import { useEffect, useState } from "react";
-import { useLocale, travelMessages } from "@/lib/i18n";
+import { useCallback, useEffect, useRef, useState } from "react";
+import { MESSAGES, useLocale, travelMessages } from "@/lib/i18n";
 import { contentHelp, localizedDescription, localizedPlaceName } from "@/lib/localized-place";
 import { MAP_CONFIG } from "@/config/map";
 import type { Category, CourseItem, Place } from "@/lib/types";
@@ -19,12 +19,27 @@ export function JejuMap({
   items,
   places = [],
   tripMode = false,
+  center,
+  onSelectOrder,
+  onViewStop,
 }: {
   items: CourseItem[];
   places?: Place[];
   tripMode?: boolean;
+  /** The chosen area's centre, for a course with no stops. Pass a stable object. */
+  center?: { lat: number; lng: number };
+  /** Map -> timeline: which course stop is picked on the map (null when the card closes). */
+  onSelectOrder?: (order: number | null) => void;
+  /** "See this stop" in the bottom card scrolls the timeline to that stop. */
+  onViewStop?: (order: number) => void;
 }) {
-  const [selected, setSelected] = useState<Selected | null>(null);
+  const [selected, setSelectedState] = useState<Selected | null>(null);
+  const selectOrderRef = useRef(onSelectOrder);
+  selectOrderRef.current = onSelectOrder;
+  const setSelected = useCallback((s: Selected | null) => {
+    setSelectedState(s);
+    selectOrderRef.current?.(s?.order ?? null);
+  }, []);
   const { locale } = useLocale();
   const tx = travelMessages[locale];
   const selectedDescription = selected ? localizedDescription(selected.place, locale) : null;
@@ -45,7 +60,7 @@ export function JejuMap({
     }
     window.addEventListener("mypace:select-place", handleSelection);
     return () => window.removeEventListener("mypace:select-place", handleSelection);
-  }, [items, places]);
+  }, [items, places, setSelected]);
 
   return (
     <div id="course-map" className="relative">
@@ -57,6 +72,7 @@ export function JejuMap({
           tripMode={tripMode}
           activeCategories={activeCategories}
           focusPlace={selected?.place ?? null}
+          center={center}
           onSelect={setSelected}
           onError={(e) => {
             console.warn("Kakao Maps SDK could not load:", e);
@@ -101,6 +117,20 @@ export function JejuMap({
                   </details>
                 )}
                 <p className="mt-1 text-xs font-medium text-sea">{tx.stay} {selected.stay} {tx.min}</p>
+                {selected.order != null && onViewStop && (
+                  <button
+                    type="button"
+                    className="mt-1 text-xs font-bold text-sea underline underline-offset-2"
+                    onClick={() => {
+                      const order = selected.order!;
+                      setSelected(null);
+                      onViewStop(order);
+                    }}
+                  >
+                    {MESSAGES[locale].map.viewStop}
+                  </button>
+                )}
+                {selected.order == null && <p className="mt-1 text-xs text-muted">{MESSAGES[locale].map.notOnRoute}</p>}
                 <PhotoCredit place={selected.place} />
               </div>
             </div>
