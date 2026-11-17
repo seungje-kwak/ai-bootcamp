@@ -1,0 +1,115 @@
+/* Wide-screen landing (editorial serif).
+   Everything is scoped under .lp so the rest of the app is untouched. */
+@import url('https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,500;1,300;1,400&family=Nanum+Myeongjo:wght@400;700&display=swap');
+
+/* The shared shell is boxed at 1420px; the landing is full-bleed. */
+.app-shell:has(.lp){max-width:none;box-shadow:none;background:transparent}
+html:has(.lp){scroll-behavior:smooth;scroll-padding-top:70px}
+
+.lp{position:relative;min-height:100dvh;overflow-x:clip}
+.lp *{box-sizing:border-box}
+.lp h1,.lp h2,.lp h3{word-break:keep-all;overflow-wrap:break-word;margin:0;text-wrap:balance}
+.lp p{margin:0;word-break:keep-all;text-wrap:pretty}
+.lp a{text-decoration:none}
+:where(.lp) a{color:inherit}
+.lp button{font:inherit;cursor:pointer}
+.lp a:focus-visible,.lp button:focus-visible{outline:2px solid currentColor;outline-offset:3px}
+.lp [data-reveal]{opacity:0;transform:translateY(26px);transition:opacity .9s cubic-bezier(.2,.7,.2,1),transform .9s cubic-bezier(.2,.7,.2,1)}
+.lp [data-reveal].is-in{opacity:1;transform:none}
+
+/* ───────────────────────── Draft A ───────────────────────── */
+.lpa{--a-paper:#fffef5;--a-ink:#1c1b17;--a-soft:#6f6a5e;--a-line:#1c1b1722;--a-bronze:#8d6b45;
+  --a-serif:'Cormorant Garamond','Nanum Myeongjo','Noto Serif KR',Georgia,serif;
+  --a-kr:'Nanum Myeongjo','Noto Serif KR',Georgia,serif;
+  background:var(--a-paper);color:var(--a-ink);font-family:'DM Sans','Noto Sans KR','Noto Sans JP',system-ui,sans-serif}
+
+.lpa-bar{position:fixed;inset:0 0 auto 0;z-index:40;display:grid;grid-template-columns:1fr auto 1fr;align-items:center;gap:20px;height:60px;padding:0 clamp(20px,2.6vw,44px);color:#fffef5;transition:background .35s,color .35s,border-color .35s;border-bottom:1px solid transparent}
+.lpa-bar.is-scrolled{background:#fffef5f2;color:var(--a-ink);border-color:var(--a-line);backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px)}
+.lpa-bar-tag{font-family:var(--a-serif);font-size:16px;letter-spacing:.01em;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.lpa-bar-brand{font-family:var(--a-serif);font-size:24px;font-weight:300;letter-spacing:.14em;text-transform:uppercase;white-space:nowrap;opacity:0;transition:opacity .35s}
+.lpa-bar.is-scrolled .lpa-bar-brand{opacity:1}
+.lpa-bar-right{display:flex;justify-content:flex-end;align-items:center;gap:26px;font-size:11px;font-weight:600;letter-spacing:.16em;text-transform:uppercase;padding-right:clamp(0px,17vw,250px)}
+.lpa-bar-right>a{opacity:.85}.lpa-bar-right>a:hover{opacity:1}
+.lpa .language-switch{display:flex;flex-wrap:nowrap;gap:0}
+.lpa .language-switch__option{border:0;border-radius:0;background:none;box-shadow:none;padding:4px 9px;color:inherit;opacity:.55;font-size:11px;font-weight:600;letter-spacing:.04em;text-transform:none}
+.lpa .language-switch__option+.language-switch__option{border-left:1px solid currentColor}
+.lpa .language-switch__option.is-active{opacity:1;background:none;color:inherit;box-shadow:none;text-decoration:underline;text-underline-offset:4px}
+
+.lpa-float{position:fixed;top:12px;right:clamp(14px,1.6vw,26px);z-index:45;display:grid;gap:6px;justify-items:end;max-width:230px}
+.lpa-float strong{display:block;padding:14px 22px;background:var(--a-bronze);color:#fffef5;font-family:var(--a-kr);font-size:14px;font-weight:700;letter-spacing:.02em;border-radius:3px;box-shadow:0 10px 26px #3a2a1440;transition:background .2s,transform .2s;white-space:nowrap}
+.lpa-float:hover strong{background:#755635;transform:translateY(-1px)}
+.lpa-float small{display:block;padding:7px 11px;background:#23211cd9;color:#fffef5;font-size:10.5px;line-height:1.5;border-radius:3px;text-align:right}
+
+.lpa-cover{position:relative;height:100vh;height:100svh;min-height:600px;display:flex;flex-direction:column;justify-content:center;align-items:center;overflow:hidden;color:#fffef5;isolation:isolate;background:#22342c}
+.lpa-cover>img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;object-position:100% 60%;transform:scale(1.14);transform-origin:100% 70%;z-index:-2;animation:lpa-drift 26s ease-out both}
+@keyframes lpa-drift{from{transform:scale(1.22)}to{transform:scale(1.14)}}
+.lpa-cover::after{content:"";position:absolute;inset:0;z-index:-1;background:linear-gradient(180deg,#10160f8c 0%,#10160f73 40%,#10160f80 62%,#10160fd9 100%)}
+.lpa-cover-center{text-align:center;padding:0 24px;margin-top:-6vh}
+.lpa-wordmark{font-family:var(--a-serif);font-weight:300;font-size:clamp(64px,10.4vw,176px);line-height:1;letter-spacing:.06em;text-transform:uppercase;white-space:nowrap;text-shadow:0 2px 50px #00000059}
+.lpa-cover-tag{margin-top:14px!important;font-family:var(--a-serif);font-style:italic;font-size:clamp(17px,1.5vw,23px);letter-spacing:.02em}
+.lpa-cover h1{margin-top:clamp(40px,7vh,84px);font-family:var(--a-kr);font-weight:400;font-size:clamp(17px,1.35vw,21px);line-height:1.9;letter-spacing:.08em}
+.lpa-index{position:absolute;left:0;right:0;bottom:0;display:grid;grid-template-columns:repeat(3,1fr);border-top:1px solid #fffef566}
+.lpa-index a{display:grid;gap:5px;justify-items:center;padding:26px 16px 30px;text-align:center;transition:background .3s}
+.lpa-index a+a{border-left:1px solid #fffef566}
+.lpa-index a:hover{background:#fffef51f}
+.lpa-index span{font-family:var(--a-kr);font-size:clamp(15px,1.25vw,19px);letter-spacing:.06em}
+.lpa-index em{font-family:var(--a-serif);font-style:italic;font-size:15px;opacity:.85}
+
+.lpa-label{font-family:var(--a-serif);font-size:20px;letter-spacing:.01em;color:var(--a-ink)}
+.lpa-about{max-width:880px;margin:0 auto;padding:clamp(90px,11vw,170px) 24px;text-align:center}
+.lpa-about h2{margin-top:22px;font-family:var(--a-kr);font-weight:400;font-size:clamp(26px,2.5vw,38px);line-height:1.5;letter-spacing:-.01em}
+.lpa-about-desc{margin:22px auto 0!important;max-width:520px;color:var(--a-soft);font-size:15px;line-height:2}
+.lpa-outline{display:inline-block;margin-top:38px;padding:13px 30px;border:1px solid var(--a-ink);font-family:var(--a-kr);font-size:14px;letter-spacing:.04em;transition:background .25s,color .25s}
+.lpa-outline:hover{background:var(--a-ink);color:var(--a-paper)}
+
+.lpa-guide{padding:0 clamp(24px,5.5vw,104px) clamp(90px,10vw,150px)}
+.lpa-guide-head{display:flex;justify-content:space-between;align-items:flex-end;gap:30px;padding:34px 0 26px;border-top:1px solid var(--a-line)}
+.lpa-guide-head h2{margin-top:10px;font-family:var(--a-kr);font-weight:400;font-size:clamp(22px,2vw,30px);line-height:1.5}
+.lpa-count{font-family:var(--a-serif);font-size:19px;white-space:nowrap}.lpa-count i{font-style:normal;color:var(--a-soft)}
+.lpa-rail{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:clamp(12px,1.3vw,22px)}
+.lpa-card-img{aspect-ratio:4/5;overflow:hidden;background:#ebe8de}
+.lpa-card-img img{width:100%;height:100%;object-fit:cover;transform:scale(1.06);transition:transform 1.4s cubic-bezier(.2,.7,.2,1)}
+.lpa-card:hover .lpa-card-img img{transform:scale(1.12)}
+.lpa-card-no{margin-top:20px!important;font-family:var(--a-serif);font-size:16px;color:var(--a-soft)}
+.lpa-card h3{margin-top:4px;font-family:var(--a-kr);font-weight:400;font-size:clamp(20px,1.7vw,27px);line-height:1.4}
+.lpa-card h3+p{margin-top:9px;color:var(--a-soft);font-size:13.5px;line-height:1.85}
+
+.lpa-journey{padding:clamp(80px,9vw,140px) clamp(24px,5.5vw,104px);text-align:center;background:#f7f4e8}
+.lpa-journey h2{margin-top:20px;font-family:var(--a-kr);font-weight:400;font-size:clamp(26px,2.5vw,38px);line-height:1.55}
+.lpa-steps{list-style:none;margin:clamp(46px,5vw,76px) 0 0;padding:0;display:grid;grid-template-columns:repeat(4,minmax(0,1fr));border-top:1px solid var(--a-line);border-bottom:1px solid var(--a-line);text-align:left}
+.lpa-steps li{padding:30px clamp(16px,2vw,34px) 40px;display:grid;gap:34px}
+.lpa-steps li+li{border-left:1px solid var(--a-line)}
+.lpa-steps span{font-family:var(--a-serif);font-weight:300;font-size:clamp(44px,4.4vw,72px);line-height:1;color:var(--a-bronze)}
+.lpa-steps strong{font-family:var(--a-kr);font-weight:400;font-size:clamp(16px,1.3vw,20px);line-height:1.6}
+
+.lpa-closing{display:grid;grid-template-columns:1fr 1fr;min-height:min(720px,82vh)}
+.lpa-closing>img{width:100%;height:100%;min-height:340px;object-fit:cover}
+.lpa-closing>div{display:flex;flex-direction:column;justify-content:center;align-items:flex-start;padding:clamp(48px,7vw,120px)}
+.lpa-closing-en{font-family:var(--a-serif);font-weight:300;font-size:clamp(50px,5.6vw,92px);line-height:1.02;letter-spacing:.01em}
+.lpa-closing-desc{margin-top:30px!important;max-width:430px;color:var(--a-soft);font-size:15px;line-height:2}
+.lpa-solid{display:inline-block;margin-top:38px;padding:17px 44px;background:var(--a-bronze);color:#fffef5;font-family:var(--a-kr);font-weight:700;font-size:15px;letter-spacing:.03em;border-radius:3px;transition:background .2s}
+.lpa-solid:hover{background:#755635}
+
+.lpa-footer{display:grid;grid-template-columns:auto 1fr auto;gap:30px;align-items:center;padding:34px clamp(24px,5.5vw,104px) 92px;border-top:1px solid var(--a-line);color:var(--a-soft);font-size:11px;letter-spacing:.08em}
+.lpa-footer-brand{font-family:var(--a-serif);font-size:22px;letter-spacing:.14em;text-transform:uppercase;color:var(--a-ink)}
+.lpa-footer p{line-height:1.7;letter-spacing:0}
+
+@media (max-width:1100px){.lpa-bar-tag{visibility:hidden}.lpa-bar-right>a{display:none}}
+@media (max-width:860px){
+  .lpa-bar{grid-template-columns:auto 1fr;height:54px}.lpa-bar-tag{display:none}.lpa-bar-right{padding-right:0}
+  .lpa-float{top:auto;bottom:70px;right:14px}.lpa-float small{display:none}
+  .lpa-rail{grid-template-columns:repeat(2,minmax(0,1fr));row-gap:34px}
+  .lpa-steps{grid-template-columns:repeat(2,minmax(0,1fr))}.lpa-steps li:nth-child(3){border-left:0}.lpa-steps li:nth-child(n+3){border-top:1px solid var(--a-line)}
+  .lpa-closing{grid-template-columns:1fr}
+  .lpa-footer{grid-template-columns:1fr;gap:12px}
+  .lpa-index a{padding:18px 8px 20px}.lpa-index em{font-size:13px}
+}
+
+@media (prefers-reduced-motion:reduce){
+  .lp [data-reveal]{opacity:1;transform:none;transition:none}
+  .lpa-cover>img{animation:none}
+  .lpa-cover>img{transform:scale(1.14)}
+  html:has(.lp){scroll-behavior:auto}
+}
+.lpa-bar.is-scrolled~.lpa-float small{display:none}
+@media (max-width:860px){.lpa-float{bottom:18px}.lpa-bar:not(.is-scrolled)~.lpa-float{display:none}}
